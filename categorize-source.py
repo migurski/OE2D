@@ -142,11 +142,15 @@ def _read_pdf_contest_titles(pdf_page: object) -> list[str] | None:
         return None
 
     words: list[dict] = pdf_page.extract_words(  # type: ignore[attr-defined]
-        keep_blank_chars=True, y_tolerance=1,
+        keep_blank_chars=True, y_tolerance=1, extra_attrs=['upright'],
     )
     # Title words sit between the page header (county/date) and the
-    # column headers — typically in the y range 55-100
-    title_words: list[dict] = [w for w in words if 55 < w['top'] < 100]
+    # column headers — typically in the y range 40-100. Only consider
+    # upright text to avoid picking up rotated column header chars.
+    title_words: list[dict] = [
+        w for w in words
+        if 40 < w['top'] < 100 and w.get('upright') is True
+    ]
     if not title_words:
         return None
 
@@ -215,6 +219,17 @@ def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
     if not rotated_chars:
         return None
 
+    # Detect rotation direction from the transformation matrix.
+    # matrix[1] (the b component) indicates:
+    #   b == -1: counterclockwise 90° — text reads top-to-bottom,
+    #            multi-line headers have higher x0 = first line
+    #   b ==  1: clockwise 90° — text reads bottom-to-top,
+    #            multi-line headers have lower x0 = first line
+    sample_b: float = rotated_chars[0].get('matrix', (0, -1))[1]
+    clockwise: bool = sample_b > 0
+    char_reverse: bool = clockwise
+    x0_reverse: bool = not clockwise
+
     # Group rotated chars by which vertical-line column they fall in
     col_chars: dict[int, list[dict]] = defaultdict(list)
     for c in rotated_chars:
@@ -231,12 +246,13 @@ def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
         sub_groups: dict[int, list[dict]] = defaultdict(list)
         for c in col_group:
             sub_groups[round(c['x0'])].append(c)
-        # Read each sub-group top-to-bottom, then join in reverse x0 order
-        # (rightmost x0 = topmost line of the rotated header)
+        # Read each sub-group in character order, then join lines
         text_lines: list[str] = []
-        for x0 in sorted(sub_groups.keys(), reverse=True):
+        for x0 in sorted(sub_groups.keys(), reverse=x0_reverse):
             line_text: str = ''.join(
-                c['text'] for c in sorted(sub_groups[x0], key=lambda c: c['top'])
+                c['text'] for c in sorted(
+                    sub_groups[x0], key=lambda c: c['top'], reverse=char_reverse,
+                )
             ).strip()
             if line_text:
                 text_lines.append(line_text)
