@@ -17,28 +17,75 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 
+def _xlsx_sheet_info(path: str, page: int) -> tuple[int, bool]:
+    '''Check an XLSX sheet's merge status without loading the full workbook.
+
+    Peeks directly into the ZIP archive to count sheets and check whether
+    the target sheet contains merged cells — much faster than a full
+    openpyxl load for large workbooks with many sheets.
+
+    Returns (num_sheets, has_merges).  If page is out of range,
+    has_merges is False.
+    '''
+    import zipfile
+
+    ns_r: str = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+    ns_s: str = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+
+    with zipfile.ZipFile(path) as z:
+        rels_root: ET.Element = ET.fromstring(z.read('xl/_rels/workbook.xml.rels'))
+        rid_to_file: dict[str, str] = {
+            r.get('Id'): r.get('Target') for r in rels_root
+        }
+
+        wb_root: ET.Element = ET.fromstring(z.read('xl/workbook.xml'))
+        sheets: list[ET.Element] = wb_root.findall(f'.//{{{ns_s}}}sheet')
+        num_sheets: int = len(sheets)
+
+        if page < 1 or page > num_sheets:
+            return num_sheets, False
+
+        rid: str = sheets[page - 1].get(f'{{{ns_r}}}id')
+        target: str = rid_to_file[rid].lstrip('/')
+        if not target.startswith('xl/'):
+            target = f'xl/{target}'
+
+        sheet_data: bytes = z.read(target)
+        return num_sheets, b'<mergeCells' in sheet_data
+
+
 def read_xlsx_page(path: str, page: int) -> list[list[str]] | None:
     '''Read a sheet from an XLSX file, return rows as lists of strings.
 
     Expands merged cells so that a value spanning multiple columns is
-    repeated into each spanned column.
+    repeated into each spanned column.  Uses read_only mode for sheets
+    without merged cells to avoid the cost of parsing every sheet in
+    a large workbook.
     '''
     import openpyxl
 
-    wb: openpyxl.Workbook = openpyxl.load_workbook(path, data_only=True)
-    if page < 1 or page > len(wb.sheetnames):
-        print(f'Page {page} out of range (1-{len(wb.sheetnames)})', file=sys.stderr)
+    num_sheets: int
+    has_merges: bool
+    num_sheets, has_merges = _xlsx_sheet_info(path, page)
+
+    if page < 1 or page > num_sheets:
+        print(f'Page {page} out of range (1-{num_sheets})', file=sys.stderr)
         return None
+
+    wb: openpyxl.Workbook = openpyxl.load_workbook(
+        path, data_only=True, read_only=not has_merges,
+    )
     ws: openpyxl.worksheet.worksheet.Worksheet = wb.worksheets[page - 1]
 
     # Build a map of (row, col) -> value for merged cell regions,
     # so every cell in a merge gets the top-left cell's value
     merge_fill: dict[tuple[int, int], str] = {}
-    for merge_range in ws.merged_cells.ranges:
-        top_left_value: str = str(ws.cell(merge_range.min_row, merge_range.min_col).value or '')
-        for row_idx in range(merge_range.min_row, merge_range.max_row + 1):
-            for col_idx in range(merge_range.min_col, merge_range.max_col + 1):
-                merge_fill[(row_idx, col_idx)] = top_left_value
+    if has_merges:
+        for merge_range in ws.merged_cells.ranges:
+            top_left_value: str = str(ws.cell(merge_range.min_row, merge_range.min_col).value or '')
+            for row_idx in range(merge_range.min_row, merge_range.max_row + 1):
+                for col_idx in range(merge_range.min_col, merge_range.max_col + 1):
+                    merge_fill[(row_idx, col_idx)] = top_left_value
 
     rows: list[list[str]] = []
     for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
