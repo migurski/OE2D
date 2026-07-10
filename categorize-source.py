@@ -118,7 +118,7 @@ def _read_xml_spreadsheet_page(path: str, page: int) -> list[list[str]] | None:
     return rows
 
 
-def _read_pdf_contest_titles(pdf_page: object) -> list[str] | None:
+def _read_pdf_contest_titles(pdf_page: object) -> list[list[str]] | None:
     '''Read contest title text and map each column to its contest.
 
     Election PDFs often have one or more contest titles (e.g. "President
@@ -126,8 +126,8 @@ def _read_pdf_contest_titles(pdf_page: object) -> list[str] | None:
     This function finds those titles in the header area and assigns each
     table column to the nearest title by x-midpoint.
 
-    Returns a row of contest names aligned to the vertical line columns,
-    or None if no titles are found.
+    Returns one row per line of title text, each with contest names
+    aligned to the vertical line columns, or None if no titles are found.
     '''
     import pdfplumber
 
@@ -154,31 +154,30 @@ def _read_pdf_contest_titles(pdf_page: object) -> list[str] | None:
     if not title_words:
         return None
 
-    # Filter to title-like words: the topmost group of words in that range
-    # (contest names appear at the same y, "VOTE FOR 1" and "Precincts
-    # Reporting" appear on lower lines)
-    min_top: float = min(w['top'] for w in title_words)
-    titles: list[dict] = sorted(
-        [w for w in title_words if w['top'] < min_top + 5],
-        key=lambda w: w['x0'],
-    )
-    if not titles:
-        return None
+    # Group title words by y-line (within tolerance of 5)
+    y_lines: list[list[dict]] = []
+    for w in sorted(title_words, key=lambda w: w['top']):
+        if y_lines and abs(w['top'] - y_lines[-1][0]['top']) < 5:
+            y_lines[-1].append(w)
+        else:
+            y_lines.append([w])
 
-    # Title midpoints
-    title_mids: list[tuple[float, str]] = [
-        ((t['x0'] + t['x1']) / 2, t['text'].strip()) for t in titles
-    ]
-
-    # Assign each column to the nearest title by x-midpoint
+    # Build one row per y-line, assigning columns to nearest title
     num_cols: int = len(v_xs) - 1
-    contest_row: list[str] = []
-    for ci in range(num_cols):
-        col_mid: float = (v_xs[ci] + v_xs[ci + 1]) / 2
-        best_title: str = min(title_mids, key=lambda tm: abs(col_mid - tm[0]))[1]
-        contest_row.append(best_title)
+    title_rows: list[list[str]] = []
+    for line_words in y_lines:
+        title_mids: list[tuple[float, str]] = [
+            ((w['x0'] + w['x1']) / 2, w['text'].strip())
+            for w in sorted(line_words, key=lambda w: w['x0'])
+        ]
+        row: list[str] = []
+        for ci in range(num_cols):
+            col_mid: float = (v_xs[ci] + v_xs[ci + 1]) / 2
+            best_title: str = min(title_mids, key=lambda tm: abs(col_mid - tm[0]))[1]
+            row.append(best_title)
+        title_rows.append(row)
 
-    return contest_row
+    return title_rows if title_rows else None
 
 
 def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
@@ -295,7 +294,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
 
     # Reconstruct headers from vertical text if present
     vertical_headers: list[str] | None = _read_pdf_vertical_headers(pdf_page)
-    contest_titles: list[str] | None = _read_pdf_contest_titles(pdf_page)
+    contest_titles: list[list[str]] | None = _read_pdf_contest_titles(pdf_page)
 
     rows: list[list[str]] = []
     for row in table:
@@ -324,11 +323,12 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
 
         header_rows: list[list[str]] = []
 
-        # Add contest title row if present
+        # Add contest title rows if present
         if contest_titles:
-            while len(contest_titles) < data_width:
-                contest_titles.append('')
-            header_rows.append(contest_titles[:data_width])
+            for title_row in contest_titles:
+                while len(title_row) < data_width:
+                    title_row.append('')
+                header_rows.append(title_row[:data_width])
 
         header_rows.append(vertical_headers[:data_width])
         rows = header_rows + rows[data_start:]
