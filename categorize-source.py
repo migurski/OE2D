@@ -273,6 +273,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
     pdf: pdfplumber.PDF = pdfplumber.open(path)
     if page < 1 or page > len(pdf.pages):
         print(f'Page {page} out of range (1-{len(pdf.pages)})', file=sys.stderr)
+        pdf.close()
         return None
 
     pdf_page: pdfplumber.page.Page = pdf.pages[page - 1]
@@ -376,6 +377,274 @@ def main() -> None:
         sys.stdout.flush()
     except BrokenPipeError:
         pass
+
+
+###############################################################################
+# Tests — run with: python -m unittest categorize-source
+###############################################################################
+
+import unittest
+
+FIXTURES_DIR: str = os.path.join(os.path.dirname(__file__), 'fixtures')
+
+
+def _fixture(filename: str) -> str:
+    return os.path.join(FIXTURES_DIR, filename)
+
+
+class TestXlsxSanFrancisco(unittest.TestCase):
+    '''San Francisco County - Statement of the Vote - General 2024.xlsx
+
+    Fixture: sheet 2 extracted as single-sheet XLSX.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('sf-xlsx-sheet2.xlsx')
+
+    def test_page_2_has_contest_header(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        self.assertIn('PRESIDENT AND VICE PRESIDENT', rows[1][0])
+
+    def test_page_2_has_candidate_columns(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        row_text = ' '.join(rows[3])
+        self.assertIn('DONALD J. TRUMP', row_text)
+        self.assertIn('KAMALA D. HARRIS', row_text)
+
+    def test_page_2_merged_cells_expanded(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        contest_row = rows[1]
+        filled = [c for c in contest_row if 'PRESIDENT' in c]
+        self.assertGreater(len(filled), 1)
+
+
+class TestXlsxAlamedaDistrict(unittest.TestCase):
+    '''2024 Alameda County, CA district-level results.xlsx
+
+    Fixture: sheet 5 extracted as single-sheet XLSX.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('alameda-district-xlsx-sheet5.xlsx')
+
+    def test_sheet_5_contest_title_expanded(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        row_text = ' '.join(rows[5])
+        self.assertIn('U.S. Representative', row_text)
+        filled = [c for c in rows[5] if 'U.S. Representative' in c]
+        self.assertGreater(len(filled), 1)
+
+    def test_sheet_5_has_data_rows(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        data_texts = [r[0] for r in rows if 'California' in r[0] or 'District' in r[0]]
+        self.assertGreater(len(data_texts), 0)
+
+
+class TestXlsSantaClara(unittest.TestCase):
+    '''Santa Clara - Precint results - General 2024.xls (XML Spreadsheet)
+
+    Fixture: sheets 2-3 extracted, 100 rows each.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('santa-clara-xls-sheets2-3.xls')
+
+    def test_page_2_registered_voters(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        self.assertEqual(rows[0][0], 'Precinct')
+        self.assertEqual(rows[0][1], 'Registered Voters')
+        self.assertEqual(rows[0][2], 'Ballots Cast')
+
+    def test_page_2_has_precinct_data(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        self.assertEqual(rows[1][0], '0002001')
+
+    def test_page_3_president_contest(self):
+        rows = page_table(self.path, 2)
+        self.assertIsNotNone(rows)
+        self.assertIn('President and Vice President', rows[0][0])
+        row_text = ' '.join(rows[1])
+        self.assertIn('Kamala D. Harris', row_text)
+        self.assertIn('Donald J. Trump', row_text)
+
+
+class TestPdfAlameda(unittest.TestCase):
+    '''Alameda County - Statement of Vote - General Election.pdf
+
+    Counterclockwise-rotated vertical text headers.
+    Fixture: pages 1 and 101 extracted.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('alameda-sov-pdf-p1-p101.pdf')
+
+    def test_page_1_vertical_headers_reconstructed(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:3])
+        self.assertIn('DONALD J. TRUMP', all_text)
+        self.assertIn('KAMALA D. HARRIS', all_text)
+        self.assertIn('Registered Voters', all_text)
+
+    def test_page_1_contest_title(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        self.assertIn('President', rows[0][0])
+
+    def test_page_1_data_rows_individual(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        data_rows = [r for r in rows if r[0].strip().isdigit()]
+        self.assertGreater(len(data_rows), 0)
+        for r in data_rows[:5]:
+            self.assertNotIn('\n', r[0])
+
+    def test_page_1_no_garbled_headers(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        for r in rows[:5]:
+            row_text = ' '.join(r)
+            self.assertNotIn('DLANOD', row_text)
+
+    def test_page_101_us_senator(self):
+        rows = page_table(self.path, 2)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:3])
+        self.assertIn('STEVE GARVEY', all_text)
+        self.assertIn('ADAM B. SCHIFF', all_text)
+
+
+class TestPdfAmador(unittest.TestCase):
+    '''Amador County - Statement of the Vote - General 2024.pdf
+
+    Landscape pages with counterclockwise-rotated headers and
+    multi-contest side-by-side layout.
+    Fixture: pages 5, 7, 10, 30 extracted.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('amador-pdf-p5-p7-p10-p30.pdf')
+
+    def test_page_5_statistics(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:6])
+        self.assertIn('Registered Voters', all_text)
+        self.assertIn('Ballots Cast', all_text)
+
+    def test_page_7_president_single_contest(self):
+        rows = page_table(self.path, 2)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:6])
+        self.assertIn('DONALD J. TRUMP', all_text)
+        self.assertIn('KAMALA D. HARRIS', all_text)
+        self.assertIn('President', all_text)
+
+    def test_page_7_precinct_data(self):
+        rows = page_table(self.path, 2)
+        self.assertIsNotNone(rows)
+        cp_rows = [r for r in rows if r[0].startswith('CP')]
+        self.assertGreater(len(cp_rows), 0)
+        self.assertEqual(cp_rows[0][0], 'CP10')
+
+    def test_page_10_two_senator_contests(self):
+        rows = page_table(self.path, 3)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:6])
+        self.assertIn('United States Senator - Full Term', all_text)
+        self.assertIn('United States Senator - Partial/Unexpired Term', all_text)
+
+    def test_page_10_contest_titles_split_columns(self):
+        rows = page_table(self.path, 3)
+        self.assertIsNotNone(rows)
+        senator_row = None
+        for r in rows:
+            if 'United States Senator - Full Term' in r:
+                senator_row = r
+                break
+        self.assertIsNotNone(senator_row)
+        self.assertIn('United States Senator - Full Term', senator_row)
+        self.assertIn('United States Senator - Partial/Unexpired Term', senator_row)
+        first_full = senator_row.index('United States Senator - Full Term')
+        first_partial = senator_row.index('United States Senator - Partial/Unexpired Term')
+        self.assertLess(first_full, first_partial)
+
+    def test_page_10_has_all_precincts(self):
+        rows = page_table(self.path, 3)
+        self.assertIsNotNone(rows)
+        cp_rows = [r for r in rows if r[0].startswith('CP')]
+        self.assertEqual(len(cp_rows), 17)
+
+    def test_page_30_two_propositions(self):
+        rows = page_table(self.path, 4)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:6])
+        self.assertIn('Proposition 6', all_text)
+        self.assertIn('Proposition 32', all_text)
+
+    def test_page_10_vote_for_1_row(self):
+        rows = page_table(self.path, 3)
+        self.assertIsNotNone(rows)
+        vote_rows = [r for r in rows if 'VOTE FOR 1' in r]
+        self.assertGreater(len(vote_rows), 0)
+
+
+class TestPdfGlenn(unittest.TestCase):
+    '''Glenn County - Statement of the Vote - General 2024.pdf
+
+    Clockwise-rotated vertical text (reads bottom-to-top).
+    Fixture: page 15 extracted.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('glenn-pdf-p15.pdf')
+
+    def test_page_15_headers_not_backwards(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:5])
+        self.assertNotIn('ECNAV', all_text)
+        self.assertNotIn('PMURT', all_text)
+        self.assertNotIn('tsaC', all_text)
+
+    def test_page_15_correct_headers(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:5])
+        self.assertIn('Times Cast', all_text)
+        self.assertIn('Registered Voters', all_text)
+        self.assertIn('TRUMP', all_text)
+
+    def test_page_15_contest_title(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows[:3])
+        self.assertIn('President', all_text)
+
+
+class TestPageTableRouting(unittest.TestCase):
+    '''Test that page_table routes correctly and handles errors.'''
+
+    def test_unsupported_extension(self):
+        rows = page_table('test.doc', 1)
+        self.assertIsNone(rows)
+
+    def test_xlsx_out_of_range(self):
+        path = _fixture('sf-xlsx-sheet2.xlsx')
+        rows = page_table(path, 9999)
+        self.assertIsNone(rows)
+
+    def test_pdf_out_of_range(self):
+        path = _fixture('alameda-sov-pdf-p1-p101.pdf')
+        rows = page_table(path, 99999)
+        self.assertIsNone(rows)
 
 
 if __name__ == '__main__':
