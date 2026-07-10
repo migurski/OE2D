@@ -18,17 +18,39 @@ from collections import defaultdict
 
 
 def read_xlsx_page(path: str, page: int) -> list[list[str]] | None:
-    '''Read a sheet from an XLSX file, return rows as lists of strings.'''
+    '''Read a sheet from an XLSX file, return rows as lists of strings.
+
+    Expands merged cells so that a value spanning multiple columns is
+    repeated into each spanned column.
+    '''
     import openpyxl
 
-    wb: openpyxl.Workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    wb: openpyxl.Workbook = openpyxl.load_workbook(path, data_only=True)
     if page < 1 or page > len(wb.sheetnames):
         print(f'Page {page} out of range (1-{len(wb.sheetnames)})', file=sys.stderr)
         return None
     ws: openpyxl.worksheet.worksheet.Worksheet = wb.worksheets[page - 1]
+
+    # Build a map of (row, col) -> value for merged cell regions,
+    # so every cell in a merge gets the top-left cell's value
+    merge_fill: dict[tuple[int, int], str] = {}
+    for merge_range in ws.merged_cells.ranges:
+        top_left_value: str = str(ws.cell(merge_range.min_row, merge_range.min_col).value or '')
+        for row_idx in range(merge_range.min_row, merge_range.max_row + 1):
+            for col_idx in range(merge_range.min_col, merge_range.max_col + 1):
+                merge_fill[(row_idx, col_idx)] = top_left_value
+
     rows: list[list[str]] = []
-    for row in ws.iter_rows(values_only=True):
-        rows.append([str(v) if v is not None else '' for v in row])
+    for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
+        cells: list[str] = []
+        for col_idx, v in enumerate(row, start=1):
+            if v is not None:
+                cells.append(str(v))
+            elif (row_idx, col_idx) in merge_fill:
+                cells.append(merge_fill[(row_idx, col_idx)])
+            else:
+                cells.append('')
+        rows.append(cells)
     wb.close()
     return rows
 
@@ -94,6 +116,65 @@ def _read_xml_spreadsheet_page(path: str, page: int) -> list[list[str]] | None:
             col_index += 1
         rows.append(cells)
     return rows
+
+
+def _read_pdf_contest_titles(pdf_page: object) -> list[str] | None:
+    '''Read contest title text and map each column to its contest.
+
+    Election PDFs often have one or more contest titles (e.g. "President
+    and Vice President", "Proposition 6") centered above their columns.
+    This function finds those titles in the header area and assigns each
+    table column to the nearest title by x-midpoint.
+
+    Returns a row of contest names aligned to the vertical line columns,
+    or None if no titles are found.
+    '''
+    import pdfplumber
+
+    chars: list[dict] = pdf_page.chars  # type: ignore[attr-defined]
+    lines: list[dict] = pdf_page.lines  # type: ignore[attr-defined]
+
+    # Find vertical line x positions to define column boundaries
+    v_xs: list[int] = sorted(set(
+        round(l['x0']) for l in lines if abs(l['x0'] - l['x1']) < 1
+    ))
+    if not v_xs or len(v_xs) < 2:
+        return None
+
+    words: list[dict] = pdf_page.extract_words(  # type: ignore[attr-defined]
+        keep_blank_chars=True, y_tolerance=1,
+    )
+    # Title words sit between the page header (county/date) and the
+    # column headers — typically in the y range 55-100
+    title_words: list[dict] = [w for w in words if 55 < w['top'] < 100]
+    if not title_words:
+        return None
+
+    # Filter to title-like words: the topmost group of words in that range
+    # (contest names appear at the same y, "VOTE FOR 1" and "Precincts
+    # Reporting" appear on lower lines)
+    min_top: float = min(w['top'] for w in title_words)
+    titles: list[dict] = sorted(
+        [w for w in title_words if w['top'] < min_top + 5],
+        key=lambda w: w['x0'],
+    )
+    if not titles:
+        return None
+
+    # Title midpoints
+    title_mids: list[tuple[float, str]] = [
+        ((t['x0'] + t['x1']) / 2, t['text'].strip()) for t in titles
+    ]
+
+    # Assign each column to the nearest title by x-midpoint
+    num_cols: int = len(v_xs) - 1
+    contest_row: list[str] = []
+    for ci in range(num_cols):
+        col_mid: float = (v_xs[ci] + v_xs[ci + 1]) / 2
+        best_title: str = min(title_mids, key=lambda tm: abs(col_mid - tm[0]))[1]
+        contest_row.append(best_title)
+
+    return contest_row
 
 
 def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
@@ -198,6 +279,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
 
     # Reconstruct headers from vertical text if present
     vertical_headers: list[str] | None = _read_pdf_vertical_headers(pdf_page)
+    contest_titles: list[str] | None = _read_pdf_contest_titles(pdf_page)
 
     rows: list[list[str]] = []
     for row in table:
@@ -219,15 +301,43 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
                 data_start = i
                 break
 
-        # Pad header to match data row width
+        # Pad headers to match data row width
         data_width: int = len(rows[data_start]) if data_start < len(rows) else len(vertical_headers)
         while len(vertical_headers) < data_width:
             vertical_headers.append('')
 
-        rows = [vertical_headers[:data_width]] + rows[data_start:]
+        header_rows: list[list[str]] = []
+
+        # Add contest title row if present
+        if contest_titles:
+            while len(contest_titles) < data_width:
+                contest_titles.append('')
+            header_rows.append(contest_titles[:data_width])
+
+        header_rows.append(vertical_headers[:data_width])
+        rows = header_rows + rows[data_start:]
 
     pdf.close()
     return rows
+
+
+def page_table(path: str, page: int) -> list[list[str]] | None:
+    '''Read tabular data from a page of a source file.
+
+    Routes to the appropriate reader based on file extension.
+    Returns rows as lists of strings, or None on failure.
+    '''
+    ext: str = os.path.splitext(path)[1].lower()
+
+    if ext == '.xlsx':
+        return read_xlsx_page(path, page)
+    elif ext == '.xls':
+        return read_xls_page(path, page)
+    elif ext == '.pdf':
+        return read_pdf_page(path, page)
+    else:
+        print(f'Unsupported file type: {ext}', file=sys.stderr)
+        return None
 
 
 def main() -> None:
@@ -238,19 +348,7 @@ def main() -> None:
     parser.add_argument('page', type=int, help='Page number (1-based)')
     args: argparse.Namespace = parser.parse_args()
 
-    ext: str = os.path.splitext(args.filename)[1].lower()
-
-    rows: list[list[str]] | None
-
-    if ext == '.xlsx':
-        rows = read_xlsx_page(args.filename, args.page)
-    elif ext == '.xls':
-        rows = read_xls_page(args.filename, args.page)
-    elif ext == '.pdf':
-        rows = read_pdf_page(args.filename, args.page)
-    else:
-        print(f'Unsupported file type: {ext}', file=sys.stderr)
-        sys.exit(1)
+    rows: list[list[str]] | None = page_table(args.filename, args.page)
 
     if rows is None:
         sys.exit(1)
