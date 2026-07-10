@@ -8,11 +8,13 @@ For PDF files, page = PDF page number.
 from __future__ import annotations
 
 import argparse
+import bisect
 import csv
 import io
 import os
 import sys
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 
 def read_xlsx_page(path: str, page: int) -> list[list[str]] | None:
@@ -94,12 +96,81 @@ def _read_xml_spreadsheet_page(path: str, page: int) -> list[list[str]] | None:
     return rows
 
 
+def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
+    '''Reconstruct column headers from rotated (non-upright) PDF text.
+
+    Many election PDFs use vertical text for column headers. This function
+    detects non-upright characters, groups them by which vertical-line
+    column they fall in, reads each group top-to-bottom, and assembles
+    the full header label for each column.
+
+    Returns a header row aligned to the vertical line columns, or None
+    if no rotated text is found.
+    '''
+    chars: list[dict] = pdf_page.chars  # type: ignore[attr-defined]
+    lines: list[dict] = pdf_page.lines  # type: ignore[attr-defined]
+
+    # Find vertical line x positions to define column boundaries
+    v_xs: list[int] = sorted(set(
+        round(l['x0']) for l in lines if abs(l['x0'] - l['x1']) < 1
+    ))
+    if not v_xs:
+        return None
+
+    # Find the boundary between header and data: use the lowest
+    # horizontal line that's in the top half of the page
+    h_lines: list[dict] = [l for l in lines if abs(l['top'] - l['bottom']) < 1]
+    page_height: float = pdf_page.height  # type: ignore[attr-defined]
+    header_bottom: float = max(
+        (l['top'] for l in h_lines if l['top'] < page_height / 2),
+        default=page_height / 4,
+    )
+
+    # Get non-upright (rotated) characters in the header area
+    rotated_chars: list[dict] = [
+        c for c in chars
+        if c['top'] < header_bottom and not c.get('upright')
+    ]
+    if not rotated_chars:
+        return None
+
+    # Group rotated chars by which vertical-line column they fall in
+    col_chars: dict[int, list[dict]] = defaultdict(list)
+    for c in rotated_chars:
+        col_idx: int = bisect.bisect_right(v_xs, c['x0']) - 1
+        col_chars[col_idx].append(c)
+
+    # Build header row with one entry per column
+    num_cols: int = len(v_xs) - 1
+    headers: list[str] = [''] * num_cols
+    for col_idx, col_group in col_chars.items():
+        if col_idx < 0 or col_idx >= num_cols:
+            continue
+        # Sub-group by x0 position (each x0 is one line of the header)
+        sub_groups: dict[int, list[dict]] = defaultdict(list)
+        for c in col_group:
+            sub_groups[round(c['x0'])].append(c)
+        # Read each sub-group top-to-bottom, then join in reverse x0 order
+        # (rightmost x0 = topmost line of the rotated header)
+        text_lines: list[str] = []
+        for x0 in sorted(sub_groups.keys(), reverse=True):
+            line_text: str = ''.join(
+                c['text'] for c in sorted(sub_groups[x0], key=lambda c: c['top'])
+            ).strip()
+            if line_text:
+                text_lines.append(line_text)
+        headers[col_idx] = ' '.join(text_lines)
+
+    return headers
+
+
 def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
     '''Read a table from a PDF page, return rows as lists of strings.
 
     Uses text-based horizontal line detection so that each text line
     becomes its own row, rather than merging everything between the
-    sparse horizontal rules into a single cell.
+    sparse horizontal rules into a single cell. Reconstructs column
+    headers from rotated (vertical) text when present.
     '''
     import pdfplumber
 
@@ -124,12 +195,37 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
 
     # Use the largest table on the page
     table: list[list[str | None]] = max(tables, key=len)
+
+    # Reconstruct headers from vertical text if present
+    vertical_headers: list[str] | None = _read_pdf_vertical_headers(pdf_page)
+
     rows: list[list[str]] = []
     for row in table:
         cells: list[str] = [str(v) if v is not None else '' for v in row]
         # Skip blank rows
         if any(c.strip() for c in cells):
             rows.append(cells)
+
+    # Replace garbled header rows with reconstructed vertical headers
+    if vertical_headers and rows:
+        # Find where data rows start: first row where both the first and
+        # second cells are non-empty and contain no newlines (garbled header
+        # rows have empty cells, newline fragments, or span columns)
+        data_start: int = 0
+        for i, row in enumerate(rows):
+            c0: str = row[0].strip() if row else ''
+            c1: str = row[1].strip() if len(row) > 1 else ''
+            if c0 and '\n' not in c0 and c1 and '\n' not in c1:
+                data_start = i
+                break
+
+        # Pad header to match data row width
+        data_width: int = len(rows[data_start]) if data_start < len(rows) else len(vertical_headers)
+        while len(vertical_headers) < data_width:
+            vertical_headers.append('')
+
+        rows = [vertical_headers[:data_width]] + rows[data_start:]
+
     pdf.close()
     return rows
 
