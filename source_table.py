@@ -385,6 +385,38 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
     return rows
 
 
+def page_count(path: str) -> int:
+    '''Return the number of pages (PDF) or sheets (XLSX/XLS) in a file.'''
+    ext: str = os.path.splitext(path)[1].lower()
+
+    if ext == '.xlsx':
+        import zipfile
+        ns_s: str = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+        with zipfile.ZipFile(path) as z:
+            wb_root: ET.Element = ET.fromstring(z.read('xl/workbook.xml'))
+            return len(wb_root.findall(f'.//{{{ns_s}}}sheet'))
+
+    if ext == '.xls':
+        with open(path, 'rb') as f:
+            head: bytes = f.read(20)
+        if head.lstrip(b'\xef\xbb\xbf').startswith(b'<?xml'):
+            ns: dict[str, str] = {'s': 'urn:schemas-microsoft-com:office:spreadsheet'}
+            tree: ET.ElementTree = ET.parse(path)
+            return len(tree.getroot().findall('.//s:Worksheet', ns))
+        import xlrd
+        wb: xlrd.Book = xlrd.open_workbook(path)
+        return wb.nsheets
+
+    if ext == '.pdf':
+        import pdfplumber
+        pdf: pdfplumber.PDF = pdfplumber.open(path)
+        count: int = len(pdf.pages)
+        pdf.close()
+        return count
+
+    return 0
+
+
 def page_table(path: str, page: int) -> list[list[str]] | None:
     '''Read tabular data from a page of a source file.
 
@@ -692,6 +724,31 @@ class TestPageTableRouting(unittest.TestCase):
         path = _fixture('alameda-sov-pdf-p1-p101.pdf')
         rows = page_table(path, 99999)
         self.assertIsNone(rows)
+
+
+class TestPageCount(unittest.TestCase):
+    '''Test page_count for all fixture file types.'''
+
+    def test_xlsx_sf(self):
+        self.assertEqual(page_count(_fixture('sf-xlsx-sheet2.xlsx')), 1)
+
+    def test_xlsx_alameda_district(self):
+        self.assertEqual(page_count(_fixture('alameda-district-xlsx-sheet5.xlsx')), 1)
+
+    def test_xls_santa_clara(self):
+        self.assertEqual(page_count(_fixture('santa-clara-xls-sheets2-3.xls')), 2)
+
+    def test_pdf_glenn(self):
+        self.assertEqual(page_count(_fixture('glenn-pdf-p15.pdf')), 1)
+
+    def test_pdf_amador(self):
+        self.assertEqual(page_count(_fixture('amador-pdf-p5-p7-p10-p30.pdf')), 4)
+
+    def test_pdf_alameda_sov(self):
+        self.assertEqual(page_count(_fixture('alameda-sov-pdf-p1-p101.pdf')), 2)
+
+    def test_unsupported_extension(self):
+        self.assertEqual(page_count('test.doc'), 0)
 
 
 if __name__ == '__main__':
