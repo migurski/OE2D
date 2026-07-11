@@ -15,6 +15,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
+from functools import lru_cache
 
 
 def _xlsx_sheet_info(path: str, page: int) -> tuple[int, bool]:
@@ -385,6 +386,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
     return rows
 
 
+@lru_cache(maxsize=None)
 def page_count(path: str) -> int:
     '''Return the number of pages (PDF) or sheets (XLSX/XLS) in a file.'''
     ext: str = os.path.splitext(path)[1].lower()
@@ -417,6 +419,7 @@ def page_count(path: str) -> int:
     return 0
 
 
+@lru_cache(maxsize=None)
 def page_table(path: str, page: int) -> list[list[str]] | None:
     '''Read tabular data from a page of a source file.
 
