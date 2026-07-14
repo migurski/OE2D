@@ -10,15 +10,38 @@ from __future__ import annotations
 import argparse
 import bisect
 import csv
+import dataclasses
 import os
 import sys
+import typing
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from functools import lru_cache
 
 import openpyxl
 import pdfplumber
+import pydantic
 import xlrd
+
+
+@dataclasses.dataclass
+class BBox:
+    '''Bounding box compatible with pdfplumber crop() and within_bbox().'''
+    x0: float = pydantic.Field(description='Left edge x coordinate')
+    top: float = pydantic.Field(description='Top edge y coordinate')
+    x1: float = pydantic.Field(description='Right edge x coordinate')
+    bottom: float = pydantic.Field(description='Bottom edge y coordinate')
+
+
+@dataclasses.dataclass
+class PageTable:
+    '''A table found on a PDF page with its bounding box and content preview.'''
+    index: int = pydantic.Field(description='Zero-based index of this table on the page')
+    bbox: BBox = pydantic.Field(description='Bounding box region of the table on the page')
+    row_count: int = pydantic.Field(description='Number of rows in the table')
+    col_count: int = pydantic.Field(description='Number of columns in the table')
+    preview: list[list[str | None]] = pydantic.Field(description='First 3 rows of table content as preview')
+    strategy: str = pydantic.Field(description='Extraction strategy that found this table: "lines", "lines_strict", or "text"')
 
 
 @lru_cache(maxsize=None)
@@ -447,6 +470,94 @@ def page_table(path: str, page: int) -> list[list[str]] | None:
         return None
 
 
+def page_tables(
+    path: str,
+    page: int,
+    strategy: typing.Literal['lines', 'lines_strict', 'text'] = 'lines',
+) -> list[PageTable] | None:
+    '''Find tables on a PDF page using the given extraction strategy.
+
+    Returns a list of PageTable instances with bounding boxes and content
+    previews, or None if the file is not a PDF, the page is out of range,
+    or no tables are found.
+
+    The strategy parameter sets both vertical and horizontal extraction:
+    "lines" uses ruled lines to find table boundaries, "lines_strict"
+    uses only explicit line intersections, and "text" uses text alignment
+    to infer column structure.
+    '''
+    ext: str = os.path.splitext(path)[1].lower()
+    if ext != '.pdf':
+        return None
+
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return None
+
+    pdf_page: pdfplumber.page.Page = pdf.pages[page - 1]
+
+    table_settings: dict[str, str] = {
+        'vertical_strategy': strategy,
+        'horizontal_strategy': strategy,
+    }
+
+    tables = pdf_page.find_tables(table_settings)
+    if not tables:
+        return None
+
+    result: list[PageTable] = []
+    for i, table in enumerate(tables):
+        rows = table.extract()
+        result.append(PageTable(
+            index=i,
+            bbox=BBox(
+                x0=round(table.bbox[0], 1),
+                top=round(table.bbox[1], 1),
+                x1=round(table.bbox[2], 1),
+                bottom=round(table.bbox[3], 1),
+            ),
+            row_count=len(rows),
+            col_count=len(rows[0]) if rows else 0,
+            preview=rows[:3],
+            strategy=strategy,
+        ))
+
+    return result
+
+
+def page_words(path: str, page: int) -> list[dict] | None:
+    '''Extract words with positions from a PDF page.
+
+    Returns a list of word dicts with keys: text, x0, x1, top, bottom,
+    upright. Useful for scanning page content and finding contest names
+    or candidate names without committing to a table extraction strategy.
+
+    Returns None if the file is not a PDF or the page is out of range.
+    '''
+    ext: str = os.path.splitext(path)[1].lower()
+    if ext != '.pdf':
+        return None
+
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return None
+
+    pdf_page: pdfplumber.page.Page = pdf.pages[page - 1]
+    words = pdf_page.extract_words(keep_blank_chars=True, extra_attrs=['upright'])
+
+    return [
+        {
+            'text': w['text'],
+            'x0': round(w['x0'], 1),
+            'x1': round(w['x1'], 1),
+            'top': round(w['top'], 1),
+            'bottom': round(w['bottom'], 1),
+            'upright': w['upright'],
+        }
+        for w in words
+    ]
+
+
 def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Read tabular data from a page of a source file.',
@@ -814,6 +925,91 @@ class TestPageCount(unittest.TestCase):
 
     def test_unsupported_extension(self):
         self.assertEqual(page_count('test.doc'), 0)
+
+
+class TestPageTables(unittest.TestCase):
+    '''Test page_tables with different strategies and fixtures.'''
+
+    def test_humboldt_lines_finds_multiple_tables(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        tables = page_tables(path, 1, 'lines')
+        self.assertIsNotNone(tables)
+        self.assertGreater(len(tables), 1)
+
+    def test_amador_lines_finds_one_table(self):
+        path = _fixture('amador-pdf-p5-p7-p10-p30.pdf')
+        tables = page_tables(path, 2, 'lines')
+        self.assertIsNotNone(tables)
+        self.assertEqual(len(tables), 1)
+
+    def test_bbox_is_bbox_instance(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        tables = page_tables(path, 1, 'lines')
+        self.assertIsNotNone(tables)
+        bbox = tables[0].bbox
+        self.assertIsInstance(bbox, BBox)
+        self.assertIsInstance(bbox.x0, float)
+        self.assertIsInstance(bbox.top, float)
+        self.assertIsInstance(bbox.x1, float)
+        self.assertIsInstance(bbox.bottom, float)
+
+    def test_preview_capped_at_three_rows(self):
+        path = _fixture('amador-pdf-p5-p7-p10-p30.pdf')
+        tables = page_tables(path, 2, 'lines')
+        self.assertIsNotNone(tables)
+        self.assertLessEqual(len(tables[0].preview), 3)
+
+    def test_strategy_recorded(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        tables = page_tables(path, 1, 'text')
+        self.assertIsNotNone(tables)
+        self.assertEqual(tables[0].strategy, 'text')
+
+    def test_non_pdf_returns_none(self):
+        path = _fixture('sf-xlsx-sheet2.xlsx')
+        self.assertIsNone(page_tables(path, 1, 'lines'))
+
+    def test_out_of_range_returns_none(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        self.assertIsNone(page_tables(path, 999, 'lines'))
+
+
+class TestPageWords(unittest.TestCase):
+    '''Test page_words for PDF fixtures.'''
+
+    def test_returns_word_dicts(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        words = page_words(path, 1)
+        self.assertIsNotNone(words)
+        self.assertGreater(len(words), 0)
+        self.assertIn('text', words[0])
+        self.assertIn('x0', words[0])
+        self.assertIn('top', words[0])
+        self.assertIn('bottom', words[0])
+        self.assertIn('upright', words[0])
+
+    def test_president_in_words(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        words = page_words(path, 1)
+        self.assertIsNotNone(words)
+        all_text = ' '.join(w['text'] for w in words)
+        self.assertIn('PRESIDENT', all_text)
+
+    def test_coordinates_are_rounded(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        words = page_words(path, 1)
+        self.assertIsNotNone(words)
+        for w in words[:10]:
+            self.assertEqual(w['x0'], round(w['x0'], 1))
+            self.assertEqual(w['top'], round(w['top'], 1))
+
+    def test_non_pdf_returns_none(self):
+        path = _fixture('sf-xlsx-sheet2.xlsx')
+        self.assertIsNone(page_words(path, 1))
+
+    def test_out_of_range_returns_none(self):
+        path = _fixture('humboldt-p1-p2.pdf')
+        self.assertIsNone(page_words(path, 999))
 
 
 if __name__ == '__main__':
