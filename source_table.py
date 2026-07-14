@@ -293,21 +293,72 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
         return None
 
     pdf_page: pdfplumber.page.Page = pdf.pages[page - 1]
+
+    # Check whether the page has vertical lines for column boundaries
+    page_lines: list[dict] = pdf_page.lines
+    has_vertical_lines: bool = any(
+        abs(l['x0'] - l['x1']) < 1 for l in page_lines
+    )
+
     table_settings: dict[str, object] = {
-        'vertical_strategy': 'lines',
         'horizontal_strategy': 'text',
         'snap_y_tolerance': 4,
         'snap_x_tolerance': 4,
         'join_y_tolerance': 4,
         'join_x_tolerance': 4,
     }
+
+    if has_vertical_lines:
+        table_settings['vertical_strategy'] = 'lines'
+    else:
+        # No vertical lines — derive column boundaries from horizontal
+        # line segment endpoints. Use the horizontal line y-position with
+        # the most segments (the most detailed column breakdown), then
+        # merge nearby x-values (within 5px) to collapse inter-group gaps.
+        h_lines: list[dict] = [
+            l for l in page_lines if abs(l['top'] - l['bottom']) < 1
+        ]
+        y_groups: dict[float, list[dict]] = defaultdict(list)
+        for l in h_lines:
+            y_groups[round(l['top'], 1)].append(l)
+        multi_seg_ys: list[float] = [
+            y for y, segs in y_groups.items() if len(segs) > 1
+        ]
+        if not multi_seg_ys:
+            print(f'No column structure found on page {page}', file=sys.stderr)
+            return None
+        best_y: float = max(multi_seg_ys, key=lambda y: len(y_groups[y]))
+        best_segs: list[dict] = y_groups[best_y]
+        x_points: list[float] = sorted(set(
+            round(l['x0'], 1) for l in best_segs
+        ) | set(
+            round(l['x1'], 1) for l in best_segs
+        ))
+        merged_xs: list[float] = []
+        for x in x_points:
+            if merged_xs and x - merged_xs[-1] < 5:
+                merged_xs[-1] = (merged_xs[-1] + x) / 2
+            else:
+                merged_xs.append(x)
+        table_settings['vertical_strategy'] = 'explicit'
+        table_settings['explicit_vertical_lines'] = merged_xs
+
     tables: list[list[list[str | None]]] = pdf_page.extract_tables(table_settings)
     if not tables:
         print(f'No tables found on page {page}', file=sys.stderr)
         return None
 
-    # Use the largest table on the page
-    table: list[list[str | None]] = max(tables, key=len)
+    # Find the most common column width — that's the data table width.
+    # Concatenate all tables with that width to capture stacked contests.
+    width_counts: dict[int, int] = defaultdict(int)
+    for t in tables:
+        if t:
+            width_counts[len(t[0])] += len(t)
+    data_width: int = max(width_counts, key=width_counts.get)
+    table: list[list[str | None]] = []
+    for t in tables:
+        if t and len(t[0]) == data_width:
+            table.extend(t)
 
     # Reconstruct headers from vertical text if present
     vertical_headers: list[str] | None = _read_pdf_vertical_headers(pdf_page)
@@ -666,6 +717,60 @@ class TestPdfGlenn(unittest.TestCase):
         self.assertIsNotNone(rows)
         all_text = ' '.join(' '.join(r) for r in rows[:3])
         self.assertIn('President', all_text)
+
+
+class TestPdfHumboldt(unittest.TestCase):
+    '''Humboldt County - Final Precinct Report - General 2024.pdf
+
+    No vertical lines — column boundaries derived from horizontal line
+    segment endpoints. Multiple stacked contests per page with multi-line
+    candidate names (e.g. "Donald J. Trump\\nand JD Vance").
+    Fixture: pages 1 and 2 extracted.
+    '''
+
+    def setUp(self):
+        self.path = _fixture('humboldt-p1-p2.pdf')
+
+    def test_page_1_has_all_three_contests(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows)
+        self.assertIn('PRESIDENT AND VICE PRESIDENT', all_text)
+        self.assertIn('U.S. SENATOR, FULL TERM', all_text)
+        self.assertIn('U.S. SENATOR, PARTIAL/UNEXPIRED', all_text)
+
+    def test_page_1_president_candidates(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows)
+        self.assertIn('Claudia De la Cruz', all_text)
+        self.assertIn('Kamala D. Harris', all_text)
+        self.assertIn('Donald J. Trump', all_text)
+
+    def test_page_1_data_aligned(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        trump_row = [r for r in rows if 'Donald J. Trump' in r[0]]
+        self.assertEqual(len(trump_row), 1)
+        self.assertEqual(trump_row[0][1], '204')
+        self.assertEqual(trump_row[0][-2], '1,155')
+
+    def test_page_1_summary_rows_intact(self):
+        rows = page_table(self.path, 1)
+        self.assertIsNotNone(rows)
+        cast_rows = [r for r in rows if r[0].startswith('Cast Votes')]
+        self.assertEqual(len(cast_rows), 3)
+
+    def test_page_2_has_three_contests(self):
+        rows = page_table(self.path, 2)
+        self.assertIsNotNone(rows)
+        all_text = ' '.join(' '.join(r) for r in rows)
+        self.assertIn('U.S. REPRESENTATIVE DISTRICT 2', all_text)
+        self.assertIn('STATE ASSEMBLY DISTRICT 2', all_text)
+        self.assertIn('HUMBOLDT COMMUNITY SERVICES DIS', all_text)
+
+    def test_page_count(self):
+        self.assertEqual(page_count(self.path), 2)
 
 
 class TestPageTableRouting(unittest.TestCase):
