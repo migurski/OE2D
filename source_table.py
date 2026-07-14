@@ -10,83 +10,59 @@ from __future__ import annotations
 import argparse
 import bisect
 import csv
-import io
 import os
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from functools import lru_cache
 
+import openpyxl
+import pdfplumber
+import xlrd
 
-def _xlsx_sheet_info(path: str, page: int) -> tuple[int, bool]:
-    '''Check an XLSX sheet's merge status without loading the full workbook.
 
-    Peeks directly into the ZIP archive to count sheets and check whether
-    the target sheet contains merged cells — much faster than a full
-    openpyxl load for large workbooks with many sheets.
+@lru_cache(maxsize=None)
+def _open_xlsx_workbook(path: str) -> 'openpyxl.Workbook':
+    '''Open and cache an XLSX workbook (non-read-only, to support merges).'''
+    return openpyxl.load_workbook(path, data_only=True, read_only=False)
 
-    Returns (num_sheets, has_merges).  If page is out of range,
-    has_merges is False.
-    '''
-    import zipfile
 
-    ns_r: str = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
-    ns_s: str = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+@lru_cache(maxsize=None)
+def _open_pdf(path: str) -> 'pdfplumber.PDF':
+    '''Open and cache a pdfplumber PDF.'''
+    return pdfplumber.open(path)
 
-    with zipfile.ZipFile(path) as z:
-        rels_root: ET.Element = ET.fromstring(z.read('xl/_rels/workbook.xml.rels'))
-        rid_to_file: dict[str, str] = {
-            r.get('Id'): r.get('Target') for r in rels_root
-        }
 
-        wb_root: ET.Element = ET.fromstring(z.read('xl/workbook.xml'))
-        sheets: list[ET.Element] = wb_root.findall(f'.//{{{ns_s}}}sheet')
-        num_sheets: int = len(sheets)
-
-        if page < 1 or page > num_sheets:
-            return num_sheets, False
-
-        rid: str = sheets[page - 1].get(f'{{{ns_r}}}id')
-        target: str = rid_to_file[rid].lstrip('/')
-        if not target.startswith('xl/'):
-            target = f'xl/{target}'
-
-        sheet_data: bytes = z.read(target)
-        return num_sheets, b'<mergeCells' in sheet_data
+@lru_cache(maxsize=None)
+def _open_xlrd_workbook(path: str) -> 'xlrd.Book':
+    '''Open and cache an xlrd workbook.'''
+    return xlrd.open_workbook(path)
 
 
 def read_xlsx_page(path: str, page: int) -> list[list[str]] | None:
     '''Read a sheet from an XLSX file, return rows as lists of strings.
 
     Expands merged cells so that a value spanning multiple columns is
-    repeated into each spanned column.  Uses read_only mode for sheets
-    without merged cells to avoid the cost of parsing every sheet in
-    a large workbook.
+    repeated into each spanned column.  Uses a cached workbook so that
+    reading multiple sheets doesn't re-parse the entire file.
     '''
-    import openpyxl
-
-    num_sheets: int
-    has_merges: bool
-    num_sheets, has_merges = _xlsx_sheet_info(path, page)
+    wb: openpyxl.Workbook = _open_xlsx_workbook(path)
+    num_sheets: int = len(wb.worksheets)
 
     if page < 1 or page > num_sheets:
         print(f'Page {page} out of range (1-{num_sheets})', file=sys.stderr)
         return None
 
-    wb: openpyxl.Workbook = openpyxl.load_workbook(
-        path, data_only=True, read_only=not has_merges,
-    )
     ws: openpyxl.worksheet.worksheet.Worksheet = wb.worksheets[page - 1]
 
     # Build a map of (row, col) -> value for merged cell regions,
     # so every cell in a merge gets the top-left cell's value
     merge_fill: dict[tuple[int, int], str] = {}
-    if has_merges:
-        for merge_range in ws.merged_cells.ranges:
-            top_left_value: str = str(ws.cell(merge_range.min_row, merge_range.min_col).value or '')
-            for row_idx in range(merge_range.min_row, merge_range.max_row + 1):
-                for col_idx in range(merge_range.min_col, merge_range.max_col + 1):
-                    merge_fill[(row_idx, col_idx)] = top_left_value
+    for merge_range in ws.merged_cells.ranges:
+        top_left_value: str = str(ws.cell(merge_range.min_row, merge_range.min_col).value or '')
+        for row_idx in range(merge_range.min_row, merge_range.max_row + 1):
+            for col_idx in range(merge_range.min_col, merge_range.max_col + 1):
+                merge_fill[(row_idx, col_idx)] = top_left_value
 
     rows: list[list[str]] = []
     for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
@@ -99,7 +75,6 @@ def read_xlsx_page(path: str, page: int) -> list[list[str]] | None:
             else:
                 cells.append('')
         rows.append(cells)
-    wb.close()
     return rows
 
 
@@ -119,9 +94,7 @@ def read_xls_page(path: str, page: int) -> list[list[str]] | None:
 
 def _read_xlrd_page(path: str, page: int) -> list[list[str]] | None:
     '''Read a sheet from a binary XLS file using xlrd.'''
-    import xlrd
-
-    wb: xlrd.Book = xlrd.open_workbook(path)
+    wb: xlrd.Book = _open_xlrd_workbook(path)
     if page < 1 or page > wb.nsheets:
         print(f'Page {page} out of range (1-{wb.nsheets})', file=sys.stderr)
         return None
@@ -177,8 +150,6 @@ def _read_pdf_contest_titles(pdf_page: object) -> list[list[str]] | None:
     Returns one row per line of title text, each with contest names
     aligned to the vertical line columns, or None if no titles are found.
     '''
-    import pdfplumber
-
     chars: list[dict] = pdf_page.chars  # type: ignore[attr-defined]
     lines: list[dict] = pdf_page.lines  # type: ignore[attr-defined]
 
@@ -316,12 +287,9 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
     sparse horizontal rules into a single cell. Reconstructs column
     headers from rotated (vertical) text when present.
     '''
-    import pdfplumber
-
-    pdf: pdfplumber.PDF = pdfplumber.open(path)
+    pdf: pdfplumber.PDF = _open_pdf(path)
     if page < 1 or page > len(pdf.pages):
         print(f'Page {page} out of range (1-{len(pdf.pages)})', file=sys.stderr)
-        pdf.close()
         return None
 
     pdf_page: pdfplumber.page.Page = pdf.pages[page - 1]
@@ -382,7 +350,6 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
         header_rows.append(vertical_headers[:data_width])
         rows = header_rows + rows[data_start:]
 
-    pdf.close()
     return rows
 
 
@@ -392,11 +359,7 @@ def page_count(path: str) -> int:
     ext: str = os.path.splitext(path)[1].lower()
 
     if ext == '.xlsx':
-        import zipfile
-        ns_s: str = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
-        with zipfile.ZipFile(path) as z:
-            wb_root: ET.Element = ET.fromstring(z.read('xl/workbook.xml'))
-            return len(wb_root.findall(f'.//{{{ns_s}}}sheet'))
+        return len(_open_xlsx_workbook(path).worksheets)
 
     if ext == '.xls':
         with open(path, 'rb') as f:
@@ -405,16 +368,10 @@ def page_count(path: str) -> int:
             ns: dict[str, str] = {'s': 'urn:schemas-microsoft-com:office:spreadsheet'}
             tree: ET.ElementTree = ET.parse(path)
             return len(tree.getroot().findall('.//s:Worksheet', ns))
-        import xlrd
-        wb: xlrd.Book = xlrd.open_workbook(path)
-        return wb.nsheets
+        return _open_xlrd_workbook(path).nsheets
 
     if ext == '.pdf':
-        import pdfplumber
-        pdf: pdfplumber.PDF = pdfplumber.open(path)
-        count: int = len(pdf.pages)
-        pdf.close()
-        return count
+        return len(_open_pdf(path).pages)
 
     return 0
 
