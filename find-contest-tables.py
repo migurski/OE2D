@@ -17,8 +17,8 @@ import source_table
 
 @dataclasses.dataclass
 class ContestTable:
-    contest_name: str = pydantic.Field(description='Contest name, e.g. "President", "U.S. Senate", "U.S. House District 12", "Proposition 6"')
-    district_number: str | None = pydantic.Field(description='District number for legislative races, or None')
+    contest_name: typing.Literal['President', 'U.S. Senate', 'U.S. House'] = pydantic.Field(description='Contest name')
+    district_number: str | None = pydantic.Field(description='District number (for legislative races)')
     page_number: int = pydantic.Field(description='One-based page number')
     bbox: source_table.BBox = pydantic.Field(description='Bounding box region containing this contest table, compatible with pdfplumber crop() and within_bbox()')
     strategy: str = pydantic.Field(description='Extraction strategy that found this table: "lines", "lines_strict", or "text"')
