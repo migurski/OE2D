@@ -8,15 +8,13 @@ compatible with pdfplumber crop() and within_bbox().
 '''
 from __future__ import annotations
 
-import dataclasses
 import os
 import typing
 import pydantic
 import source_table
 
 
-@dataclasses.dataclass
-class ContestTable:
+class ContestTable(pydantic.BaseModel):
     contest_name: typing.Literal['President', 'U.S. Senate', 'U.S. House'] = pydantic.Field(description='Contest name')
     district_number: str | None = pydantic.Field(description='District number (for legislative races)')
     page_number: int = pydantic.Field(description='One-based page number')

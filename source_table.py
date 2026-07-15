@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import bisect
 import csv
-import dataclasses
 import os
 import sys
 import typing
@@ -24,8 +23,7 @@ import pydantic
 import xlrd
 
 
-@dataclasses.dataclass
-class BBox:
+class BBox(pydantic.BaseModel):
     '''Bounding box compatible with pdfplumber crop() and within_bbox().'''
     x0: float = pydantic.Field(description='Left edge x coordinate')
     top: float = pydantic.Field(description='Top edge y coordinate')
@@ -33,8 +31,7 @@ class BBox:
     bottom: float = pydantic.Field(description='Bottom edge y coordinate')
 
 
-@dataclasses.dataclass
-class PageTable:
+class PageTable(pydantic.BaseModel):
     '''A table found on a PDF page with its bounding box and content preview.'''
     index: int = pydantic.Field(description='Zero-based index of this table on the page')
     bbox: BBox = pydantic.Field(description='Bounding box region of the table on the page')
