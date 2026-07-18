@@ -10,13 +10,16 @@ requires-python = ">=3.10"
 dependencies = [
     "pdfplumber",
     "openpyxl",
+    "pypdf",
     "xlrd==1.2.0",
+    "xlwt",
     "pydantic>=2",
     "dspy>=2.5",
 ]
 
 [project.scripts]
 oe2d-categorize-source = "oe2d.categorize:main"
+oe2d-make-fixture = "oe2d.fixture:main"
 
 # Reuse the existing top-level source_table.py without moving it, so the
 # pre-existing find-contest-*.py scripts keep importing it unchanged.
