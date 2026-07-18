@@ -24,37 +24,44 @@ import pydantic
 import source_table
 
 
-# Allowed label vocabularies — these define the routing taxonomy.
-CONTAINERS = (
+# Allowed label vocabularies — these Literal types define the routing
+# taxonomy. The tuples are derived from them so runtime membership checks and
+# the pydantic/DSPy field types can never drift apart.
+Container = typing.Literal[
     'vector_pdf', 'scanned_pdf', 'xlsx', 'xls_binary', 'xls_xml',
     'csv', 'txt', 'zip', 'unknown',
-)
-ORIENTATIONS = ('candidate_columns', 'candidate_rows', 'unknown')
-GRAINS = ('precinct', 'district', 'county', 'unknown')
-QUIRKS = (
+]
+Orientation = typing.Literal['candidate_columns', 'candidate_rows', 'unknown']
+Grain = typing.Literal['precinct', 'district', 'county', 'unknown']
+Quirk = typing.Literal[
     'rotated_headers', 'stacked_contests', 'side_by_side',
     'multi_sheet_stitch', 'bitmap_needs_ocr',
-)
+]
+
+CONTAINERS: tuple[str, ...] = typing.get_args(Container)
+ORIENTATIONS: tuple[str, ...] = typing.get_args(Orientation)
+GRAINS: tuple[str, ...] = typing.get_args(Grain)
+QUIRKS: tuple[str, ...] = typing.get_args(Quirk)
 
 # Containers whose first tabular page source_table can read directly.
-_TABULAR_CONTAINERS = ('vector_pdf', 'xlsx', 'xls_binary', 'xls_xml')
-_PAGED_CONTAINERS = ('vector_pdf', 'scanned_pdf', 'xlsx', 'xls_binary', 'xls_xml')
-_EXT_CONTAINERS = {'.xlsx': 'xlsx', '.csv': 'csv', '.txt': 'txt', '.zip': 'zip'}
+_TABULAR_CONTAINERS: tuple[str, ...] = ('vector_pdf', 'xlsx', 'xls_binary', 'xls_xml')
+_PAGED_CONTAINERS: tuple[str, ...] = ('vector_pdf', 'scanned_pdf', 'xlsx', 'xls_binary', 'xls_xml')
+_EXT_CONTAINERS: dict[str, Container] = {'.xlsx': 'xlsx', '.csv': 'csv', '.txt': 'txt', '.zip': 'zip'}
 
 
 class SourceCategory(pydantic.BaseModel):
     '''Categorization of a single source file for extractor routing.'''
     path: str
     file_name: str
-    container: str
+    container: Container
     page_count: int
-    orientation: str
-    grain: str
-    quirks: list[str]
+    orientation: Orientation
+    grain: Grain
+    quirks: list[Quirk]
     llm_used: bool
 
 
-def detect_container(path: str) -> str:
+def detect_container(path: str) -> Container:
     '''Sniff the container format from extension and file content.'''
     ext: str = os.path.splitext(path)[1].lower()
     if ext == '.pdf':
@@ -64,7 +71,7 @@ def detect_container(path: str) -> str:
     return _EXT_CONTAINERS.get(ext, 'unknown')
 
 
-def _detect_pdf_kind(path: str) -> str:
+def _detect_pdf_kind(path: str) -> Container:
     '''Distinguish a vector PDF (extractable text) from a scanned bitmap.'''
     pdf: pdfplumber.PDF = pdfplumber.open(path)
     try:
@@ -74,7 +81,7 @@ def _detect_pdf_kind(path: str) -> str:
     return 'vector_pdf' if char_total > 20 else 'scanned_pdf'
 
 
-def _detect_xls_kind(path: str) -> str:
+def _detect_xls_kind(path: str) -> Container:
     '''Distinguish a binary BIFF .xls from an XML SpreadsheetML .xls.'''
     with open(path, 'rb') as file:
         head: bytes = file.read(20)
@@ -96,7 +103,7 @@ def count_pages(path: str, container: str) -> int:
     return 1
 
 
-def grain_from_name(file_name: str) -> str:
+def grain_from_name(file_name: str) -> Grain:
     '''Guess geographic grain from cues in the file name.'''
     low: str = file_name.lower()
     if 'precinct' in low:
@@ -178,9 +185,9 @@ def run_llm(signals: dict) -> dict | None:
         container: str = dspy.InputField()
         page_count: int = dspy.InputField()
         content_preview: str = dspy.InputField(desc='first rows of the first tabular page')
-        orientation: typing.Literal['candidate_columns', 'candidate_rows', 'unknown'] = dspy.OutputField()
-        grain: typing.Literal['precinct', 'district', 'county', 'unknown'] = dspy.OutputField()
-        quirks: list[str] = dspy.OutputField(desc='subset of the allowed quirk labels')
+        orientation: Orientation = dspy.OutputField()
+        grain: Grain = dspy.OutputField()
+        quirks: list[Quirk] = dspy.OutputField(desc='subset of the allowed quirk labels')
 
     model: str = os.environ.get('OE2D_LM', 'bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0')
     try:
@@ -221,9 +228,9 @@ def categorize(path: str) -> dict:
 
     llm: dict | None = run_llm(signals) if _llm_enabled() else None
     if llm is not None:
-        orientation: str = llm['orientation']
-        grain: str = llm['grain'] if llm['grain'] != 'unknown' else name_grain
-        quirks: list[str] = list(llm['quirks'])
+        orientation: Orientation = llm['orientation']
+        grain: Grain = llm['grain'] if llm['grain'] != 'unknown' else name_grain
+        quirks: list[Quirk] = list(llm['quirks'])
     else:
         orientation = 'unknown'
         grain = name_grain
