@@ -20,6 +20,7 @@ dependencies = [
 [project.scripts]
 oe2d-categorize-source = "oe2d.categorize:main"
 oe2d-make-fixture = "oe2d.fixture:main"
+oe2d-label-categories = "oe2d.label:main"
 
 # Reuse the existing top-level source_table.py without moving it, so the
 # pre-existing find-contest-*.py scripts keep importing it unchanged.
