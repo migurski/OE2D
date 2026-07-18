@@ -25,6 +25,9 @@ _ORIENTATIONS = {'c': 'candidate_columns', 'r': 'candidate_rows', 'u': 'unknown'
 _GRAINS = {'p': 'precinct', 'd': 'district', 'c': 'county', 'u': 'unknown'}
 _READABLE = ('vector_pdf', 'xlsx', 'xls_binary', 'xls_xml', 'csv', 'txt')
 
+# Spreadsheets render badly in Quick Look; hand them to the default app instead.
+_APP_CONTAINERS = ('xlsx', 'xls_binary', 'xls_xml')
+
 
 def iter_targets(fixtures_dir: str) -> list[str]:
     '''List fixture files to label, skipping READMEs and hidden files.'''
@@ -82,22 +85,26 @@ def format_preview(path: str, container: str, rows: int = 15, cols: int = 14) ->
 class Previewer:
     '''Show each fixture in a rendered viewer, one window at a time.
 
-    Prefers macOS Quick Look (`qlmanage -p`) launched in the background so the
-    preview window stays up while you answer the prompts; the previous window
-    is dismissed before the next fixture. Falls back to the OS opener elsewhere.
+    PDFs use macOS Quick Look (`qlmanage -p`) in the background so the window
+    stays up while you answer and is dismissed before the next fixture.
+    Spreadsheets render badly in Quick Look, so they open in the default app
+    (`open`) instead. Non-Mac runs fall back to the text preview.
     '''
 
     def __init__(self) -> None:
         self.proc: subprocess.Popen | None = None
 
-    def show(self, path: str) -> bool:
-        '''Auto-preview via background Quick Look; True only if a window opened.
-
-        Restricted to macOS `qlmanage` so non-Mac runs fall back to the text
-        preview rather than a non-rendering opener.
-        '''
+    def show(self, path: str, container: str) -> bool:
+        '''Preview path; return whether a viewer was launched.'''
         self.close()
-        if sys.platform == 'darwin' and shutil.which('qlmanage'):
+        if sys.platform != 'darwin':
+            return False
+        if container in _APP_CONTAINERS:
+            if shutil.which('open'):
+                subprocess.run(['open', path], check=False)
+                return True
+            return False
+        if shutil.which('qlmanage'):
             self.proc = subprocess.Popen(
                 ['qlmanage', '-p', path],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -105,9 +112,9 @@ class Previewer:
             return True
         return False
 
-    def reopen(self, path: str) -> None:
-        '''Explicit open in response to `o`: Quick Look, else the OS opener.'''
-        if self.show(path):
+    def reopen(self, path: str, container: str) -> None:
+        '''Explicit open in response to `o`.'''
+        if self.show(path, container):
             return
         opener: str = 'open' if sys.platform == 'darwin' else 'xdg-open'
         if shutil.which(opener):
@@ -116,18 +123,18 @@ class Previewer:
             print(f'  (view manually: {path})')
 
     def close(self) -> None:
-        '''Dismiss the current preview window, if any.'''
+        '''Dismiss the current Quick Look window, if any.'''
         if self.proc and self.proc.poll() is None:
             self.proc.terminate()
         self.proc = None
 
 
-def _ask_orientation(path: str, previewer: Previewer) -> str | None:
+def _ask_orientation(path: str, container: str, previewer: Previewer) -> str | None:
     '''Prompt for orientation; None means skip, and 'QUIT' aborts the run.'''
     while True:
         reply: str = input('  candidate orientation [c=candidates in columns  r=candidates in rows  u=unknown | o=open s=skip q=quit]: ').strip().lower()
         if reply == 'o':
-            previewer.reopen(path)
+            previewer.reopen(path, container)
             continue
         if reply == 's':
             return None
@@ -170,8 +177,8 @@ def label_one(path: str, previewer: Previewer) -> dict | str | None:
 
     print(f'\n{os.path.basename(path)}')
     print(f'  container={container}  page_count={pages}  grain_hint={grain_hint}')
-    if previewer.show(path):
-        print('  (Quick Look preview opened — o to reopen)')
+    if previewer.show(path, container):
+        print('  (preview opened — o to reopen)')
     else:
         preview: str | None = format_preview(path, container)
         if preview:
@@ -181,7 +188,7 @@ def label_one(path: str, previewer: Previewer) -> dict | str | None:
         else:
             print('  (no preview available — o to open the file)')
 
-    orientation: str | None = _ask_orientation(path, previewer)
+    orientation: str | None = _ask_orientation(path, container, previewer)
     if orientation == 'QUIT':
         return 'QUIT'
     if orientation is None:
