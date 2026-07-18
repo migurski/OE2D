@@ -44,6 +44,12 @@ _XLS_MAX_SHEETNAME = 31
 # Scanned pages are large images; drop pages until a PDF fixture fits this.
 _PDF_MAX_BYTES = 3_000_000
 
+# Copy spreadsheets whole below this size so they preview natively; re-serializing
+# a workbook strips sharedStrings/activeTab and can leave Quick Look blank, and
+# these one-contest-per-sheet workbooks often lead with a table-of-contents sheet.
+_SPREADSHEET_MAX_BYTES = 2_000_000
+_SPREADSHEET_CONTAINERS = ('xlsx', 'xls_binary', 'xls_xml')
+
 
 def slugify(name: str) -> str:
     '''Turn a source basename into a safe fixture stem.'''
@@ -200,8 +206,13 @@ def _trim_local(local: str, out_path: str, container: str,
 
 
 def excerpt(source: str, out_dir: str, name: str | None = None,
-            pages: int = 4, sheets: int = 2, rows: int = 60, members: int = 3) -> str:
-    '''Write a trimmed fixture for a source, returning the output path.'''
+            pages: int = 4, sheets: int = 2, rows: int = 60, members: int = 3,
+            spreadsheet_max_bytes: int = _SPREADSHEET_MAX_BYTES) -> str:
+    '''Write a fixture for a source, returning the output path.
+
+    Small spreadsheets are copied whole so they preview natively; everything
+    else (and oversized spreadsheets) is trimmed per container.
+    '''
     os.makedirs(out_dir, exist_ok=True)
     with tempfile.TemporaryDirectory() as work_dir:
         local: str = fetch(source, work_dir)
@@ -209,7 +220,11 @@ def excerpt(source: str, out_dir: str, name: str | None = None,
         ext: str = os.path.splitext(local)[1].lower()
         stem: str = name or slugify(os.path.basename(local))
         out_path: str = os.path.join(out_dir, stem + ext)
-        _trim_local(local, out_path, container, pages, sheets, rows, members)
+        if (container in _SPREADSHEET_CONTAINERS
+                and os.path.getsize(local) <= spreadsheet_max_bytes):
+            shutil.copyfile(local, out_path)
+        else:
+            _trim_local(local, out_path, container, pages, sheets, rows, members)
         return out_path
 
 
@@ -223,7 +238,8 @@ def _summarize(out_path: str) -> dict:
 
 
 def _run_manifest(manifest: str, out_dir: str, limit: int | None,
-                  pages: int, sheets: int, rows: int, members: int) -> None:
+                  pages: int, sheets: int, rows: int, members: int,
+                  spreadsheet_max_bytes: int) -> None:
     with open(manifest, encoding='utf-8') as handle:
         records: list[dict] = list(csv.DictReader(handle, delimiter='\t'))
     if limit:
@@ -235,7 +251,8 @@ def _run_manifest(manifest: str, out_dir: str, limit: int | None,
             continue
         try:
             out_path: str = excerpt(source, out_dir, pages=pages, sheets=sheets,
-                                    rows=rows, members=members)
+                                    rows=rows, members=members,
+                                    spreadsheet_max_bytes=spreadsheet_max_bytes)
             summary: dict = _summarize(out_path)
             print(f'{summary["bytes"]:>9d}  {summary["container"]:11s}  {os.path.basename(out_path)}')
         except Exception as err:
@@ -254,12 +271,14 @@ def main() -> None:
     parser.add_argument('--sheets', type=int, default=2, help='Workbook sheets to keep')
     parser.add_argument('--rows', type=int, default=60, help='Rows per sheet / text lines')
     parser.add_argument('--zip-members', type=int, default=3, help='Zip members to keep')
+    parser.add_argument('--sheet-max-bytes', type=int, default=_SPREADSHEET_MAX_BYTES,
+                        help='Copy spreadsheets whole at or below this size')
     parser.add_argument('--limit', type=int, help='Manifest rows to process')
     args: argparse.Namespace = parser.parse_args()
 
     if args.manifest:
         _run_manifest(args.manifest, args.out, args.limit, args.pages, args.sheets,
-                      args.rows, args.zip_members)
+                      args.rows, args.zip_members, args.sheet_max_bytes)
         return
 
     if not args.source:
@@ -268,6 +287,7 @@ def main() -> None:
     out_path: str = excerpt(
         args.source, args.out, name=args.name,
         pages=args.pages, sheets=args.sheets, rows=args.rows, members=args.zip_members,
+        spreadsheet_max_bytes=args.sheet_max_bytes,
     )
     print(json.dumps(_summarize(out_path), indent=2))
 

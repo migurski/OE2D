@@ -10,10 +10,12 @@ Regenerate the whole set:
     oe2d-make-fixture --manifest oe2d/labels/seed_sources.tsv --out oe2d/tests/fixtures
 
 Trimming per container: PDFs keep the first few pages plus one from the middle
-(shedding pages if a scanned page pushes past ~3 MB); xlsx/xls rebuild the first
-sheets and rows; csv/txt keep the first lines; zips keep the first few members.
-A few scanned single pages stay large because one hi-res image cannot be split
-further.
+(shedding pages if a scanned page pushes past ~3 MB); spreadsheets under ~2 MB
+are copied whole so they preview natively (re-serializing a workbook strips
+sharedStrings/activeTab and can leave Quick Look blank), while larger xlsx/xls
+are trimmed to the first sheets and rows; csv/txt keep the first lines; zips
+keep the first few members. A few scanned single pages stay large because one
+hi-res image cannot be split further.
 
 These are the inputs to hand-label as the categorizer's per-stage gold set;
 they are distinct from the historic CA fixtures in the top-level `./fixtures`.
