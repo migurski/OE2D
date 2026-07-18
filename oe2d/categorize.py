@@ -33,9 +33,10 @@ Container = typing.Literal[
 ]
 Orientation = typing.Literal['candidate_columns', 'candidate_rows', 'unknown']
 Grain = typing.Literal['precinct', 'district', 'county', 'unknown']
+# OCR-needed is implied by the scanned_pdf container, so it is not a quirk.
 Quirk = typing.Literal[
     'rotated_headers', 'stacked_contests', 'side_by_side',
-    'multi_sheet_stitch', 'bitmap_needs_ocr',
+    'multi_sheet_stitch',
 ]
 
 CONTAINERS: tuple[str, ...] = typing.get_args(Container)
@@ -178,8 +179,8 @@ def run_llm(signals: dict) -> dict | None:
         grain: geographic grain of the data rows — 'precinct', 'district', or
         'county'.
         quirks: any of 'rotated_headers', 'stacked_contests', 'side_by_side',
-        'multi_sheet_stitch', 'bitmap_needs_ocr'. Return an empty list if none
-        apply.
+        'multi_sheet_stitch'. Return an empty list if none apply. OCR-needed is
+        not a quirk; it is implied by the scanned_pdf container.
         '''
         file_name: str = dspy.InputField()
         container: str = dspy.InputField()
@@ -235,9 +236,6 @@ def categorize(path: str) -> dict:
         orientation = 'unknown'
         grain = name_grain
         quirks = []
-
-    if container == 'scanned_pdf' and 'bitmap_needs_ocr' not in quirks:
-        quirks.append('bitmap_needs_ocr')
 
     category = SourceCategory(
         path=path,

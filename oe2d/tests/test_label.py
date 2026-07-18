@@ -17,7 +17,7 @@ def test_done_roundtrip(tmp_path):
     out = str(tmp_path / 'category.jsonl')
     record = {'path': 'x.pdf', 'container': 'scanned_pdf',
               'orientation': 'candidate_rows', 'grain': 'precinct',
-              'quirks': ['bitmap_needs_ocr']}
+              'quirks': ['rotated_headers']}
     label.append_record(out, record)
     label.append_record(out, {**record, 'path': 'y.xlsx'})
     done = label.load_done(out)
