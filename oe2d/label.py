@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 
@@ -78,21 +79,55 @@ def format_preview(path: str, container: str, rows: int = 15, cols: int = 14) ->
     )
 
 
-def open_file(path: str) -> None:
-    '''Open a fixture in the OS default viewer.'''
-    opener: str = 'open' if sys.platform == 'darwin' else 'xdg-open'
-    try:
-        subprocess.run([opener, path], check=False)
-    except FileNotFoundError:
-        print(f'  (cannot open; view manually: {path})')
+class Previewer:
+    '''Show each fixture in a rendered viewer, one window at a time.
+
+    Prefers macOS Quick Look (`qlmanage -p`) launched in the background so the
+    preview window stays up while you answer the prompts; the previous window
+    is dismissed before the next fixture. Falls back to the OS opener elsewhere.
+    '''
+
+    def __init__(self) -> None:
+        self.proc: subprocess.Popen | None = None
+
+    def show(self, path: str) -> bool:
+        '''Auto-preview via background Quick Look; True only if a window opened.
+
+        Restricted to macOS `qlmanage` so non-Mac runs fall back to the text
+        preview rather than a non-rendering opener.
+        '''
+        self.close()
+        if sys.platform == 'darwin' and shutil.which('qlmanage'):
+            self.proc = subprocess.Popen(
+                ['qlmanage', '-p', path],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            return True
+        return False
+
+    def reopen(self, path: str) -> None:
+        '''Explicit open in response to `o`: Quick Look, else the OS opener.'''
+        if self.show(path):
+            return
+        opener: str = 'open' if sys.platform == 'darwin' else 'xdg-open'
+        if shutil.which(opener):
+            subprocess.run([opener, path], check=False)
+        else:
+            print(f'  (view manually: {path})')
+
+    def close(self) -> None:
+        '''Dismiss the current preview window, if any.'''
+        if self.proc and self.proc.poll() is None:
+            self.proc.terminate()
+        self.proc = None
 
 
-def _ask_orientation(path: str) -> str | None:
+def _ask_orientation(path: str, previewer: Previewer) -> str | None:
     '''Prompt for orientation; None means skip, and 'QUIT' aborts the run.'''
     while True:
         reply: str = input('  orientation [c=columns r=rows u=unknown | o=open s=skip q=quit]: ').strip().lower()
         if reply == 'o':
-            open_file(path)
+            previewer.reopen(path)
             continue
         if reply == 's':
             return None
@@ -127,7 +162,7 @@ def _ask_container(container: str) -> str:
     return reply or container
 
 
-def label_one(path: str) -> dict | str | None:
+def label_one(path: str, previewer: Previewer) -> dict | str | None:
     '''Interactively label one fixture. Returns a record, None (skip), or 'QUIT'.'''
     container: str = categorize.detect_container(path)
     pages: int = categorize.count_pages(path, container)
@@ -135,15 +170,18 @@ def label_one(path: str) -> dict | str | None:
 
     print(f'\n{os.path.basename(path)}')
     print(f'  container={container}  page_count={pages}  grain_hint={grain_hint}')
-    preview: str | None = format_preview(path, container)
-    if preview:
-        print('  --- preview ---')
-        for line in preview.splitlines():
-            print('  ' + line)
+    if previewer.show(path):
+        print('  (Quick Look preview opened — o to reopen)')
     else:
-        print('  (no text preview — press o to open the file)')
+        preview: str | None = format_preview(path, container)
+        if preview:
+            print('  --- preview ---')
+            for line in preview.splitlines():
+                print('  ' + line)
+        else:
+            print('  (no preview available — o to open the file)')
 
-    orientation: str | None = _ask_orientation(path)
+    orientation: str | None = _ask_orientation(path, previewer)
     if orientation == 'QUIT':
         return 'QUIT'
     if orientation is None:
@@ -176,17 +214,21 @@ def main() -> None:
     pending: list[str] = [t for t in targets if t not in done]
 
     print(f'{len(targets)} fixtures, {len(done)} already labeled, {len(pending)} to go.')
-    for index, path in enumerate(pending, 1):
-        print(f'\n[{index}/{len(pending)}]', end='')
-        outcome: dict | str | None = label_one(path)
-        if outcome == 'QUIT':
-            print('\nSaved progress. Re-run to continue.')
-            return
-        if outcome is None:
-            print('  skipped.')
-            continue
-        append_record(args.out, outcome)
-    print('\nDone.')
+    previewer: Previewer = Previewer()
+    try:
+        for index, path in enumerate(pending, 1):
+            print(f'\n[{index}/{len(pending)}]', end='')
+            outcome: dict | str | None = label_one(path, previewer)
+            if outcome == 'QUIT':
+                print('\nSaved progress. Re-run to continue.')
+                return
+            if outcome is None:
+                print('  skipped.')
+                continue
+            append_record(args.out, outcome)
+        print('\nDone.')
+    finally:
+        previewer.close()
 
 
 if __name__ == '__main__':
