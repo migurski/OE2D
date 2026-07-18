@@ -1,0 +1,161 @@
+repo	file	container_hint	grain_hint	notes
+openelections-sources-mi	2024 Berrien County, MI county-level results.pdf	pdf?	county	vendor-normalized
+openelections-sources-mi	2024 Cass County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	2024 Eaton County, MI precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-mi	2024 Genesse County, MI precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-mi	2024 Grand Traverse County, MI precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-mi	2024 Ionia County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	2024 Lake County, MI precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-mi	2024 Lapeer County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	2024 Livingston County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	2024 Oakland County, MI precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-mi	2024 Oscoda County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	2024 Ottawa County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	2024 Van Buren County, MI precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-mi	2024 Wexford County, MI precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-mi	Alcona MI RESULTS-SPREADSHEET-FINAL-November-2024.pdf	pdf?	?	county-original
+openelections-sources-mi	Alger MI November 5, 2024 Statement of Votes Cast (official).pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Allegan MI County Official Statement of Votes.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Allegan MI Official Federal State and Judicial Votes.pdf	pdf?	?	county-original
+openelections-sources-mi	Alllegan MI Official County Races.pdf	pdf?	?	county-original
+openelections-sources-mi	Alpena MI 2024 November General Results.pdf	pdf?	?	county-original
+openelections-sources-mi	Antrim MI SOVC Official Election Results.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Arenac MI Official 2024 Nov Gen Elec Cards Cast Report.pdf	pdf?	?	county-original
+openelections-sources-mi	Baraga MI OFFICIAL-General-Election-11.05.2024-Statement-Of-Votes-Cast.pdf	pdf?	?	county-original
+openelections-sources-mi	Barry MI SOVC OFFICIAL RESULTS.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Bay MI Precinct Official.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Benzie 11.5.2024 Results.pdf	pdf?	?	county-original
+openelections-sources-mi	Benzie Nov 5 2024 Statement of Votes.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Branch MI Results-per-Precinct-2.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Calhoun MI 2024 SOVFULL.PDF	pdf?	?	county-original
+openelections-sources-mi	Charlevoix MI Statement of Votes Cast Nov 24.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Cheboygan MI Statement-Of-Votes-Cast-Report-Cheboygan-County.pdf	pdf?	?	county-original
+openelections-sources-mi	Chippewa MI OFFICIAL RESULTS STATEMENT OF CAST VOTES.pdf	pdf?	?	county-original
+openelections-sources-mi	Clinton MI Official Precinct Results.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Crawford MI StatementOfVotesCastRPT-11.5-OFFICAL-1.docx	docx	?	county-original
+openelections-sources-mi	Dickinson MI 11-2024 Election 1-96.pdf	pdf?	?	county-original
+openelections-sources-mi	Emmet MI 24Nov-official-precinct.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Genesee MI Official Canvass Report-11-19-2024 12-54-51 PM.pdf	pdf?	?	canvass,county-original
+openelections-sources-mi	Gladwin MI Statement-Of-Votes-Cast.pdf	pdf?	?	county-original
+openelections-sources-mi	Gogebic MI Official Statement of Votes Cast with Certification 11.5.2024.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Gogebic MI Official Statement of Votes Cast with Certification 11.5.2024.xlsx	xlsx	?	sovc,county-original
+openelections-sources-mi	Hillsdale MI Official_Precinct_Results-11-13-2024_01-52-23_PM.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Houghton MI 11.5.24 SOVC RESULTS.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Huron MI Official Results Per Precinct.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Ingham MI OFFICIAL November2024StatementofVotesCastRPT.pdf	pdf?	?	county-original
+openelections-sources-mi	Iron MI StatementOfVotesCastRPT-1.pdf	pdf?	?	county-original
+openelections-sources-mi	Jackson MI Precinct Results.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Kalkaska County Official Statement of Votes Cast -2nd copy  with Judicial.pdf	pdf?	?	sovc,multi-part,county-original
+openelections-sources-mi	Kalkaska County Official Statement of Votes Cast -2nd copy  with Judicial.xlsx	xlsx	?	sovc,multi-part,county-original
+openelections-sources-mi	Kalkaska Election Reports 11-5-2024 #1.pdf	pdf?	?	multi-part,county-original
+openelections-sources-mi	Kalkaska Election Reports 11-5-2024 #1.xlsx	xlsx	?	multi-part,county-original
+openelections-sources-mi	Kalkaska Election Reports 11-5-2024 #2.xlsx	xlsx	?	multi-part,county-original
+openelections-sources-mi	Keweenaw MI Statement_Votes_Cast_November_5_2024.pdf	pdf?	?	county-original
+openelections-sources-mi	Leelanau MI official_statement_of_votes_cast_report_general_election_11_5.pdf	pdf?	?	county-original
+openelections-sources-mi	Lenawee MI OFFICIAL_StatementOfVotesCastRPT.pdf	pdf?	?	county-original
+openelections-sources-mi	Lenawee MI OFFICIAL_StatementOfVotesCastRPT.xlsx	xlsx	?	county-original
+openelections-sources-mi	Luce MI november 2024 Official Results.pdf	pdf?	?	county-original
+openelections-sources-mi	Mackinac MI Statement-of-Votes-Cast-Closed-Primary-Nov-11-2024.pdf	pdf?	?	primary,county-original
+openelections-sources-mi	Manistee MI StatementOfVotesCastRPT2.pdf	pdf?	?	county-original
+openelections-sources-mi	Marquette MI StatementOfVotesCastNov2024.pdf	pdf?	?	county-original
+openelections-sources-mi	Mason MI Precinct Results.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Mecosta MI Nov 2024 Statement of Votes Cast Official.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Mecosta MI Nov 2024 Statement of Votes Cast Official.xlsx	xlsx	?	sovc,county-original
+openelections-sources-mi	Menominee MI statementofvotescastrpt_11.5.24.pdf	pdf?	?	county-original
+openelections-sources-mi	Missaukee MI Final Official November General 2024 Spreadsheet.pdf	pdf?	?	county-original
+openelections-sources-mi	Montcalm MI County Canvass.pdf	pdf?	?	canvass,county-original
+openelections-sources-mi	Montcalm MI County Canvass.xlsx	xlsx	?	canvass,county-original
+openelections-sources-mi	Montcalm MI State Canvass.xlsx	xlsx	?	canvass,county-original
+openelections-sources-mi	Montmorency MI canvass_official_vote_totals_november_2024.pdf	pdf?	?	canvass,county-original
+openelections-sources-mi	Montmorency MI canvass_official_vote_totals_november_2024.xlsx	xlsx	?	canvass,county-original
+openelections-sources-mi	Muskegon MI Precinct Results-11-15-2024 01-02-42 PM_202411151411042595.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Newaygo MI 2024 general.xlsx	xlsx	?	county-original
+openelections-sources-mi	Oceana MI 11-18-2024-Official-StatementOfVotesCastRPT.pdf	pdf?	?	county-original
+openelections-sources-mi	Ogemaw MI Election_Results_110524.pdf	pdf?	?	county-original
+openelections-sources-mi	Ontonagon MI November-5-2024-General-Election-Statement-of-Votes.pdf	pdf?	?	county-original
+openelections-sources-mi	Otsego MI Official Statement of Votes Cast part 1, precinct by precinct.pdf	pdf?	precinct	sovc,multi-part,county-original
+openelections-sources-mi	Otsego MI Official Statement of Votes Cast part 1, precinct by precinct.xlsx	xlsx	precinct	sovc,multi-part,county-original
+openelections-sources-mi	Otsego MI Official Statement of Votes Cast part 2, precinct by precinct.xlsx	xlsx	precinct	sovc,multi-part,county-original
+openelections-sources-mi	Ottawa MI precinctFile-218.pdf	pdf?	precinct	county-original
+openelections-sources-mi	Presque Isle MI 2024 - November Official Totals.pdf	pdf?	?	county-original
+openelections-sources-mi	Sanilac MI StatementOfVotesCast- SANILAC COUNTY.pdf	pdf?	?	county-original
+openelections-sources-mi	Schoolcraft MI Nov 2024 Precinct by Precinct Results.pdf	pdf?	precinct	county-original
+openelections-sources-mi	St. Clair MI November 2024 Statement of Votes Summary.pdf	pdf?	?	summary-report,sovc,county-original
+openelections-sources-mi	StatementOfVotesCast- SANILAC COUNTY.pdf	pdf?	?	county-original
+openelections-sources-mi	Tuscola MI Statement of Votes - All - Combined.pdf	pdf?	?	sovc,county-original
+openelections-sources-mi	Wayne MI partisan_offices.pdf	pdf?	?	county-original
+openelections-sources-pa	2024 Adams County, PA Precinct-Summary-General-2024.pdf	pdf?	precinct	summary-report,vendor-normalized
+openelections-sources-pa	2024 Allegheny County, PA precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-pa	2024 Armstrong County, PA precinct-level results.zip	zip	precinct	vendor-normalized
+openelections-sources-pa	2024 Armstrong PA general.pdf	pdf?	?	vendor-normalized
+openelections-sources-pa	2024 Beaver County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Berks County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Blair County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Bucks County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Butler County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Cambria County, PA precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-pa	2024 Centre County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Chester County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Chester County, PA precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-pa	2024 Crawford County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Cumberland County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Erie County, PA precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-pa	2024 Fayette County, PA precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-pa	2024 Franklin County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Huntingdon County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Indiana County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Jefferson County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Juniata County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Lackawanna County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Lawrence County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Lebanon County, PA precinct-level results.zip	zip	precinct	vendor-normalized
+openelections-sources-pa	2024 Lehigh County, PA precinct-level results.csv	csv	precinct	vendor-normalized
+openelections-sources-pa	2024 Lycoming County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Mercer County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Mifflin County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Monroe County, PA precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-pa	2024 Montgomery County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Northumberland County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Philadelphia County, PA precinct-level results.csv	csv	precinct	vendor-normalized
+openelections-sources-pa	2024 Philadelphia County, PA precinct-level results.xlsx	xlsx	precinct	vendor-normalized
+openelections-sources-pa	2024 Pike County, PA precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-pa	2024 Schuylkill County, PA precinct-level results.zip	zip	precinct	vendor-normalized
+openelections-sources-pa	2024 Somerset County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Tioga County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Union County, PA precinct-level results.zip	zip	precinct	vendor-normalized
+openelections-sources-pa	2024 Venango County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Washington County, PA precinct-level results.xls	xls?	precinct	vendor-normalized
+openelections-sources-pa	2024 Wayne County, PA precinct-level results.pdf	pdf?	precinct	vendor-normalized
+openelections-sources-pa	2024 Westmoreland County, PA election-level results.xls	xls?	?	vendor-normalized
+openelections-sources-pa	Bedford PA Nov 5 2024 - Official - Statement Of Votes Cast RPT.pdf	pdf?	?	sovc,county-original
+openelections-sources-pa	Bradford PA SOVC_Nov_13_2024_09_16_55FINAL.pdf	pdf?	?	sovc,county-original
+openelections-sources-pa	Bradford PA SOVC_Nov_13_2024_09_16_55FINAL.txt	txt	?	sovc,county-original
+openelections-sources-pa	Bradford PA SOVC_Nov_13_2024_09_16_55FINAL.xlsx	xlsx	?	sovc,county-original
+openelections-sources-pa	Carbon PA StatementOfVotesCastRPT.pdf	pdf?	?	county-original
+openelections-sources-pa	Clearfield PA 24GE PRECINCT REPORT (1)_202411261304599488.pdf	pdf?	precinct	county-original
+openelections-sources-pa	Clinton PA 2024 general.pdf	pdf?	?	county-original
+openelections-sources-pa	Columbia PA 2024 general SKM_C360i24112216200.pdf	pdf?	?	county-original
+openelections-sources-pa	Elk County PA Precinct - Recount 11 21 24.pdf	pdf?	precinct	county-original
+openelections-sources-pa	Elk PA GeneralPSummary2024.pdf	pdf?	?	summary-report,county-original
+openelections-sources-pa	Forest PA Final Results for November 5th 2024 Election.pdf	pdf?	?	county-original
+openelections-sources-pa	Fulton PA 2024 general.pdf	pdf?	?	county-original
+openelections-sources-pa	McKean PA OfficialPrecinctGen24.pdf	pdf?	precinct	county-original
+openelections-sources-pa	Montour PA 18-November-2024-Recount-Totals.pdf	pdf?	?	county-original
+openelections-sources-pa	Montour PA 5-November-2024-Official-Precinct-Summary.pdf	pdf?	precinct	summary-report,county-original
+openelections-sources-pa	Northampton PA GE24 Precinct Level Summary Results_1290.pdf	pdf?	precinct	summary-report,county-original
+openelections-sources-pa	Perry PA 2024G-Final-Signing-11252024-Official-Detail.pdf	pdf?	?	county-original
+openelections-sources-pa	Potter PA PrecinctResults.pdf	pdf?	precinct	county-original
+openelections-sources-pa	Snyder PA Official-Precinct-Summary-With-Group-Detail-11.15.2024.pdf	pdf?	precinct	summary-report,county-original
+openelections-sources-pa	Somerset PA 2024 Attorney General Race.pdf	pdf?	?	county-original
+openelections-sources-pa	Somerset PA 2024 Presidential Turnout by Precinct.pdf	pdf?	precinct	county-original
+openelections-sources-pa	Susquehanna PA 2024-General-Certified-Results.pdf	pdf?	?	county-original
+openelections-sources-pa	Union PA 2024 general.pdf	pdf?	?	county-original
+openelections-sources-pa	Wyoming PA 2024-OFFICIAL-PRECINCT-Presidential.pdf	pdf?	precinct	county-original
+fixtures	sf-xlsx-sheet2.xlsx	xlsx	precinct	candidate-columns,clean
+fixtures	alameda-district-xlsx-sheet5.xlsx	xlsx	district	district-grain
+fixtures	santa-clara-xls-sheets2-3.xls	xls_xml	precinct	xml-spreadsheetml
+fixtures	alameda-sov-pdf-p1-p101.pdf	vector_pdf	precinct	rotated-headers-ccw
+fixtures	glenn-pdf-p15.pdf	vector_pdf	precinct	rotated-headers-cw
+fixtures	amador-pdf-p5-p7-p10-p30.pdf	vector_pdf	precinct	landscape,side-by-side
+fixtures	humboldt-p1-p2.pdf	vector_pdf	precinct	no-vlines,stacked-contests
+fixtures	sac-p84.pdf	vector_pdf	precinct	single-page
