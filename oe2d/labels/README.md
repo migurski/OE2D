@@ -11,13 +11,23 @@ points) plus the local CA `fixtures/`. It is a pointer list, not a download:
 
 ## Columns
 
-- `repo` — `openelections-sources-mi` / `-pa`, or `fixtures` for local files
+- `repo` — `openelections-sources-mi` / `-pa` / `-ca`, or `fixtures` for local files
 - `file` — exact basename
+- `url` — raw-download URL for the source; for `fixtures` rows this is the
+  local relative path instead, since those are excerpted from larger files
 - `container_hint` — best guess before reading; `pdf?` and `xls?` mean the
   deterministic layer resolves the real container (vector vs scanned PDF,
   binary vs XML xls) at read time
 - `grain_hint` — precinct / district / county cue from the file name, or `?`
 - `notes` — which bases this file covers (see axes below)
+
+## Balance
+
+Each unique shape (`container_hint` × `grain_hint` × `notes`) is capped at 8
+examples so no single PDF shape dominates the label set; every rare container
+(csv, txt, docx, zip, xls_xml) is under the cap and fully kept. District- and
+county-grain files are pulled in uncapped from all three repos to offset the
+precinct-heavy skew.
 
 ## Coverage axes (why these files)
 
