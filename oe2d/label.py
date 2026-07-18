@@ -125,7 +125,7 @@ class Previewer:
 def _ask_orientation(path: str, previewer: Previewer) -> str | None:
     '''Prompt for orientation; None means skip, and 'QUIT' aborts the run.'''
     while True:
-        reply: str = input('  orientation [c=columns r=rows u=unknown | o=open s=skip q=quit]: ').strip().lower()
+        reply: str = input('  candidate orientation [c=candidates in columns  r=candidates in rows  u=unknown | o=open s=skip q=quit]: ').strip().lower()
         if reply == 'o':
             previewer.reopen(path)
             continue
