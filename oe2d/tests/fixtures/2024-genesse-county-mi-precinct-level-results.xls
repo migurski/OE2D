@@ -1,0 +1,1345 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ss:Workbook xmlns:ns1="urn:schemas-microsoft-com:office:office" xmlns:ns2="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <ns1:DocumentProperties>
+    <ns1:Title>Election Results</ns1:Title>
+    <ns1:Author>SOE Software Inc.</ns1:Author>
+    <ns1:Created>2024-11-20T15:07:08</ns1:Created>
+  </ns1:DocumentProperties>
+  <ns2:ExcelWorkbook>
+    <ns2:WindowHeight>7000</ns2:WindowHeight>
+    <ns2:WindowTopX>100</ns2:WindowTopX>
+    <ns2:WindowTopY>200</ns2:WindowTopY>
+    <ns2:WindowWidth>8000</ns2:WindowWidth>
+    <ns2:ActiveSheet>0</ns2:ActiveSheet>
+    <ns2:ProtectStructure>False</ns2:ProtectStructure>
+    <ns2:ProtectWindows>False</ns2:ProtectWindows>
+  </ns2:ExcelWorkbook>
+  <ss:Styles>
+    <ss:Style ss:ID="VoteCount">
+      <ss:Alignment ss:Horizontal="Right" />
+    </ss:Style>
+    <ss:Style ss:ID="Page">
+      <ss:Alignment ss:Horizontal="Left" />
+    </ss:Style>
+    <ss:Style ss:ID="headerLbl">
+      <ss:Alignment ss:Horizontal="Center" />
+      <ss:Font ss:Color="White" />
+      <ss:Interior ss:Color="Blue" ss:Pattern="Solid" />
+    </ss:Style>
+  </ss:Styles>
+  <ss:Worksheet ss:Name="Table of Contents">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String" />
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row />
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String">Table of Contents</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Page</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Contest</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Straight Party Ticket ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Electors of President and Vice-President of the United States ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">United States Senator ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in Congress 7th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in Congress 8th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 67th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 68th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 69th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 70th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">11</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 71st District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">12</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 72nd District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">13</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in State Legislature 97th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">14</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Member of the State Board of Education ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">15</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Regent of the University of Michigan ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">16</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee of Michigan State University ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">17</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Governor of Wayne State University ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">18</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Prosecuting Attorney ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">19</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Sheriff ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">20</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk and Register of Deeds ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">21</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">22</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Drain Commissioner ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">23</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Surveyor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">24</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 1st District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">25</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 2nd District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">26</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 3rd District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">27</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 4th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">28</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 5th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">29</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 6th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">30</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 7th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">31</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 8th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">32</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">County Commissioner 9th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">33</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Supervisor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">34</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">35</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">36</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">37</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Supervisor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">38</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">39</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">40</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">41</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Supervisor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">42</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">43</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">44</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee ( 4)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">45</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Supervisor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">46</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">47</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">48</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee ( 2)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">49</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Supervisor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">50</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">51</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">52</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee ( 4)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">53</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Supervisor ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">54</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clerk ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">55</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">56</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Trustee ( 4)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      </ss:Table>
+  </ss:Worksheet>
+  <ss:Worksheet ss:Name="Registered Voters">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Precinct</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ballots Cast</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Voter Turnout</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Argentine Township, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2532</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2009</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Argentine Township, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2443</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1988</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.38%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Argentine Township, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">677</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">571</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Atlas Township, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1955</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1720</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.98%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Atlas Township, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1143</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">987</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.35%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Atlas Township, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2126</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1719</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.86%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Atlas Township, Precinct 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1642</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1326</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.76%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2257</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1353</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">59.95%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2215</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1138</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">51.38%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2443</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1836</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.15%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2701</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1290</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">47.76%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1732</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1143</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">65.99%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2204</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">873</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">39.61%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2416</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1317</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">54.51%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2312</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1808</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.20%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1029</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">758</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.66%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2982</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1934</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">64.86%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 11</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1591</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1178</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.04%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Burton, Precinct 12</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1843</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1309</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">71.03%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clayton Township, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1971</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1692</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.84%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clayton Township, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1589</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1323</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.26%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clayton Township, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1146</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">955</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.33%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Clayton Township, Precinct 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1230</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">963</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.29%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Clio, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2115</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1369</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">64.73%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Davison, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2123</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1423</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">67.03%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Davison, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2345</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1517</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">64.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2347</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1686</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">71.84%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2049</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1622</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.16%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1474</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1166</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.10%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2108</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1540</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.06%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2229</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1280</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">57.42%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2292</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1663</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.56%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1463</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1260</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.12%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1202</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">973</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.95%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Davison Township, Precinct 9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1818</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1335</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.43%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Fenton, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1700</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1316</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.41%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Fenton, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4237</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3127</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.80%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Fenton, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4106</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2787</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">67.88%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fenton Township, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2839</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2238</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.83%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fenton Township, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2765</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2164</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.26%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fenton Township, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2522</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2044</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.05%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fenton Township, Precinct 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2309</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1850</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.12%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fenton Township, Precinct 5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2393</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1961</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.95%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fenton Township, Precinct 6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2752</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2156</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5265</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2279</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">43.29%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3208</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1877</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">58.51%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">83</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">47</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">56.63%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1369</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">565</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">41.27%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2656</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1349</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">50.79%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4476</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1697</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">37.91%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1507</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">571</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">37.89%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1492</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">852</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">57.10%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2853</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">983</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">34.45%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2253</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1079</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">47.89%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 11</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3669</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1179</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">32.13%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 12</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3960</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1844</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">46.57%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 13</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">166</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">64</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">38.55%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 14</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4420</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1733</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">39.21%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">City of Flint, Precinct 15</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4365</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1584</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">36.29%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      </ss:Table>
+  </ss:Worksheet>
+  </ss:Workbook>

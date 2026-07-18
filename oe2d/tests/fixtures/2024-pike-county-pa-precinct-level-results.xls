@@ -1,0 +1,403 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ss:Workbook xmlns:ns1="urn:schemas-microsoft-com:office:office" xmlns:ns2="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <ns1:DocumentProperties>
+    <ns1:Title>Election Results</ns1:Title>
+    <ns1:Author>SOE Software Inc.</ns1:Author>
+    <ns1:Created>2024-12-03T11:14:12</ns1:Created>
+  </ns1:DocumentProperties>
+  <ns2:ExcelWorkbook>
+    <ns2:WindowHeight>7000</ns2:WindowHeight>
+    <ns2:WindowTopX>100</ns2:WindowTopX>
+    <ns2:WindowTopY>200</ns2:WindowTopY>
+    <ns2:WindowWidth>8000</ns2:WindowWidth>
+    <ns2:ActiveSheet>0</ns2:ActiveSheet>
+    <ns2:ProtectStructure>False</ns2:ProtectStructure>
+    <ns2:ProtectWindows>False</ns2:ProtectWindows>
+  </ns2:ExcelWorkbook>
+  <ss:Styles>
+    <ss:Style ss:ID="VoteCount">
+      <ss:Alignment ss:Horizontal="Right" />
+    </ss:Style>
+    <ss:Style ss:ID="Page">
+      <ss:Alignment ss:Horizontal="Left" />
+    </ss:Style>
+    <ss:Style ss:ID="headerLbl">
+      <ss:Alignment ss:Horizontal="Center" />
+      <ss:Font ss:Color="White" />
+      <ss:Interior ss:Color="Blue" ss:Pattern="Solid" />
+    </ss:Style>
+  </ss:Styles>
+  <ss:Worksheet ss:Name="Table of Contents">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String" />
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row />
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String">Table of Contents</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Page</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Contest</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">PRESIDENTIAL ELECTORS ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">UNITED STATES SENATOR ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ATTORNEY GENERAL ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">AUDITOR GENERAL ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">STATE TREASURER ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">CONGRESS REPRESENTATIVE DISTRICT 8 ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GENERAL ASSEMBLY DISTRICT 139 ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GENERAL ASSEMBLY DISTRICT 189 ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">LACKAWAXEN TWP AMBULANCE/RESCUE TAX QUESTION ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+    </ss:Table>
+  </ss:Worksheet>
+  <ss:Worksheet ss:Name="Registered Voters">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Precinct</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ballots Cast</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Voter Turnout</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">BLOOMING GROVE TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4390</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3266</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.40%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DELAWARE TWP #1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2844</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2116</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.40%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DELAWARE TWP #2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2921</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2111</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.27%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DINGMAN TWP #1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4915</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3857</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.47%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DINGMAN TWP #2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4892</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3685</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.33%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENE TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2787</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2114</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.85%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">LACKAWAXEN TWP #1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2402</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1867</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.73%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">LACKAWAXEN TWP #2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2025</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1622</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.10%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">LEHMAN TWP #1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3875</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2537</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">65.47%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">LEHMAN TWP #2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4266</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2714</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">63.62%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">MATAMORAS  BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1655</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1225</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.02%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">MILFORD BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">904</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">664</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.45%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">MILFORD TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1236</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">992</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.26%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">PALMYRA TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3036</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2358</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.67%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">PORTER TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">419</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">296</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">70.64%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">SHOHOLA TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2105</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1694</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.48%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">WESTFALL TWP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2514</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1971</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.40%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Total:</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">47186</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">35089</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.36%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+    </ss:Table>
+  </ss:Worksheet>
+  </ss:Workbook>

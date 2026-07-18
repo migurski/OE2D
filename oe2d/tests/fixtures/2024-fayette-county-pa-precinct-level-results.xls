@@ -1,0 +1,969 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ss:Workbook xmlns:ns1="urn:schemas-microsoft-com:office:office" xmlns:ns2="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <ns1:DocumentProperties>
+    <ns1:Title>Election Results</ns1:Title>
+    <ns1:Author>SOE Software Inc.</ns1:Author>
+    <ns1:Created>2024-11-27T12:10:21</ns1:Created>
+  </ns1:DocumentProperties>
+  <ns2:ExcelWorkbook>
+    <ns2:WindowHeight>7000</ns2:WindowHeight>
+    <ns2:WindowTopX>100</ns2:WindowTopX>
+    <ns2:WindowTopY>200</ns2:WindowTopY>
+    <ns2:WindowWidth>8000</ns2:WindowWidth>
+    <ns2:ActiveSheet>0</ns2:ActiveSheet>
+    <ns2:ProtectStructure>False</ns2:ProtectStructure>
+    <ns2:ProtectWindows>False</ns2:ProtectWindows>
+  </ns2:ExcelWorkbook>
+  <ss:Styles>
+    <ss:Style ss:ID="VoteCount">
+      <ss:Alignment ss:Horizontal="Right" />
+    </ss:Style>
+    <ss:Style ss:ID="Page">
+      <ss:Alignment ss:Horizontal="Left" />
+    </ss:Style>
+    <ss:Style ss:ID="headerLbl">
+      <ss:Alignment ss:Horizontal="Center" />
+      <ss:Font ss:Color="White" />
+      <ss:Interior ss:Color="Blue" ss:Pattern="Solid" />
+    </ss:Style>
+  </ss:Styles>
+  <ss:Worksheet ss:Name="Table of Contents">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String" />
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row />
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String">Table of Contents</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Page</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Contest</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Presidential Electors ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">United States Senator ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Attorney General ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Auditor General ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">State Treasurer ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in Congress  14th District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly  51st District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly  52nd District ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+    </ss:Table>
+  </ss:Worksheet>
+  <ss:Worksheet ss:Name="Registered Voters">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Precinct</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ballots Cast</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Voter Turnout</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Belle Vernon Borough - 02-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">672</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">480</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">71.43%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Brownsville Township - 04-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">378</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">272</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">71.96%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Brownsville Borough 1 - 06-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">369</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">235</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">63.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Brownsville Borough 2 - 06-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">389</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">274</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">70.44%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Brownsville Borough 3 - 06-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">507</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">338</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">66.67%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bullskin Township 1 - 08-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2776</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2325</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.75%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bullskin Township 2 - 08-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">994</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">846</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.11%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bullskin Township 3 - 08-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">937</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">812</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.66%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Connellsville City 1- 10-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1320</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1005</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">76.14%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Connellsville City 2- 10-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1261</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">904</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">71.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Connellsville City 3- 10-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">631</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">457</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.42%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Connellsville City 4- 10-04</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">920</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">675</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.37%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Connellsville Township - 12-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1419</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1160</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.75%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Dawson Borough - 14-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">213</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">168</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.87%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Dunbar Township 1 - 16-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1754</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1412</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.50%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Dunbar Township 2 - 16-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2707</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2215</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.82%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Dunbar  Borough - 18-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">628</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">497</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.14%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Everson Borough - 20-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">402</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">308</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">76.62%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fairchance Borough - 22-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1187</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">936</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.85%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Fayette City Borough - 24-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">352</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">254</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.16%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Franklin Township 1 - 26-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">917</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">760</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.88%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Franklin Township 2 - 26-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">632</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">533</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Georges Township 1 - 28-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">951</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">779</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.91%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Georges Township 2 - 28-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1464</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1183</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.81%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Georges Township 3 - 28-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1547</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1195</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.25%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">German Township 1 - 30-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1393</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1100</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.97%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">German Township 2 - 30-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">720</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">509</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">70.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">German Township 3 - 30-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">666</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">519</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.93%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">German Township 4 - 30-04</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">272</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">211</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.57%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Henry Clay Township - 32-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1229</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">927</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.43%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Jefferson Township - 34-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1345</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1118</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.12%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Lower Tyrone Township - 36-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">737</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">633</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.89%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Luzerne Township 1 - 38-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">860</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">682</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.30%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Luzerne Township 2 - 38-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">941</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">781</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.00%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Luzerne Township 3 - 38-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">381</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">301</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.00%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Luzerne Township 4 - 38-04</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">271</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">215</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Markleysburg Borough - 40-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">145</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">115</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.31%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Masontown Borough - 42-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2009</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1428</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">71.08%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Menallen Township 1 - 44-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">801</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">635</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.28%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Menallen Township 2 - 44-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1291</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1053</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.56%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Menallen Township 3 - 44-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">611</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">478</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.23%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Newell Borough - 46-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">328</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">252</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">76.83%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Nicholson Township - 48-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1239</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">931</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.14%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">North Union Township 1 - 50-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1657</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1226</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.99%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">North Union Township 2 - 50-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2523</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2002</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.35%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">North Union Township 3 - 50-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">778</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">608</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.15%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">North Union Township 4 - 50-04</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2144</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1578</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.60%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">North Union Township 5 - 50-05</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">458</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">360</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.60%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ohiopyle Borough - 52-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">24</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">17</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">70.83%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Perry Township - 54-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1609</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1319</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.98%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Perryopolis Borough - 56-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1241</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1028</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.84%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Point Marion Borough - 58-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">663</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">460</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">69.38%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Redstone Township 1 - 60-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1175</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">856</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.85%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Redstone Township 2 - 60-02</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1256</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">929</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.96%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Redstone Township 3 - 60-03</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">331</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">279</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.29%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Redstone Township 4 - 60-04</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">389</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">288</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.04%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Saltlick Township - 62-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2002</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1640</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.92%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Smithfield Borough - 64-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">534</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">424</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.40%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">South Connellsville Borough - 66-01</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1134</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">918</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.95%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      </ss:Table>
+  </ss:Worksheet>
+  </ss:Workbook>

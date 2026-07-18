@@ -1,0 +1,1749 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ss:Workbook xmlns:ns1="urn:schemas-microsoft-com:office:office" xmlns:ns2="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <ns1:DocumentProperties>
+    <ns1:Title>Election Results</ns1:Title>
+    <ns1:Author>SOE Software Inc.</ns1:Author>
+    <ns1:Created>2024-11-27T11:09:51</ns1:Created>
+  </ns1:DocumentProperties>
+  <ns2:ExcelWorkbook>
+    <ns2:WindowHeight>7000</ns2:WindowHeight>
+    <ns2:WindowTopX>100</ns2:WindowTopX>
+    <ns2:WindowTopY>200</ns2:WindowTopY>
+    <ns2:WindowWidth>8000</ns2:WindowWidth>
+    <ns2:ActiveSheet>0</ns2:ActiveSheet>
+    <ns2:ProtectStructure>False</ns2:ProtectStructure>
+    <ns2:ProtectWindows>False</ns2:ProtectWindows>
+  </ns2:ExcelWorkbook>
+  <ss:Styles>
+    <ss:Style ss:ID="VoteCount">
+      <ss:Alignment ss:Horizontal="Right" />
+    </ss:Style>
+    <ss:Style ss:ID="Page">
+      <ss:Alignment ss:Horizontal="Left" />
+    </ss:Style>
+    <ss:Style ss:ID="headerLbl">
+      <ss:Alignment ss:Horizontal="Center" />
+      <ss:Font ss:Color="White" />
+      <ss:Interior ss:Color="Blue" ss:Pattern="Solid" />
+    </ss:Style>
+  </ss:Styles>
+  <ss:Worksheet ss:Name="Table of Contents">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String" />
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row />
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String">Table of Contents</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Page</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Contest</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Presidential Electors (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">United States Senator (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Attorney General (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Auditor General (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">State Treasurer (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in Congress District 12 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in Congress District 17 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Senator in the General Assembly District 37 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Senator in the General Assembly District 43 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">11</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Senator in the General Assembly District 45 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">12</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 19 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">13</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 20 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">14</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 21 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">15</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 23 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">16</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 24 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">17</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 25 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">18</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 27 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">19</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 28 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">20</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 30 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">21</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 32 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">22</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 33 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">23</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 34 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">24</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 35 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">25</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 36 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">26</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 38 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">27</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 39 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">28</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 40 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">29</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 42 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">30</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 44 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">31</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 45 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">32</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Representative in the General Assembly District 46 (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">33</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Special Election Question - City of Duquesne (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">34</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Government Study Commissioner - Duquesne (Vote For 7)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">35</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Special Election Question - Borough of Jefferson Hills (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">36</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Government Study Commissioner - Jefferson Hills (Vote For 7)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">37</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Special Election Question - South Park Township (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">38</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Special Election Question - West Deer Township (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">39</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Special Election Question - Borough of Wilkinsburg (Vote For 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+    </ss:Table>
+  </ss:Worksheet>
+  <ss:Worksheet ss:Name="Registered Voters">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Precinct</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Election Day</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Absentee</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Provisional</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ballots Cast</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Voter Turnout</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Aleppo</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1363</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">671</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">441</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">16</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1128</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.76%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Aspinwall Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">855</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">554</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">167</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">730</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.38%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Aspinwall Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">582</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">346</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">117</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">472</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.10%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Aspinwall Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">827</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">507</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">179</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">12</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">698</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.40%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Avalon Ward 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1115</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">616</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">211</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">22</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">849</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">76.14%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Avalon Ward 2 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">712</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">406</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">138</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">554</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.81%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Avalon Ward 2 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">472</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">242</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">118</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">369</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.18%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Avalon Ward 3 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">335</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">188</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">92</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">281</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.88%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Avalon Ward 3 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">459</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">215</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">135</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">356</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.56%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Avalon Ward 3 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">517</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">243</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">129</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">377</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.92%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">613</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">339</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">163</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">505</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.38%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1041</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">575</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">305</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">881</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.63%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">857</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">517</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">189</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">713</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.20%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">798</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">474</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">188</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">671</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.09%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">840</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">484</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">195</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">11</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">690</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.14%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">743</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">411</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">195</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">616</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.91%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">833</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">479</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">220</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">705</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.63%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">729</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">415</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">211</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">631</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.56%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">776</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">412</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">212</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">12</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">636</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.96%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1029</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">422</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">194</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">21</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">637</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">61.90%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 11</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1308</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">525</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">265</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">36</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">826</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">63.15%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 12</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">660</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">408</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">153</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">565</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.61%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 13</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">685</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">446</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">153</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">605</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">88.32%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 14</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">614</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">372</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">142</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">520</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 15</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">806</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">481</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">218</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">705</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.47%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 16</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">916</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">532</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">204</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">741</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.90%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 17</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">678</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">365</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">189</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">564</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.19%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Br Dist 18</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">972</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">530</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">276</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">14</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">820</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.36%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Tp Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">809</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">522</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">172</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">696</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.03%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Baldwin Tp Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">762</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">466</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">154</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">625</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.02%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bell Acres</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1188</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">690</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">297</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">991</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.42%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bellevue Ward 1 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">973</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">483</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">222</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">12</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">717</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">73.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bellevue Ward 1 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">984</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">526</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">207</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">743</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.51%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bellevue Ward 2 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1092</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">560</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">215</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">13</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">788</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.16%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bellevue Ward 2 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">989</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">519</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">204</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">15</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">738</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">74.62%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bellevue Ward 3 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1048</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">547</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">229</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">786</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.00%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bellevue Ward 3 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">981</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">544</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">201</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">16</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">761</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.57%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ben Avon Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">496</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">321</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">107</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">428</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.29%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ben Avon Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">994</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">613</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">221</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">841</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.61%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ben Avon Ht</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">341</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">208</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">89</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">298</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.39%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 1 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">869</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">459</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">256</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">719</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.74%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 1 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">801</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">451</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">217</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">672</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.90%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 1 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">840</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">469</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">232</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">707</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.17%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 2 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">748</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">450</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">185</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">636</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.03%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 2 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">939</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">520</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">275</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">13</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">808</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.05%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 2 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1099</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">604</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">332</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">940</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.53%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 3 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">791</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">464</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">216</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">686</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.73%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 3 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1100</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">582</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">369</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">961</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.36%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 3 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1055</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">589</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">327</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">926</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.77%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 4 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1351</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">745</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">415</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1170</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.60%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 4 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">808</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">418</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">258</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">11</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">687</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.02%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 4 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">878</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">461</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">258</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">727</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.80%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 5 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">712</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">393</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">194</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">590</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.87%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 5 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">653</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">387</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">145</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">537</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.24%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 5 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1481</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">646</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">535</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1189</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.28%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 6 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1285</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">711</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">383</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1102</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.76%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 6 Dist 2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">945</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">545</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">271</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">821</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.88%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 6 Dist 3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">908</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">471</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">273</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">753</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.93%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Bethel Park Ward 7 Dist 1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1182</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">684</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">329</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1023</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.55%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      </ss:Table>
+  </ss:Worksheet>
+  </ss:Workbook>

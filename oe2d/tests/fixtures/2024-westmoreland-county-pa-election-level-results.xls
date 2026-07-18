@@ -1,0 +1,1573 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ss:Workbook xmlns:ns1="urn:schemas-microsoft-com:office:office" xmlns:ns2="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <ns1:DocumentProperties>
+    <ns1:Title>Election Results</ns1:Title>
+    <ns1:Author>SOE Software Inc.</ns1:Author>
+    <ns1:Created>2024-11-25T15:08:03</ns1:Created>
+  </ns1:DocumentProperties>
+  <ns2:ExcelWorkbook>
+    <ns2:WindowHeight>7000</ns2:WindowHeight>
+    <ns2:WindowTopX>100</ns2:WindowTopX>
+    <ns2:WindowTopY>200</ns2:WindowTopY>
+    <ns2:WindowWidth>8000</ns2:WindowWidth>
+    <ns2:ActiveSheet>0</ns2:ActiveSheet>
+    <ns2:ProtectStructure>False</ns2:ProtectStructure>
+    <ns2:ProtectWindows>False</ns2:ProtectWindows>
+  </ns2:ExcelWorkbook>
+  <ss:Styles>
+    <ss:Style ss:ID="VoteCount">
+      <ss:Alignment ss:Horizontal="Right" />
+    </ss:Style>
+    <ss:Style ss:ID="Page">
+      <ss:Alignment ss:Horizontal="Left" />
+    </ss:Style>
+    <ss:Style ss:ID="headerLbl">
+      <ss:Alignment ss:Horizontal="Center" />
+      <ss:Font ss:Color="White" />
+      <ss:Interior ss:Color="Blue" ss:Pattern="Solid" />
+    </ss:Style>
+  </ss:Styles>
+  <ss:Worksheet ss:Name="Table of Contents">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String" />
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row />
+      <ss:Row>
+        <ss:Cell ss:MergeAcross="1">
+          <ss:Data ss:Type="String">Table of Contents</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Page</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Contest</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">PRESIDENT OF THE UNITED STATES ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">UNITED STATES SENATOR ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ATTORNEY GENERAL ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">AUDITOR GENERAL ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">STATE TREASURER ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN CONGRESS 12th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN CONGRESS 14th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">9</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">SENATOR IN THE GENERAL ASSEMBLY 39th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">10</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">SENATOR IN THE GENERAL ASSEMBLY 41st DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">11</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN THE GENERAL ASSEMBLY 55th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">12</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN THE GENERAL ASSEMBLY 56th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">13</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN THE GENERAL ASSEMBLY 57th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">14</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN THE GENERAL ASSEMBLY 58th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">15</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN THE GENERAL ASSEMBLY 59th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">16</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">REPRESENTATIVE IN THE GENERAL ASSEMBLY 60th DISTRICT ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell ss:StyleID="Page">
+          <ss:Data ss:Type="Number">17</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Library Question Southwest Greensburg ( 1)</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+    </ss:Table>
+  </ss:Worksheet>
+  <ss:Worksheet ss:Name="Registered Voters">
+    <ss:Table>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Precinct</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Registered Voters</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Election Day</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Absentee/Mail</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Provisional</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Ballots Cast</ss:Data>
+        </ss:Cell>
+        <ss:Cell>
+          <ss:Data ss:Type="String">Voter Turnout</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ADAMSBURG BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">112</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">70</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">17</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">89</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.46%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ALLEGHENY TOWNSHIP #1 SHEARERS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2256</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1392</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">570</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1966</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.15%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ALLEGHENY TOWNSHIP #2 MCKEES</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">583</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">415</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">96</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">514</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">88.16%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ALLEGHENY TOWNSHIP #3 SOBERS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1664</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1068</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">334</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1404</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.38%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ALLEGHENY TOWNSHIP #4 STEWARTS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">753</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">510</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">133</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">645</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.66%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ALLEGHENY TOWNSHIP #5 BELLVUE</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">565</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">336</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">143</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">479</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.78%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ARNOLD 1-1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">355</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">166</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">35</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">205</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">57.75%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ARNOLD 1-2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">303</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">124</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">41</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">166</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">54.79%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ARNOLD 2-1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">618</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">334</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">112</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">446</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.17%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ARNOLD 2-2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">737</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">432</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">98</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">535</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">72.59%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ARNOLD 2-3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">790</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">430</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">98</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">533</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">67.47%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">ARONA BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">198</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">142</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">17</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">159</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.30%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">AVONMORE BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">638</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">428</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">100</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">531</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.23%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">BELL TOWNSHIP PERRYSVILLE</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">884</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">585</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">178</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">768</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.88%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">BELL TOWNSHIP ROARING RUN</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">362</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">263</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">49</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">313</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">86.46%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">BELL TOWNSHIP SALINA</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">277</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">205</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">25</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">231</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.39%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">BOLIVAR BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">243</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">176</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">23</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">202</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.13%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">COOK TOWNSHIP</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1487</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">986</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">286</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1277</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.88%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DELMONT BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1937</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1229</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">425</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1660</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.70%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY BORO 1ST WARD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">581</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">356</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">109</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">466</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.21%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY BORO 2ND WARD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">442</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">271</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">62</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">333</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY BORO 3RD WARD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">332</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">236</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">21</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">264</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.52%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY BORO 4TH WARD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">320</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">219</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">46</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">268</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.75%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP ALTERS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">923</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">596</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">186</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">784</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.94%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP BRADENVILLE</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">633</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">391</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">114</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">509</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">80.41%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP COKEVILLE</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">518</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">359</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">73</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">432</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.40%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP COOPERSTOWN</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1211</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">740</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">266</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1009</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.32%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP KINGSTON</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">412</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">270</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">68</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">339</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.28%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP LOYALHANNA</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">640</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">392</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">153</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">545</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.16%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP MILLWOOD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">857</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">543</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">148</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">695</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.10%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP NEW DERRY</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1196</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">797</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">220</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1019</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.20%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP PEANUT</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">609</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">399</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">119</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">521</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.55%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP SAXMAN</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1030</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">621</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">188</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">6</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">815</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">79.13%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP SCALP LEVEL</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">492</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">328</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">80</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">409</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.13%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP SIMPSONS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">560</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">353</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">111</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">469</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.75%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DERRY TOWNSHIP TORRANCE</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">295</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">88</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">106</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">195</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">66.10%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DONEGAL BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">68</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">48</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">56</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.35%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DONEGAL TOWNSHIP FOUR MILE RUN</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1096</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">707</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">181</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">891</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">81.30%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">DONEGAL TOWNSHIP INDIAN CREEK</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">519</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">357</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">72</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">431</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.04%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST HUNTINGDON TOWNSHIP BESSEMER #1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">519</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">374</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">81</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">456</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">87.86%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST HUNTINGDON TOWNSHIP BESSEMER #2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1096</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">702</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">196</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">899</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.03%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST HUNTINGDON TOWNSHIP RUFFSDALE</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1152</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">709</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">161</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">872</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">75.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST HUNTINGDON TOWNSHIP STONERS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">501</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">360</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">63</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">424</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">84.63%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST HUNTINGDON TOWNSHIP STROHMS</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">640</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">457</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">85</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">544</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.00%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST HUNTINGDON TOWNSHIP WHITES</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1255</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">749</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">295</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1051</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.75%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EAST VANDERGRIFT BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">373</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">239</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">48</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">289</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.48%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">EXPORT BORO</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">607</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">379</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">92</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">475</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">78.25%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">FAIRFIELD TOWNSHIP FAIRFIELD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">397</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">260</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">80</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">341</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">85.89%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">FAIRFIELD TOWNSHIP NORTH FAIRFIELD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">308</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">217</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">37</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">0</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">254</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.47%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">FAIRFIELD TOWNSHIP SOUTH FAIRFIELD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">723</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">495</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">109</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">606</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">83.82%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 1-1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">334</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">151</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">57</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">211</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">63.17%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 1-2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1311</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">608</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">283</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">896</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">68.34%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 2-1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">312</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">136</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">61</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">198</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">63.46%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 2-2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">598</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">333</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">131</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">2</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">466</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">77.93%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 2-3</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">905</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">497</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">245</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">7</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">749</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.76%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 2-4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1878</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1093</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">452</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">8</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1553</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">82.69%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 3RD WARD</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">376</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">151</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">66</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">218</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">57.98%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 4-1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">433</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">200</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">91</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">4</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">295</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">68.13%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      <ss:Row>
+        <ss:Cell>
+          <ss:Data ss:Type="String">GREENSBURG 5-1</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">642</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">379</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">107</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">5</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="Number">491</ss:Data>
+        </ss:Cell>
+        <ss:Cell ss:StyleID="VoteCount">
+          <ss:Data ss:Type="String">76.48%</ss:Data>
+        </ss:Cell>
+      </ss:Row>
+      </ss:Table>
+  </ss:Worksheet>
+  </ss:Workbook>
