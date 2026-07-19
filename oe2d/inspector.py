@@ -6,7 +6,12 @@ returned facts string crosses into the Deno interpreter, never image bytes.
 '''
 from __future__ import annotations
 
+import logging
+import os
+
 from . import rendering
+
+logger = logging.getLogger(__name__)
 
 _program = None
 _vision_lm = None
@@ -54,8 +59,16 @@ def inspect_page(path: str, page: int = 1, member: str | None = None, question: 
     import dspy
 
     png_path: str = rendering.render_page(path, page, member)
+    logger.info(
+        'inspect_page: rendered %s page %s%s -> %s (%d bytes); running vision',
+        os.path.basename(path), page,
+        f' member={member!r}' if member else '',
+        os.path.basename(png_path), os.path.getsize(png_path),
+    )
     prediction = _get_program()(
         image=dspy.Image(png_path),
         question=question or _DEFAULT_QUESTION,
     )
-    return prediction.facts
+    facts: str = prediction.facts
+    logger.info('inspect_page: vision facts: %s', ' '.join(facts.split())[:400])
+    return facts
