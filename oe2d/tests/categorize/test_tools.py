@@ -1,9 +1,9 @@
-'''Tests for oe2d.rendering and oe2d.tools — no LM calls.'''
+'''Tests for oe2d.categorize.rendering and oe2d.categorize.tools — no LM calls.'''
 import os
 
 import pytest
 
-from oe2d import rendering, tools
+from oe2d.categorize import rendering, tools
 
 FIXTURES: str = os.path.join(os.path.dirname(__file__), 'fixtures')
 

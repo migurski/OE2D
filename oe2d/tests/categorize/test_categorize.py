@@ -3,7 +3,7 @@ import os
 
 from oe2d import categorize
 
-FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', '..', 'fixtures')
+FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'fixtures')
 
 
 def _fixture(name: str) -> str:

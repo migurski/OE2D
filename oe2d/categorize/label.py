@@ -22,7 +22,7 @@ import tempfile
 import openpyxl
 
 import source_table
-from . import categorize
+from .. import categorize
 
 _ORIENTATIONS = {'c': 'candidate_columns', 'r': 'candidate_rows', 'u': 'unknown'}
 _GRAINS = {'p': 'precinct', 'd': 'district', 'c': 'county', 'u': 'unknown'}
@@ -248,8 +248,8 @@ def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Guided labeling of categorization fixtures.',
     )
-    parser.add_argument('--fixtures', default='oe2d/tests/fixtures', help='Fixtures directory')
-    parser.add_argument('--out', default='oe2d/labels/category.jsonl', help='Gold JSONL output')
+    parser.add_argument('--fixtures', default='oe2d/tests/categorize/fixtures', help='Fixtures directory')
+    parser.add_argument('--out', default='oe2d/categorize/labels/category.jsonl', help='Gold JSONL output')
     parser.add_argument('--redo', action='store_true', help='Relabel fixtures already in the output')
     args: argparse.Namespace = parser.parse_args()
 

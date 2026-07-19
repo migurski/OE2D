@@ -10,7 +10,8 @@ import zipfile
 
 import source_table
 
-from . import categorize, inspector, rendering
+from . import inspector, rendering
+from .. import categorize
 
 # Keep tabular returns bounded so a wide sheet does not flood the REPL output.
 _MAX_ROWS = 100

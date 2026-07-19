@@ -19,7 +19,7 @@ import zipfile
 import openpyxl
 import pdfplumber
 
-from . import categorize
+from .. import categorize
 
 RESOLUTION = 220
 

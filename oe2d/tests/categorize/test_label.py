@@ -1,9 +1,10 @@
-'''Tests for oe2d.label — non-interactive helpers only.'''
+'''Tests for oe2d.categorize.label — non-interactive helpers only.'''
 import os
 
 import openpyxl
 
-from oe2d import categorize, label
+from oe2d import categorize
+from oe2d.categorize import label
 
 FIXTURES: str = os.path.join(os.path.dirname(__file__), 'fixtures')
 

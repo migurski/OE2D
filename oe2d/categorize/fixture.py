@@ -2,7 +2,7 @@
 
 Usage:
   oe2d-make-fixture <source-url-or-path> [--out DIR] [--pages N] [--sheets M] [--rows R]
-  oe2d-make-fixture --manifest oe2d/labels/seed_sources.tsv [--out DIR] [--limit N]
+  oe2d-make-fixture --manifest oe2d/categorize/labels/seed_sources.tsv [--out DIR] [--limit N]
 
 Election sources routinely run to hundreds of pages and tens of thousands of
 rows. For categorization we only need enough to see the shape — the container
@@ -32,7 +32,7 @@ import xlrd
 import xlwt
 
 import source_table
-from . import categorize
+from .. import categorize
 
 # SpreadsheetML namespace for XML-format .xls files.
 _SS_NS = 'urn:schemas-microsoft-com:office:spreadsheet'
@@ -279,7 +279,7 @@ def main() -> None:
     )
     parser.add_argument('source', nargs='?', help='Source URL or path')
     parser.add_argument('--manifest', help='TSV of seed sources to batch-process')
-    parser.add_argument('--out', default='oe2d/tests/fixtures', help='Output directory')
+    parser.add_argument('--out', default='oe2d/tests/categorize/fixtures', help='Output directory')
     parser.add_argument('--name', help='Fixture stem (single-source mode)')
     parser.add_argument('--pages', type=int, default=4, help='PDF pages to keep')
     parser.add_argument('--sheets', type=int, default=8,

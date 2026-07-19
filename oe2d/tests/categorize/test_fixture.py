@@ -1,9 +1,10 @@
-'''Tests for oe2d.fixture — local excerpting only (no network).'''
+'''Tests for oe2d.categorize.fixture — local excerpting only (no network).'''
 import os
 
-from oe2d import categorize, fixture
+from oe2d import categorize
+from oe2d.categorize import fixture
 
-FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', '..', 'fixtures')
+FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'fixtures')
 
 
 def _fixture(name: str) -> str:
