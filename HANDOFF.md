@@ -190,33 +190,40 @@ with resume support.
 - **Fixtures are ~38 MB.** Fine for now; `--sheet-max-bytes` can shrink if it
   becomes a burden.
 
-## Next steps — GEPA optimization (the immediate milestone)
+## GEPA optimization (built — not yet run)
 
-The categorizer runs on a stock prompt; the gold set now exists to optimize it.
-Model the optimizer on `~/Documents/Email/train-spam-finder.py` (GEPA +
-`cmpnd.auto_instrument`, student Maverick / reflection Opus, `.with_inputs`,
-save + val-eval). Build three pieces under `oe2d/categorize/`:
+The three pieces are in place under `oe2d/categorize/`, modeled on
+`~/Documents/Email/train-spam-finder.py`:
 
-1. **`datasets.py`** — load `labels/category.jsonl`; for each row recompute the
-   deterministic inputs (`detect_container`, `count_pages`, and the file path the
-   tools need) so labels don't drift, wrap as `dspy.Example` with
-   `.with_inputs('file_path', 'container', 'page_count')`, and split train/val
-   deterministically (sorted by path, no `random`), stratified so rare shapes
-   (docx, csv, zip, xls_binary) land in both sides.
-2. **`metrics.py`** — a feedback-rich metric scoring predicted vs gold per field
-   (orientation, grain, the four `has_*`), returning **prose** on what was wrong,
-   since GEPA's reflection reads that text, not just a scalar. Weight the fields
-   deliberately (orientation is the routing-critical one).
-3. **`optimize.py`** (entry point, e.g. `oe2d-optimize-categorizer`) — run
-   `dspy.teleprompt.GEPA` over `SourceCategorizer` with that metric + trainset;
-   task LM = Maverick, reflection LM = Opus 4.x; save the optimized program JSON
-   and print val accuracy per field.
+1. **`datasets.py`** — loads `labels/category.jsonl`; for each row recomputes the
+   deterministic inputs (`detect_container`, `count_pages`, absolute file path)
+   so labels can't drift, wraps as `dspy.Example` with
+   `.with_inputs('file_path', 'container', 'page_count')`, and splits train/val
+   deterministically (`split` sorts each container group by path and takes every
+   stride-th one to val — no `random`), stratified so a container with ≥2
+   examples always reaches both sides. `load_split()` does both in one call.
+2. **`metrics.py`** — `score_category` returns a `dspy.Prediction(score,
+   feedback)`: a weighted per-field scalar (orientation 3, grain 2, each `has_*`
+   1) plus **prose** naming each wrong field (predicted vs expected), which is
+   what GEPA's reflection reads. A gold `grain == 'unknown'` is not scored (the
+   CLI fills grain from name-cues, so the RLM can't be faulted for it).
+3. **`optimize.py`** (`oe2d-optimize-categorizer`) — builds the same
+   `dspy.RLM(SourceCategorizer, tools=...)` the CLI runs, GEPA-compiles it with
+   that metric, saves the optimized program to
+   `labels/optimized_categorizer.json`, and prints val accuracy per field. Task
+   LM = Maverick, reflection LM = Opus 4.5. Flags: `--max-metric-calls`,
+   `--reflection-minibatch-size`, `--num-threads`, `--val-fraction`, `-v`.
 
-Then: run it (on the Mac, with Bedrock creds + Deno + LibreOffice), inspect the
-evolved prompt, and wire the CLI to load the optimized program. That closes
-**Milestone 1**.
+Tests (`test_datasets.py`, `test_metrics.py`) are hermetic — they point the
+loader at a tiny temp gold set over the small `source_table` fixtures rather than
+opening all 88, and the metric tests use synthetic Examples. No creds needed; 81
+tests pass.
 
-Caveats for GEPA here: 88 examples is small but workable for six fields; the
+**Still to do:** run it (on the Mac, with Bedrock creds + Deno + LibreOffice),
+inspect the evolved prompt, and wire the CLI to load
+`optimized_categorizer.json`. That closes **Milestone 1**.
+
+Caveats for the run: 88 examples is small but workable for six fields; the
 deterministic fields are exact so only the hard predictions are optimized; a full
 run makes many Bedrock calls (and renders images via `inspect_page`), so watch
 cost and cmpnd traces.

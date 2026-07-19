@@ -22,6 +22,7 @@ dependencies = [
 oe2d-categorize-source = "oe2d.categorize:main"
 oe2d-make-fixture = "oe2d.categorize.fixture:main"
 oe2d-label-categories = "oe2d.categorize.label:main"
+oe2d-optimize-categorizer = "oe2d.categorize.optimize:main"
 
 [tool.setuptools]
 packages = ["oe2d", "oe2d.categorize"]
