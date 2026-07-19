@@ -28,13 +28,15 @@ def zip_members(path: str) -> list[str]:
         return [name for name in archive.namelist() if not name.endswith('/')]
 
 
-def page_count(path: str, member: str | None = None) -> int:
+# member is keyword-only: it names a file inside a .zip and is rarely needed, so
+# a stray positional (e.g. the container) cannot accidentally land there.
+def page_count(path: str, *, member: str | None = None) -> int:
     '''Number of pages (PDF) or sheets (spreadsheet) in a source or zip member.'''
     local: str = rendering.material_path(path, member)
     return source_table.page_count(local)
 
 
-def page_table(path: str, page: int, member: str | None = None) -> list[list[str]]:
+def page_table(path: str, page: int, *, member: str | None = None) -> list[list[str]]:
     '''Parsed rows of one page/sheet as lists of strings; empty if unreadable.
 
     For spreadsheets page is the sheet number. Returns nothing for scanned
@@ -49,7 +51,7 @@ def page_table(path: str, page: int, member: str | None = None) -> list[list[str
     return []
 
 
-def page_words(path: str, page: int, member: str | None = None) -> list[dict]:
+def page_words(path: str, page: int, *, member: str | None = None) -> list[dict]:
     '''Words with positions on a PDF page; empty for non-PDF or textless pages.'''
     local: str = rendering.material_path(path, member)
     words: list[dict] | None = source_table.page_words(local, page)
@@ -60,7 +62,7 @@ def page_words(path: str, page: int, member: str | None = None) -> list[dict]:
     return []
 
 
-def inspect_page(path: str, page: int = 1, member: str | None = None, question: str = '') -> str:
+def inspect_page(path: str, page: int = 1, question: str = '', *, member: str | None = None) -> str:
     '''View a rendered page/sheet with a vision model and return observed facts.
 
     Required for scanned PDFs, which have no extractable text. Also use to
@@ -68,4 +70,4 @@ def inspect_page(path: str, page: int = 1, member: str | None = None, question: 
     side-by-side contests. For spreadsheets page is the sheet number; look past
     a table-of-contents sheet at an actual contest sheet.
     '''
-    return inspector.inspect_page(path, page, member, question)
+    return inspector.inspect_page(path, page, member=member, question=question)

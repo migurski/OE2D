@@ -173,7 +173,9 @@ MAVERICK_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
 class SourceCategorizer(dspy.Signature):
     '''Categorize an election-results source file for extractor routing.
 
-    Look at the file with the tools before answering:
+    Look at the file with the tools before answering. Call them with just the
+    file path and a page/sheet number — do NOT pass the container to them; pass
+    member= (keyword) only to read a file inside a zip.
     - page_count, page_table, page_words read text; for spreadsheets the page
       argument is the sheet number. zip_members lists archive contents.
     - inspect_page renders a page/sheet and returns what a vision model sees. It
