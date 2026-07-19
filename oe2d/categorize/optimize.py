@@ -3,18 +3,18 @@
 Usage: oe2d-optimize-categorizer [--out FILE] [--max-metric-calls N] ...
 
 Builds the same dspy.RLM(SourceCategorizer, tools=...) the CLI runs, then uses
-GEPA to evolve its prompt against labels/category.jsonl. The task LM is Bedrock
-Maverick (multimodal, so it also drives the vision inspector); the reflection LM
-is Opus. The optimized program is saved as JSON and validation accuracy is
-printed per field.
+GEPA to evolve its prompt against labels/category.jsonl. The task LM is
+OpenRouter Maverick (multimodal, so it also drives the vision inspector); the
+reflection LM is Bedrock Opus. The optimized program is saved as JSON and
+validation accuracy is printed per field.
 
 GEPA checkpoints after each step to a repo-root gepa-<digest> dir, where the
 digest fingerprints the run config (examples, split, models). Re-running resumes
 a matching run; changing the config forks a fresh dir instead of resuming against
 a mismatched checkpoint. Touching a gepa.stop file in the dir stops gracefully.
 
-Requires Bedrock credentials, Deno, and LibreOffice — the same runtime pieces
-the categorizer itself needs, since GEPA actually runs the RLM over the fixtures.
+Requires an OpenRouter key (task LM) plus Bedrock credentials (Opus reflection LM),
+Deno, and LibreOffice, since GEPA actually runs the RLM over the fixtures.
 '''
 from __future__ import annotations
 

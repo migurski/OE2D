@@ -7,8 +7,8 @@ orientation, geographic grain, and layout properties. A deterministic layer
 sniffs the container and page count; a DSPy RLM then inspects the file with tools
 (including a vision inspector) to fill in orientation, grain, and the layout
 properties.
-Requires DSPy, Bedrock credentials, Deno, and LibreOffice — missing pieces fail
-loudly rather than degrading to a partial result.
+Requires DSPy, an OpenRouter key (OPENROUTER_API_KEY), Deno, and LibreOffice —
+missing pieces fail loudly rather than degrading to a partial result.
 '''
 from __future__ import annotations
 
@@ -166,9 +166,10 @@ def _raw_line_preview(path: str, rows: int) -> str:
     return '\n'.join(lines)
 
 
-# Bedrock's Llama-4 Maverick (multimodal) drives both the RLM code-writing and
-# the vision inspector. Hardcoded — no per-run model override needed.
-MAVERICK_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
+# OpenRouter's Llama-4 Maverick (multimodal) drives both the RLM code-writing and
+# the vision inspector. Hardcoded — no per-run model override needed. litellm
+# reads OPENROUTER_API_KEY (supplied by the repo .env).
+MAVERICK_LM = 'openrouter/meta-llama/llama-4-maverick'
 
 # The GEPA-optimized program, committed as package data. When present it is
 # loaded onto the RLM so an installed oe2d categorizes with the trained prompt;
@@ -242,7 +243,7 @@ def run_rlm(signals: dict, verbose: bool = False) -> dict:
     page_table, page_words, zip_members, inspect_page). inspect_page renders a
     page/sheet and runs a vision model on it, so scanned PDFs and visually
     complex layouts are read from the image rather than guessed. Raises on any
-    missing runtime piece (Bedrock credentials, Deno, LibreOffice) rather than
+    missing runtime piece (OpenRouter key, Deno, LibreOffice) rather than
     hiding it behind a partial result.
     '''
     from . import tools

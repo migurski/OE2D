@@ -52,7 +52,7 @@ off the image. Output shape:
 as inputs; the RLM predicts orientation, grain, and the layout properties.
 
 There is **no deterministic-only fallback**: if a runtime piece is missing
-(DSPy, boto3, Bedrock creds, Deno, LibreOffice) the command fails loudly rather
+(DSPy, an OpenRouter key, Deno, LibreOffice) the command fails loudly rather
 than emitting a partial `llm_used=false` result.
 
 ## Architecture
@@ -80,7 +80,7 @@ the sandbox boundary:
   (`oe2d/categorize/inspector.py`) on the image, and returns the vision model's
   facts as **text**.
 
-**Model:** Bedrock Llama-4 Maverick (`MAVERICK_LM`), hardcoded, drives both the
+**Model:** OpenRouter Llama-4 Maverick (`MAVERICK_LM`), hardcoded, drives both the
 RLM code-writing and the vision inspector (Maverick is multimodal). No override
 env vars.
 
@@ -137,7 +137,7 @@ does not. `import source_table` no longer works — it's
 pip install -e .                 # deps: dspy, boto3, python-dotenv, pdfplumber, openpyxl, xlrd, xlwt, pypdf, pydantic
 brew install --cask libreoffice  # office-format rendering (found in the app bundle)
 brew install deno optipng        # deno = RLM sandbox; optipng = image shrink (optional)
-export AWS_PROFILE=...            # Bedrock creds; .env in the repo root supplies CMPND_* for tracing
+# .env in the repo root supplies OPENROUTER_API_KEY (the runtime LM) and CMPND_* (tracing)
 oe2d-categorize-source oe2d-data/fixtures/categorize/allegan-mi-official-federal-state-and-judicial-votes.pdf
 ```
 
@@ -249,14 +249,16 @@ loader at a tiny temp gold set over the small `source_table` fixtures rather tha
 opening all 88, and the metric tests use synthetic Examples. No creds needed; 81
 tests pass.
 
-**Still to do:** run it (on the Mac, with Bedrock creds + Deno + LibreOffice) to
-produce `optimized_categorizer.json`, inspect the evolved prompt, and commit the
-artifact. The CLI already auto-loads it when present. That closes **Milestone 1**.
+**Still to do:** run it (on the Mac, with an OpenRouter key for the task LM,
+Bedrock creds for the Opus reflection LM, + Deno + LibreOffice) to produce
+`optimized_categorizer.json`, inspect the evolved prompt, and commit the artifact.
+The CLI already auto-loads it when present. That closes **Milestone 1**.
 
 Caveats for the run: 88 examples is small but workable for six fields; the
 deterministic fields are exact so only the hard predictions are optimized; a full
-run makes many Bedrock calls (and renders images via `inspect_page`), so watch
-cost and cmpnd traces.
+run makes many OpenRouter calls (and renders images via `inspect_page`), so watch
+cost and cmpnd traces. Note the runtime categorizer now needs only OpenRouter;
+Bedrock is required solely for the optimizer's Opus reflection LM.
 
 ## After the categorizer (roadmap)
 
