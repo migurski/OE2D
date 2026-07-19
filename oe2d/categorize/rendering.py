@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import zipfile
 
 import openpyxl
@@ -36,12 +37,22 @@ _SOFFICE_CANDIDATES = (
 _render_dir: str | None = None
 _profile_seq: int = 0
 
+# Guards the shared cache-dir/profile counter against concurrent GEPA rollouts.
+_state_lock = threading.Lock()
+
+# pdfplumber's to_image() rasterizes through pdfium, a native library that is
+# NOT thread-safe: two concurrent calls segfault. Serialize all rasterization
+# behind this lock. Rendering is not the bottleneck (LM calls are), so this
+# costs little while GEPA runs rollouts across threads.
+_raster_lock = threading.Lock()
+
 
 def _cache_dir() -> str:
     global _render_dir
-    if _render_dir is None:
-        _render_dir = tempfile.mkdtemp(prefix='oe2d-render-')
-    return _render_dir
+    with _state_lock:
+        if _render_dir is None:
+            _render_dir = tempfile.mkdtemp(prefix='oe2d-render-')
+        return _render_dir
 
 
 def _safe(name: str) -> str:
@@ -75,8 +86,10 @@ def _soffice_convert(src: str, out_format: str, out_dir: str) -> str:
             'LibreOffice not found; install it (brew install --cask libreoffice) '
             'or put soffice on PATH'
         )
-    _profile_seq += 1
-    profile: str = os.path.join(_cache_dir(), f'profile-{_profile_seq}')
+    with _state_lock:
+        _profile_seq += 1
+        seq: int = _profile_seq
+    profile: str = os.path.join(_cache_dir(), f'profile-{seq}')
     subprocess.run(
         [soffice, '--headless', f'-env:UserInstallation=file://{profile}',
          '--convert-to', out_format, '--outdir', out_dir, src],
@@ -122,12 +135,14 @@ def _extract_sheet(xlsx_path: str, sheet: int) -> str:
 
 
 def _raster_pdf(pdf_path: str, page: int, out_png: str, resolution: int) -> None:
-    pdf: pdfplumber.PDF = pdfplumber.open(pdf_path)
-    try:
-        index: int = max(1, min(page, len(pdf.pages))) - 1
-        pdf.pages[index].to_image(resolution=resolution).save(out_png)
-    finally:
-        pdf.close()
+    # pdfium is not thread-safe; hold the lock across the whole open/raster/save.
+    with _raster_lock:
+        pdf: pdfplumber.PDF = pdfplumber.open(pdf_path)
+        try:
+            index: int = max(1, min(page, len(pdf.pages))) - 1
+            pdf.pages[index].to_image(resolution=resolution).save(out_png)
+        finally:
+            pdf.close()
 
 
 def _optipng(png_path: str) -> None:
