@@ -8,6 +8,10 @@ Maverick (multimodal, so it also drives the vision inspector); the reflection LM
 is Opus. The optimized program is saved as JSON and validation accuracy is
 printed per field.
 
+GEPA checkpoints to --log-dir (default .gepa/categorizer) after each step, so
+re-running the command with the same dir resumes from the last checkpoint;
+touching a gepa.stop file in that dir stops the run gracefully.
+
 Requires Bedrock credentials, Deno, and LibreOffice — the same runtime pieces
 the categorizer itself needs, since GEPA actually runs the RLM over the fixtures.
 '''
@@ -33,6 +37,11 @@ REFLECTION_MODEL: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 
 _DEFAULT_OUT: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'labels', 'optimized_categorizer.json')
+
+# Repo root (oe2d/categorize -> oe2d -> repo); the GEPA checkpoint dir lives here
+# under a gitignored .gepa/ so a run can be resumed by re-invoking the command.
+_REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_DEFAULT_LOG_DIR: str = os.path.join(_REPO_ROOT, '.gepa', 'categorizer')
 
 
 def build_program(verbose: bool = False) -> dspy.Module:
@@ -71,6 +80,8 @@ def main() -> None:
                         help='Parallel RLM rollouts; each fires several Bedrock calls, so keep low to avoid throttling')
     parser.add_argument('--num-retries', type=int, default=10,
                         help='litellm retries per LM call (exponential backoff) for Bedrock throttling')
+    parser.add_argument('--log-dir', default=_DEFAULT_LOG_DIR,
+                        help='GEPA checkpoint dir; re-running with the same dir resumes the run')
     parser.add_argument('--val-fraction', type=float, default=0.3)
     parser.add_argument('-v', '--verbose', action='store_true', help='stream RLM REPL steps')
     args: argparse.Namespace = parser.parse_args()
@@ -101,12 +112,19 @@ def main() -> None:
     program: dspy.Module = build_program(verbose=args.verbose)
     program.set_lm(student_lm)
 
+    os.makedirs(args.log_dir, exist_ok=True)
+    resuming: bool = os.path.exists(os.path.join(args.log_dir, 'gepa_state.bin'))
+    print(f'{"Resuming" if resuming else "Starting"} GEPA run in {args.log_dir}', flush=True)
+    print(f'  (touch {os.path.join(args.log_dir, "gepa.stop")} to stop gracefully; '
+          're-run the same command to resume)', flush=True)
+
     optimizer: GEPA = GEPA(
         metric=metrics.score_category,
         max_metric_calls=args.max_metric_calls,
         reflection_minibatch_size=args.reflection_minibatch_size,
         num_threads=args.num_threads,
         reflection_lm=reflection_lm,
+        log_dir=args.log_dir,
     )
     optimized: dspy.Module = optimizer.compile(program, trainset=trainset, valset=valset)
 
