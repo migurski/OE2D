@@ -10,11 +10,16 @@ import zipfile
 
 import source_table
 
-from . import inspector, rendering
+from . import categorize, inspector, rendering
 
 # Keep tabular returns bounded so a wide sheet does not flood the REPL output.
 _MAX_ROWS = 100
 _MAX_COLS = 60
+
+# Returned for a PDF page with no extractable text, so the model reaches for the
+# vision tool instead of concluding the page is empty and guessing.
+_NO_TEXT_HINT = ('[no extractable text on this page — it is likely scanned; call '
+                 'inspect_page(path, page) to read it as an image]')
 
 
 def zip_members(path: str) -> list[str]:
@@ -37,16 +42,22 @@ def page_table(path: str, page: int, member: str | None = None) -> list[list[str
     '''
     local: str = rendering.material_path(path, member)
     rows: list[list[str]] | None = source_table.page_table(local, page)
-    if not rows:
-        return []
-    return [row[:_MAX_COLS] for row in rows[:_MAX_ROWS]]
+    if rows:
+        return [row[:_MAX_COLS] for row in rows[:_MAX_ROWS]]
+    if categorize.detect_container(local) in ('vector_pdf', 'scanned_pdf'):
+        return [[_NO_TEXT_HINT]]
+    return []
 
 
 def page_words(path: str, page: int, member: str | None = None) -> list[dict]:
     '''Words with positions on a PDF page; empty for non-PDF or textless pages.'''
     local: str = rendering.material_path(path, member)
     words: list[dict] | None = source_table.page_words(local, page)
-    return words or []
+    if words:
+        return words
+    if categorize.detect_container(local) in ('vector_pdf', 'scanned_pdf'):
+        return [{'text': _NO_TEXT_HINT}]
+    return []
 
 
 def inspect_page(path: str, page: int = 1, member: str | None = None, question: str = '') -> str:
