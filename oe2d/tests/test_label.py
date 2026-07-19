@@ -1,7 +1,9 @@
 '''Tests for oe2d.label — non-interactive helpers only.'''
 import os
 
-from oe2d import label
+import openpyxl
+
+from oe2d import categorize, label
 
 FIXTURES: str = os.path.join(os.path.dirname(__file__), 'fixtures')
 
@@ -34,3 +36,13 @@ def test_preview_text_for_xlsx():
 def test_preview_none_for_zip():
     zips = [t for t in label.iter_targets(FIXTURES) if t.endswith('.zip')]
     assert label.format_preview(zips[0], 'zip') is None
+
+
+def test_convert_xls_to_viewable_xlsx(tmp_path):
+    xls = next(t for t in label.iter_targets(FIXTURES) if t.endswith('.xls'))
+    out = label.convert_to_xlsx(xls, str(tmp_path))
+    assert categorize.detect_container(out) == 'xlsx'
+    workbook = openpyxl.load_workbook(out)
+    assert len(workbook.worksheets) >= 1
+    # The converted view carries real cell content, not an empty shell.
+    assert any(cell for row in workbook.worksheets[0].iter_rows(values_only=True) for cell in row)

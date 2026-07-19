@@ -17,9 +17,12 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+
+import openpyxl
 
 import source_table
-from oe2d import categorize
+from . import categorize
 
 _ORIENTATIONS = {'c': 'candidate_columns', 'r': 'candidate_rows', 'u': 'unknown'}
 _GRAINS = {'p': 'precinct', 'd': 'district', 'c': 'county', 'u': 'unknown'}
@@ -27,6 +30,12 @@ _READABLE = ('vector_pdf', 'xlsx', 'xls_binary', 'xls_xml', 'csv', 'txt')
 
 # Spreadsheets render badly in Quick Look; hand them to the default app instead.
 _APP_CONTAINERS = ('xlsx', 'xls_binary', 'xls_xml')
+
+# .xls (especially XML SpreadsheetML) opens illegibly in Numbers; convert these
+# to a temporary .xlsx for viewing while the fixture on disk stays .xls.
+_CONVERT_CONTAINERS = ('xls_binary', 'xls_xml')
+_VIEW_MAX_SHEETS = 40
+_VIEW_MAX_ROWS = 300
 
 
 def iter_targets(fixtures_dir: str) -> list[str]:
@@ -169,7 +178,33 @@ def _ask_container(container: str) -> str:
     return reply or container
 
 
-def label_one(path: str, previewer: Previewer) -> dict | str | None:
+def convert_to_xlsx(path: str, work_dir: str) -> str:
+    '''Render every sheet of an .xls into a temporary .xlsx for legible viewing.'''
+    sheet_count: int = min(categorize.count_pages(path, categorize.detect_container(path)),
+                           _VIEW_MAX_SHEETS)
+    workbook: openpyxl.Workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    for page in range(1, sheet_count + 1):
+        rows: list[list[str]] | None = source_table.page_table(path, page)
+        sheet = workbook.create_sheet(f'Sheet{page}')
+        for row in (rows or [])[:_VIEW_MAX_ROWS]:
+            sheet.append(['' if cell is None else str(cell) for cell in row])
+    out_path: str = os.path.join(work_dir, 'view.xlsx')
+    workbook.save(out_path)
+    return out_path
+
+
+def view_for(path: str, container: str, work_dir: str) -> tuple[str, str]:
+    '''Return (path, container) to preview, converting .xls to .xlsx on Mac.'''
+    if sys.platform == 'darwin' and container in _CONVERT_CONTAINERS:
+        try:
+            return convert_to_xlsx(path, work_dir), 'xlsx'
+        except Exception:
+            return path, container
+    return path, container
+
+
+def label_one(path: str, previewer: Previewer, work_dir: str) -> dict | str | None:
     '''Interactively label one fixture. Returns a record, None (skip), or 'QUIT'.'''
     container: str = categorize.detect_container(path)
     pages: int = categorize.count_pages(path, container)
@@ -177,8 +212,10 @@ def label_one(path: str, previewer: Previewer) -> dict | str | None:
 
     print(f'\n{os.path.basename(path)}')
     print(f'  container={container}  page_count={pages}  grain_hint={grain_hint}')
-    if previewer.show(path, container):
-        print('  (preview opened — o to reopen)')
+    view_path, view_container = view_for(path, container, work_dir)
+    if previewer.show(view_path, view_container):
+        note: str = ' (converted to .xlsx)' if view_path != path else ''
+        print(f'  (preview opened{note} — o to reopen)')
     else:
         preview: str | None = format_preview(path, container)
         if preview:
@@ -188,7 +225,7 @@ def label_one(path: str, previewer: Previewer) -> dict | str | None:
         else:
             print('  (no preview available — o to open the file)')
 
-    orientation: str | None = _ask_orientation(path, container, previewer)
+    orientation: str | None = _ask_orientation(view_path, view_container, previewer)
     if orientation == 'QUIT':
         return 'QUIT'
     if orientation is None:
@@ -222,20 +259,21 @@ def main() -> None:
 
     print(f'{len(targets)} fixtures, {len(done)} already labeled, {len(pending)} to go.')
     previewer: Previewer = Previewer()
-    try:
-        for index, path in enumerate(pending, 1):
-            print(f'\n[{index}/{len(pending)}]', end='')
-            outcome: dict | str | None = label_one(path, previewer)
-            if outcome == 'QUIT':
-                print('\nSaved progress. Re-run to continue.')
-                return
-            if outcome is None:
-                print('  skipped.')
-                continue
-            append_record(args.out, outcome)
-        print('\nDone.')
-    finally:
-        previewer.close()
+    with tempfile.TemporaryDirectory() as work_dir:
+        try:
+            for index, path in enumerate(pending, 1):
+                print(f'\n[{index}/{len(pending)}]', end='')
+                outcome: dict | str | None = label_one(path, previewer, work_dir)
+                if outcome == 'QUIT':
+                    print('\nSaved progress. Re-run to continue.')
+                    return
+                if outcome is None:
+                    print('  skipped.')
+                    continue
+                append_record(args.out, outcome)
+            print('\nDone.')
+        finally:
+            previewer.close()
 
 
 if __name__ == '__main__':

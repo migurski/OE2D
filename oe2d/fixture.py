@@ -32,7 +32,7 @@ import xlrd
 import xlwt
 
 import source_table
-from oe2d import categorize
+from . import categorize
 
 # SpreadsheetML namespace for XML-format .xls files.
 _SS_NS = 'urn:schemas-microsoft-com:office:spreadsheet'
@@ -40,6 +40,10 @@ _SS_NS = 'urn:schemas-microsoft-com:office:spreadsheet'
 # xlwt hard limits for the legacy BIFF format.
 _XLS_MAX_COLS = 256
 _XLS_MAX_SHEETNAME = 31
+
+# Columns kept per sheet when trimming — enough to see candidate orientation
+# without carrying a contest's full 200+ column width.
+_TRIM_MAX_COLS = 40
 
 # Scanned pages are large images; drop pages until a PDF fixture fits this.
 _PDF_MAX_BYTES = 3_000_000
@@ -110,7 +114,7 @@ def _excerpt_xlsx(path: str, out_path: str, sheets: int, rows: int) -> None:
     for worksheet in source.worksheets[:sheets]:
         out_sheet = out_book.create_sheet(worksheet.title[:_XLS_MAX_SHEETNAME])
         for _, row in zip(range(rows), worksheet.iter_rows(values_only=True)):
-            out_sheet.append(list(row))
+            out_sheet.append(list(row)[:_TRIM_MAX_COLS])
     out_book.save(out_path)
     source.close()
 
@@ -135,7 +139,7 @@ def _excerpt_xls_binary(path: str, out_path: str, sheets: int, rows: int) -> Non
         used_names.add(sheet_name)
         out_sheet = out_book.add_sheet(sheet_name, cell_overwrite_ok=True)
         for row_index in range(min(rows, sheet.nrows)):
-            for col_index in range(min(_XLS_MAX_COLS, sheet.ncols)):
+            for col_index in range(min(_TRIM_MAX_COLS, _XLS_MAX_COLS, sheet.ncols)):
                 out_sheet.write(row_index, col_index, sheet.cell_value(row_index, col_index))
     out_book.save(out_path)
 
@@ -156,6 +160,9 @@ def _excerpt_xls_xml(path: str, out_path: str, sheets: int, rows: int) -> None:
             kept += 1
             if kept > rows:
                 table.remove(row)
+                continue
+            for extra_cell in row.findall(f'{{{_SS_NS}}}Cell')[_TRIM_MAX_COLS:]:
+                row.remove(extra_cell)
         expanded: str = f'{{{_SS_NS}}}ExpandedRowCount'
         if expanded in table.attrib:
             table.attrib[expanded] = str(min(rows, kept))
@@ -206,7 +213,7 @@ def _trim_local(local: str, out_path: str, container: str,
 
 
 def excerpt(source: str, out_dir: str, name: str | None = None,
-            pages: int = 4, sheets: int = 2, rows: int = 60, members: int = 3,
+            pages: int = 4, sheets: int = 8, rows: int = 60, members: int = 3,
             spreadsheet_max_bytes: int = _SPREADSHEET_MAX_BYTES) -> str:
     '''Write a fixture for a source, returning the output path.
 
@@ -268,7 +275,8 @@ def main() -> None:
     parser.add_argument('--out', default='oe2d/tests/fixtures', help='Output directory')
     parser.add_argument('--name', help='Fixture stem (single-source mode)')
     parser.add_argument('--pages', type=int, default=4, help='PDF pages to keep')
-    parser.add_argument('--sheets', type=int, default=2, help='Workbook sheets to keep')
+    parser.add_argument('--sheets', type=int, default=8,
+                        help='Workbook sheets to keep (trim path); early sheets are often a TOC')
     parser.add_argument('--rows', type=int, default=60, help='Rows per sheet / text lines')
     parser.add_argument('--zip-members', type=int, default=3, help='Zip members to keep')
     parser.add_argument('--sheet-max-bytes', type=int, default=_SPREADSHEET_MAX_BYTES,
