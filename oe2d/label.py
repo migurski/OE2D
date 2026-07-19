@@ -159,16 +159,16 @@ def _ask_grain(hint: str) -> str:
     return _GRAINS.get(reply, hint) if reply else hint
 
 
-def _ask_quirks() -> list[str]:
+def _ask_quirks() -> dict[str, bool]:
     for index, quirk in enumerate(categorize.QUIRKS, 1):
         print(f'    {index}) {quirk}')
     reply: str = input('  quirks (comma nums, Enter=none): ').strip()
-    picks: list[str] = []
+    flags: dict[str, bool] = {name: False for name in categorize.QUIRKS}
     for token in reply.split(','):
         token = token.strip()
         if token.isdigit() and 1 <= int(token) <= len(categorize.QUIRKS):
-            picks.append(categorize.QUIRKS[int(token) - 1])
-    return picks
+            flags[categorize.QUIRKS[int(token) - 1]] = True
+    return flags
 
 
 def _ask_container(container: str) -> str:
@@ -231,7 +231,7 @@ def label_one(path: str, previewer: Previewer, work_dir: str) -> dict | str | No
     if orientation is None:
         return None
     grain: str = _ask_grain(grain_hint)
-    quirks: list[str] = _ask_quirks()
+    quirks: dict[str, bool] = _ask_quirks()
     container = _ask_container(container)
 
     return {

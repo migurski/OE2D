@@ -35,21 +35,30 @@ Container = typing.Literal[
 ]
 Orientation = typing.Literal['candidate_columns', 'candidate_rows', 'unknown']
 Grain = typing.Literal['precinct', 'district', 'county', 'unknown']
-# OCR-needed is implied by the scanned_pdf container, so it is not a quirk.
-Quirk = typing.Literal[
-    'rotated_headers', 'stacked_contests', 'side_by_side',
-    'multi_sheet_stitch',
-]
 
 CONTAINERS: tuple[str, ...] = typing.get_args(Container)
 ORIENTATIONS: tuple[str, ...] = typing.get_args(Orientation)
 GRAINS: tuple[str, ...] = typing.get_args(Grain)
-QUIRKS: tuple[str, ...] = typing.get_args(Quirk)
 
 # Containers whose first tabular page source_table can read directly.
 _TABULAR_CONTAINERS: tuple[str, ...] = ('vector_pdf', 'xlsx', 'xls_binary', 'xls_xml')
 _PAGED_CONTAINERS: tuple[str, ...] = ('vector_pdf', 'scanned_pdf', 'xlsx', 'xls_binary', 'xls_xml')
 _EXT_CONTAINERS: dict[str, Container] = {'.xlsx': 'xlsx', '.csv': 'csv', '.txt': 'txt', '.zip': 'zip'}
+
+
+class Quirks(pydantic.BaseModel):
+    '''Layout quirks as boolean flags.
+
+    OCR-needed is not a flag — it is implied by the scanned_pdf container.
+    '''
+    rotated_headers: bool = False
+    stacked_contests: bool = False
+    side_by_side: bool = False
+    multi_sheet_stitch: bool = False
+
+
+# Quirk field names (e.g. for the labeler menu), kept in sync with the model.
+QUIRKS: tuple[str, ...] = tuple(Quirks.model_fields)
 
 
 class SourceCategory(pydantic.BaseModel):
@@ -60,7 +69,7 @@ class SourceCategory(pydantic.BaseModel):
     page_count: int
     orientation: Orientation
     grain: Grain
-    quirks: list[Quirk]
+    quirks: Quirks
 
 
 def detect_container(path: str) -> Container:
@@ -172,16 +181,16 @@ class SourceCategorizer(dspy.Signature):
     orientation: 'candidate_columns' when each candidate is a column and
     precincts are rows; 'candidate_rows' when each candidate is a row.
     grain: geographic grain — 'precinct', 'district', or 'county'.
-    quirks: any of 'rotated_headers', 'stacked_contests', 'side_by_side',
-    'multi_sheet_stitch'; empty list if none. OCR-needed is not a quirk; it is
-    implied by the scanned_pdf container.
+    quirks: set each boolean flag that applies — rotated_headers,
+    stacked_contests, side_by_side, multi_sheet_stitch (all default false).
+    OCR-needed is not a flag; it is implied by the scanned_pdf container.
     '''
     file_path: str = dspy.InputField(desc='Path to the source file for the tools')
     container: str = dspy.InputField(desc='Detected container format')
     page_count: int = dspy.InputField(desc='Pages (PDF) or sheets (spreadsheet)')
     orientation: Orientation = dspy.OutputField()
     grain: Grain = dspy.OutputField()
-    quirks: list[Quirk] = dspy.OutputField()
+    quirks: Quirks = dspy.OutputField()
 
 
 def _instrument() -> None:
@@ -231,7 +240,7 @@ def run_rlm(signals: dict, verbose: bool = False) -> dict:
     return {
         'orientation': prediction.orientation,
         'grain': prediction.grain,
-        'quirks': [q for q in prediction.quirks if q in QUIRKS],
+        'quirks': prediction.quirks,
     }
 
 
@@ -259,7 +268,7 @@ def categorize(path: str, verbose: bool = False) -> dict:
         page_count=pages,
         orientation=llm['orientation'],
         grain=grain,
-        quirks=list(llm['quirks']),
+        quirks=llm['quirks'],
     )
     return category.model_dump()
 
