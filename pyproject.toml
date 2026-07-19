@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2",
     "dspy>=2.5",
     "boto3",
+    "python-dotenv",
 ]
 
 [project.scripts]

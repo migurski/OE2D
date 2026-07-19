@@ -20,6 +20,7 @@ import sys
 import typing
 import zipfile
 
+import dotenv
 import dspy
 import pdfplumber
 import pydantic
@@ -206,7 +207,13 @@ class SourceCategorizer(dspy.Signature):
 
 
 def _instrument() -> None:
-    '''Turn on cmpnd tracing when a key is configured; otherwise do nothing.'''
+    '''Turn on cmpnd tracing when a key is configured; otherwise do nothing.
+
+    Loads a repo-local .env explicitly rather than leaning on litellm's
+    import-time load_dotenv() side effect, so the key source is visible here and
+    survives litellm dropping that behavior.
+    '''
+    dotenv.load_dotenv()
     key: str | None = os.environ.get('CMPND_API_KEY')
     if not key:
         return
