@@ -152,17 +152,15 @@ def _raw_line_preview(path: str, rows: int) -> str:
 
 
 def _llm_enabled() -> bool:
-    '''Whether to attempt the DSPy categorization step.'''
+    '''Whether to attempt the RLM step: needs Bedrock creds and not opted out.'''
     if os.environ.get('OE2D_NO_LM'):
         return False
-    if os.environ.get('OE2D_LM'):
-        return True
     return bool(os.environ.get('AWS_PROFILE') or os.environ.get('AWS_ACCESS_KEY_ID'))
 
 
-# RLM writes sandbox code and calls tools; vision reads rendered pages.
-DEFAULT_STUDENT_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
-DEFAULT_VISION_LM = 'bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0'
+# Bedrock's Llama-4 Maverick (multimodal) drives both the RLM code-writing and
+# the vision inspector. Hardcoded — no per-run model override needed.
+MAVERICK_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
 
 
 def _instrument() -> None:
@@ -197,9 +195,6 @@ def run_rlm(signals: dict) -> dict | None:
         return None
     from . import inspector, tools
 
-    student_model: str = os.environ.get('OE2D_LM', DEFAULT_STUDENT_LM)
-    vision_model: str = os.environ.get('OE2D_VISION_LM', DEFAULT_VISION_LM)
-
     class SourceCategorizer(dspy.Signature):
         '''Categorize an election-results source file for extractor routing.
 
@@ -228,8 +223,9 @@ def run_rlm(signals: dict) -> dict | None:
 
     try:
         _instrument()
-        dspy.configure(lm=dspy.LM(student_model))
-        inspector.configure(dspy.LM(vision_model))
+        maverick = dspy.LM(MAVERICK_LM)
+        dspy.configure(lm=maverick)
+        inspector.configure(maverick)
         categorizer = dspy.RLM(
             SourceCategorizer,
             tools=[tools.page_count, tools.page_table, tools.page_words,

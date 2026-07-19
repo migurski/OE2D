@@ -31,10 +31,11 @@ Categorize (and, later, extract) OpenElections source files.
   `brew install deno`.
 - **optipng** — optional; shrinks rendered images. `brew install optipng`.
 
+The model is hardcoded to Bedrock's Llama-4 Maverick (multimodal) for both the
+RLM and the vision inspector — no model override needed.
+
 ## Environment variables
 
-- `OE2D_LM` — RLM student model (default Llama-4 Maverick on Bedrock).
-- `OE2D_VISION_LM` — vision model for `PageInspector` (default Sonnet 4.5).
 - `OE2D_NO_LM=1` — skip the RLM, deterministic output only.
-- `AWS_PROFILE` / `AWS_ACCESS_KEY_ID` — presence enables the RLM by default.
+- `AWS_PROFILE` / `AWS_ACCESS_KEY_ID` — presence enables the RLM.
 - `CMPND_API_KEY` / `CMPND_ENDPOINT` — turn on cmpnd tracing.
