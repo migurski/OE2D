@@ -65,10 +65,14 @@ def inspect_page(path: str, page: int = 1, member: str | None = None, question: 
         f' member={member!r}' if member else '',
         os.path.basename(png_path), os.path.getsize(png_path),
     )
-    prediction = _get_program()(
-        image=dspy.Image(png_path),
-        question=question or _DEFAULT_QUESTION,
-    )
+    try:
+        prediction = _get_program()(
+            image=dspy.Image(png_path),
+            question=question or _DEFAULT_QUESTION,
+        )
+    except Exception:
+        logger.exception('inspect_page: vision call FAILED for %s', os.path.basename(png_path))
+        raise
     facts: str = prediction.facts
     logger.info('inspect_page: vision facts: %s', ' '.join(facts.split())[:400])
     return facts
