@@ -76,6 +76,39 @@ def load_examples(gold_path: str = _GOLD_PATH) -> list[dspy.Example]:
     return examples
 
 
+def subsample(examples: list[dspy.Example], n: int) -> list[dspy.Example]:
+    '''Deterministically take n examples, spread across containers.
+
+    Groups by container, sorts each group by basename, then round-robins across
+    the groups so a small slice still spans as many shapes as possible. Used for
+    quick optimization passes that want fast feedback over the whole gold set.
+    '''
+    if n >= len(examples):
+        return examples
+    by_container: dict[str, list[dspy.Example]] = collections.defaultdict(list)
+    for example in examples:
+        by_container[example.container].append(example)
+    for container in by_container:
+        by_container[container].sort(key=lambda ex: os.path.basename(ex.file_path))
+
+    order: list[str] = sorted(by_container)
+    picked: list[dspy.Example] = []
+    depth: int = 0
+    while len(picked) < n:
+        advanced: bool = False
+        for container in order:
+            group: list[dspy.Example] = by_container[container]
+            if depth < len(group):
+                picked.append(group[depth])
+                advanced = True
+                if len(picked) >= n:
+                    break
+        if not advanced:
+            break
+        depth += 1
+    return picked
+
+
 def split(examples: list[dspy.Example], val_fraction: float = 0.3) -> tuple[list[dspy.Example], list[dspy.Example]]:
     '''Split into train/val deterministically, stratified by container.
 

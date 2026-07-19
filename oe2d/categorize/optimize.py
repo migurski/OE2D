@@ -108,6 +108,9 @@ def main() -> None:
     parser.add_argument('--log-dir', default=None,
                         help='GEPA checkpoint dir (default gepa-<digest> at the repo root, '
                              'derived from the run config); re-running resumes a matching run')
+    parser.add_argument('--max-examples', type=int, default=None,
+                        help='Cap the gold set to a stratified subsample for a quick pass '
+                             '(shrinks the baseline eval, so reflections start sooner)')
     parser.add_argument('--val-fraction', type=float, default=0.3)
     parser.add_argument('-v', '--verbose', action='store_true', help='stream RLM REPL steps')
     args: argparse.Namespace = parser.parse_args()
@@ -121,7 +124,11 @@ def main() -> None:
     categorize._instrument()
 
     print('Loading gold set (recomputing container/page_count per fixture)...', flush=True)
-    trainset, valset = datasets.load_split(val_fraction=args.val_fraction)
+    examples: list = datasets.load_examples()
+    if args.max_examples:
+        examples = datasets.subsample(examples, args.max_examples)
+        print(f'Subsampled to {len(examples)} examples for a quick pass.', flush=True)
+    trainset, valset = datasets.split(examples, val_fraction=args.val_fraction)
     print(f'Loaded {len(trainset) + len(valset)} examples: {len(trainset)} train, {len(valset)} val.', flush=True)
 
     # num_retries lets litellm back off and retry on Bedrock throttling rather

@@ -61,6 +61,21 @@ def test_examples_carry_output_fields(gold_file):
         assert isinstance(example.get(name), bool)
 
 
+def test_subsample_is_deterministic_and_spreads_containers(gold_file):
+    examples = datasets.load_examples(gold_file)  # 2 vector_pdf + 2 xlsx
+    a = datasets.subsample(examples, 2)
+    b = datasets.subsample(examples, 2)
+    assert [ex.file_path for ex in a] == [ex.file_path for ex in b]
+    assert len(a) == 2
+    # Round-robin picks one from each container before a second from either.
+    assert {ex.container for ex in a} == {'vector_pdf', 'xlsx'}
+
+
+def test_subsample_caps_at_available(gold_file):
+    examples = datasets.load_examples(gold_file)
+    assert datasets.subsample(examples, 999) == examples
+
+
 def test_split_is_deterministic_and_covers_both_sides(gold_file):
     examples = datasets.load_examples(gold_file)
     train_a, val_a = datasets.split(examples)
