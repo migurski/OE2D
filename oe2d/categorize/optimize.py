@@ -67,7 +67,10 @@ def main() -> None:
     parser.add_argument('--out', default=_DEFAULT_OUT, help='Where to save the optimized program JSON')
     parser.add_argument('--max-metric-calls', type=int, default=180, help='GEPA metric-call budget')
     parser.add_argument('--reflection-minibatch-size', type=int, default=7)
-    parser.add_argument('--num-threads', type=int, default=8)
+    parser.add_argument('--num-threads', type=int, default=2,
+                        help='Parallel RLM rollouts; each fires several Bedrock calls, so keep low to avoid throttling')
+    parser.add_argument('--num-retries', type=int, default=10,
+                        help='litellm retries per LM call (exponential backoff) for Bedrock throttling')
     parser.add_argument('--val-fraction', type=float, default=0.3)
     parser.add_argument('-v', '--verbose', action='store_true', help='stream RLM REPL steps')
     args: argparse.Namespace = parser.parse_args()
@@ -84,8 +87,13 @@ def main() -> None:
     trainset, valset = datasets.load_split(val_fraction=args.val_fraction)
     print(f'Loaded {len(trainset) + len(valset)} examples: {len(trainset)} train, {len(valset)} val.', flush=True)
 
-    student_lm: dspy.LM = dspy.LM(model=STUDENT_MODEL, temperature=1.0, max_tokens=4096)
-    reflection_lm: dspy.LM = dspy.LM(model=REFLECTION_MODEL, temperature=1.0, max_tokens=8192)
+    # num_retries lets litellm back off and retry on Bedrock throttling rather
+    # than failing the rollout; combined with a low --num-threads it keeps the
+    # run under the model's rate limits.
+    student_lm: dspy.LM = dspy.LM(model=STUDENT_MODEL, temperature=1.0, max_tokens=4096,
+                                  num_retries=args.num_retries)
+    reflection_lm: dspy.LM = dspy.LM(model=REFLECTION_MODEL, temperature=1.0, max_tokens=8192,
+                                     num_retries=args.num_retries)
 
     # The ambient LM drives both the RLM and, through dspy.settings, the vision
     # inspector; the program's own LM is set to the same student model.
