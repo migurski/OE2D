@@ -8,18 +8,21 @@ Categorize (and, later, extract) OpenElections source files.
     oe2d-make-fixture --manifest ...           # trim sources into fixtures
     oe2d-label-categories                      # guided gold labeling
 
-`oe2d-categorize-source` has two layers:
+`oe2d-categorize-source` always runs the full pipeline — there is no
+deterministic-only fallback, and missing pieces fail loudly:
 
-- **Deterministic** (always runs, no model): container format (vector vs
-  scanned PDF, binary vs XML .xls, xlsx/csv/txt/zip), page/sheet count, and a
-  grain hint from the file name.
-- **RLM** (runs when a model is configured): a `dspy.RLM` writes Python in a
-  sandbox and calls host-side tools to look at the file —
-  `page_count`, `page_table`, `page_words`, `zip_members`, and `inspect_page`.
-  `inspect_page` renders a page/sheet to an image and runs a vision model on it
-  (`PageInspector`), returning text — the only way to read scanned PDFs, and
-  the way rotated headers / side-by-side layouts get confirmed. Only text
-  crosses the sandbox boundary; image bytes never do.
+- A deterministic layer sniffs the container (vector vs scanned PDF, binary vs
+  XML .xls, xlsx/csv/txt/zip) and page/sheet count, and provides a grain hint
+  from the file name. These feed the RLM as inputs.
+- A `dspy.RLM` writes Python in a sandbox and calls host-side tools to look at
+  the file — `page_count`, `page_table`, `page_words`, `zip_members`, and
+  `inspect_page`. `inspect_page` renders a page/sheet to an image and runs a
+  vision model on it (`PageInspector`), returning text — the only way to read
+  scanned PDFs, and how rotated headers / side-by-side layouts get confirmed.
+  Only text crosses the sandbox boundary; image bytes never do.
+
+If DSPy, Bedrock credentials, Deno, or LibreOffice are missing, the command
+raises rather than emitting a partial categorization.
 
 ## Runtime system dependencies
 
@@ -36,6 +39,5 @@ RLM and the vision inspector — no model override needed.
 
 ## Environment variables
 
-- `OE2D_NO_LM=1` — skip the RLM, deterministic output only.
-- `AWS_PROFILE` / `AWS_ACCESS_KEY_ID` — presence enables the RLM.
+- `AWS_PROFILE` / `AWS_ACCESS_KEY_ID` — Bedrock credentials (required).
 - `CMPND_API_KEY` / `CMPND_ENDPOINT` — turn on cmpnd tracing.

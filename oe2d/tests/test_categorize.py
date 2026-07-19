@@ -1,8 +1,5 @@
-'''Tests for oe2d.categorize — deterministic layer only (no LM required).'''
-import json
+'''Tests for oe2d.categorize deterministic detectors (the RLM step needs creds).'''
 import os
-import subprocess
-import sys
 
 from oe2d import categorize
 
@@ -37,29 +34,6 @@ def test_content_preview_reads_rows():
     assert 'PRESIDENT' in preview.upper()
 
 
-def test_categorize_dict_shape():
-    os.environ['OE2D_NO_LM'] = '1'
-    result: dict = categorize.categorize(_fixture('glenn-pdf-p15.pdf'))
-    assert result['container'] == 'vector_pdf'
-    assert result['page_count'] == 1
-    assert result['grain'] == 'unknown'
-    assert result['orientation'] == 'unknown'
-    assert result['llm_used'] is False
-    assert set(result) == {
-        'path', 'file_name', 'container', 'page_count',
-        'orientation', 'grain', 'quirks', 'llm_used',
-    }
-
-
-def test_cli_entry_point():
-    env: dict = dict(os.environ, OE2D_NO_LM='1')
-    # The console script is installed alongside the running interpreter.
-    script: str = os.path.join(os.path.dirname(sys.executable), 'oe2d-categorize-source')
-    proc = subprocess.run(
-        [script, _fixture('sf-xlsx-sheet2.xlsx')],
-        capture_output=True, text=True, env=env,
-    )
-    assert proc.returncode == 0, proc.stderr
-    payload: dict = json.loads(proc.stdout)
-    assert payload['container'] == 'xlsx'
-    assert payload['grain'] == 'unknown'
+def test_count_pages_deterministic():
+    path: str = _fixture('glenn-pdf-p15.pdf')
+    assert categorize.count_pages(path, 'vector_pdf') == 1

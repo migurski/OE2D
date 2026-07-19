@@ -3,21 +3,21 @@
 Usage: oe2d-categorize-source path/to/file
 
 Prints a JSON dict describing the source: its container format, table
-orientation, geographic grain, and layout quirks. A deterministic layer
-sniffs the container and reads a content preview; a DSPy program fills in
-the semantic fields (orientation, grain, quirks) from the file name and
-preview. The DSPy step is skipped when no LM is configured, so the CLI and
-its container detection stay testable without model credentials.
+orientation, geographic grain, and layout quirks. A deterministic layer sniffs
+the container and page count; a DSPy RLM then inspects the file with tools
+(including a vision inspector) to fill in orientation, grain, and quirks.
+Requires DSPy, Bedrock credentials, Deno, and LibreOffice — missing pieces fail
+loudly rather than degrading to a partial result.
 '''
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import sys
 import typing
 import zipfile
 
+import dspy
 import pdfplumber
 import pydantic
 
@@ -59,7 +59,6 @@ class SourceCategory(pydantic.BaseModel):
     orientation: Orientation
     grain: Grain
     quirks: list[Quirk]
-    llm_used: bool
 
 
 def detect_container(path: str) -> Container:
@@ -151,13 +150,6 @@ def _raw_line_preview(path: str, rows: int) -> str:
     return '\n'.join(lines)
 
 
-def _llm_enabled() -> bool:
-    '''Whether to attempt the RLM step: needs Bedrock creds and not opted out.'''
-    if os.environ.get('OE2D_NO_LM'):
-        return False
-    return bool(os.environ.get('AWS_PROFILE') or os.environ.get('AWS_ACCESS_KEY_ID'))
-
-
 # Bedrock's Llama-4 Maverick (multimodal) drives both the RLM code-writing and
 # the vision inspector. Hardcoded — no per-run model override needed.
 MAVERICK_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
@@ -180,19 +172,16 @@ def _instrument() -> None:
         pass
 
 
-def run_rlm(signals: dict) -> dict | None:
+def run_rlm(signals: dict) -> dict:
     '''Categorize with a DSPy RLM that inspects the file through tools.
 
     The RLM writes Python in a sandbox and calls host-side tools (page_count,
     page_table, page_words, zip_members, inspect_page). inspect_page renders a
     page/sheet and runs a vision model on it, so scanned PDFs and visually
-    complex layouts are read from the image rather than guessed. Returns
-    orientation, grain, and quirks, or None if DSPy or a model is unavailable.
+    complex layouts are read from the image rather than guessed. Raises on any
+    missing runtime piece (Bedrock credentials, Deno, LibreOffice) rather than
+    hiding it behind a partial result.
     '''
-    try:
-        import dspy
-    except Exception:
-        return None
     from . import inspector, tools
 
     class SourceCategorizer(dspy.Signature):
@@ -221,25 +210,20 @@ def run_rlm(signals: dict) -> dict | None:
         grain: Grain = dspy.OutputField()
         quirks: list[Quirk] = dspy.OutputField()
 
-    try:
-        _instrument()
-        maverick = dspy.LM(MAVERICK_LM)
-        dspy.configure(lm=maverick)
-        inspector.configure(maverick)
-        categorizer = dspy.RLM(
-            SourceCategorizer,
-            tools=[tools.page_count, tools.page_table, tools.page_words,
-                   tools.zip_members, tools.inspect_page],
-        )
-        prediction = categorizer(
-            file_path=signals['path'],
-            container=signals['container'],
-            page_count=signals['page_count'],
-        )
-    except Exception as err:
-        print(f'RLM categorization unavailable: {err}', file=sys.stderr)
-        return None
-
+    _instrument()
+    maverick = dspy.LM(MAVERICK_LM)
+    dspy.configure(lm=maverick)
+    inspector.configure(maverick)
+    categorizer = dspy.RLM(
+        SourceCategorizer,
+        tools=[tools.page_count, tools.page_table, tools.page_words,
+               tools.zip_members, tools.inspect_page],
+    )
+    prediction = categorizer(
+        file_path=signals['path'],
+        container=signals['container'],
+        page_count=signals['page_count'],
+    )
     return {
         'orientation': prediction.orientation,
         'grain': prediction.grain,
@@ -261,25 +245,17 @@ def categorize(path: str) -> dict:
         'page_count': pages,
     }
 
-    llm: dict | None = run_rlm(signals) if _llm_enabled() else None
-    if llm is not None:
-        orientation: Orientation = llm['orientation']
-        grain: Grain = llm['grain'] if llm['grain'] != 'unknown' else name_grain
-        quirks: list[Quirk] = list(llm['quirks'])
-    else:
-        orientation = 'unknown'
-        grain = name_grain
-        quirks = []
+    llm: dict = run_rlm(signals)
+    grain: Grain = llm['grain'] if llm['grain'] != 'unknown' else name_grain
 
     category = SourceCategory(
         path=path,
         file_name=file_name,
         container=container,
         page_count=pages,
-        orientation=orientation,
+        orientation=llm['orientation'],
         grain=grain,
-        quirks=quirks,
-        llm_used=llm is not None,
+        quirks=list(llm['quirks']),
     )
     return category.model_dump()
 

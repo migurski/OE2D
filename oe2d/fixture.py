@@ -236,12 +236,19 @@ def excerpt(source: str, out_dir: str, name: str | None = None,
 
 
 def _summarize(out_path: str) -> dict:
-    '''Categorize the produced fixture and report its size.'''
-    os.environ.setdefault('OE2D_NO_LM', '1')
+    '''Report a produced fixture's container, page count, and size.
+
+    Uses the deterministic detectors only — no RLM/model call, since this just
+    describes what was written.
+    '''
     source_table.page_count.cache_clear()
-    summary: dict = categorize.categorize(out_path)
-    summary['bytes'] = os.path.getsize(out_path)
-    return summary
+    container: str = categorize.detect_container(out_path)
+    return {
+        'file_name': os.path.basename(out_path),
+        'container': container,
+        'page_count': categorize.count_pages(out_path, container),
+        'bytes': os.path.getsize(out_path),
+    }
 
 
 def _run_manifest(manifest: str, out_dir: str, limit: int | None,

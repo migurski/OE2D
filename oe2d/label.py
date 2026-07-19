@@ -244,7 +244,6 @@ def label_one(path: str, previewer: Previewer, work_dir: str) -> dict | str | No
 
 
 def main() -> None:
-    os.environ.setdefault('OE2D_NO_LM', '1')
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Guided labeling of categorization fixtures.',
     )
