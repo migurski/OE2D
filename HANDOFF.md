@@ -157,10 +157,16 @@ with resume support.
   why `inspect_page` runs `PageInspector` itself and hands back a string.
 - **base64 image data only "counts" as an image when delivered as an image
   content block** (which `dspy.Image` does), never as text in a prompt.
-- **cmpnd traces the globally-configured LM, not a program-local `set_lm`.** The
-  inspector originally had `set_lm(maverick)` and its vision call was missing
-  from traces. Dropping `set_lm` so it uses the ambient `dspy.settings.lm` fixed
-  it (and killed a `dspy.Image` forward-ref warning).
+- **cmpnd.auto_instrument() patches `dspy.LM` going forward — it traces any LM
+  created *after* the call, regardless of configured-vs-`set_lm`.** The inspector
+  originally had `set_lm(maverick)` on an LM built at module-import time, *before*
+  `_instrument()` ran, so that instance was never patched and its vision call was
+  missing from traces; dropping `set_lm` made it use the ambient LM (created after
+  instrumentation), which fixed it. The rule is creation order, not
+  configured-vs-`set_lm`. `optimize.py` relies on this: it calls `_instrument()`
+  before building the student and reflection LMs, so GEPA's Opus reflection calls
+  trace alongside the Maverick task/vision calls (matching train-spam-finder,
+  which instruments at module top and traces everything).
 - **RLM tool `member` is keyword-only.** Maverick called
   `page_table(path, 1, container)`, so `'xlsx'` landed in `member`, opened the
   xlsx-as-zip, and raised a cryptic `KeyError`. Keyword-only turns that into a
