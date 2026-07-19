@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
+import sys
 import typing
 import zipfile
 
@@ -172,7 +174,7 @@ def _instrument() -> None:
         pass
 
 
-def run_rlm(signals: dict) -> dict:
+def run_rlm(signals: dict, verbose: bool = False) -> dict:
     '''Categorize with a DSPy RLM that inspects the file through tools.
 
     The RLM writes Python in a sandbox and calls host-side tools (page_count,
@@ -218,6 +220,7 @@ def run_rlm(signals: dict) -> dict:
         SourceCategorizer,
         tools=[tools.page_count, tools.page_table, tools.page_words,
                tools.zip_members, tools.inspect_page],
+        verbose=verbose,
     )
     prediction = categorizer(
         file_path=signals['path'],
@@ -231,7 +234,7 @@ def run_rlm(signals: dict) -> dict:
     }
 
 
-def categorize(path: str) -> dict:
+def categorize(path: str, verbose: bool = False) -> dict:
     '''Categorize a source file, returning a plain JSON-serializable dict.'''
     file_name: str = os.path.basename(path)
     container: str = detect_container(path)
@@ -245,7 +248,7 @@ def categorize(path: str) -> dict:
         'page_count': pages,
     }
 
-    llm: dict = run_rlm(signals)
+    llm: dict = run_rlm(signals, verbose=verbose)
     grain: Grain = llm['grain'] if llm['grain'] != 'unknown' else name_grain
 
     category = SourceCategory(
@@ -265,9 +268,18 @@ def main() -> None:
         description='Categorize an election-results source file.',
     )
     parser.add_argument('path', help='Path to the source file')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='suppress the RLM execution trace')
     args: argparse.Namespace = parser.parse_args()
 
-    print(json.dumps(categorize(args.path), indent=2))
+    verbose: bool = not args.quiet
+    if verbose:
+        # RLM logs its REPL steps at INFO; send them to stderr so stdout stays
+        # pure JSON and the trace is watchable alongside it.
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(message)s')
+        logging.getLogger('dspy').setLevel(logging.INFO)
+
+    print(json.dumps(categorize(args.path, verbose=verbose), indent=2))
 
 
 if __name__ == '__main__':
