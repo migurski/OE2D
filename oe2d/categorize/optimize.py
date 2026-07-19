@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import argparse
 import collections
+import logging
 import os
+import sys
 
 import dspy
 from dspy.teleprompt import GEPA
@@ -70,10 +72,17 @@ def main() -> None:
     parser.add_argument('-v', '--verbose', action='store_true', help='stream RLM REPL steps')
     args: argparse.Namespace = parser.parse_args()
 
+    if args.verbose:
+        # Mirror categorize.main: without a handler at INFO the RLM's verbose
+        # REPL steps are emitted to a logger nobody is listening to.
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(message)s')
+        logging.getLogger('dspy').setLevel(logging.INFO)
+
     categorize._instrument()
 
+    print('Loading gold set (recomputing container/page_count per fixture)...', flush=True)
     trainset, valset = datasets.load_split(val_fraction=args.val_fraction)
-    print(f'Loaded {len(trainset) + len(valset)} examples: {len(trainset)} train, {len(valset)} val.')
+    print(f'Loaded {len(trainset) + len(valset)} examples: {len(trainset)} train, {len(valset)} val.', flush=True)
 
     student_lm: dspy.LM = dspy.LM(model=STUDENT_MODEL, temperature=1.0, max_tokens=4096)
     reflection_lm: dspy.LM = dspy.LM(model=REFLECTION_MODEL, temperature=1.0, max_tokens=8192)
