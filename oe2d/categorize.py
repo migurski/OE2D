@@ -160,49 +160,88 @@ def _llm_enabled() -> bool:
     return bool(os.environ.get('AWS_PROFILE') or os.environ.get('AWS_ACCESS_KEY_ID'))
 
 
-def run_llm(signals: dict) -> dict | None:
-    '''Run the DSPy categorizer over deterministic signals.
+# RLM writes sandbox code and calls tools; vision reads rendered pages.
+DEFAULT_STUDENT_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
+DEFAULT_VISION_LM = 'bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0'
 
-    Returns a dict with orientation, grain, and quirks, or None if DSPy or a
-    language model is unavailable.
+
+def _instrument() -> None:
+    '''Turn on cmpnd tracing when a key is configured; otherwise do nothing.'''
+    key: str | None = os.environ.get('CMPND_API_KEY')
+    if not key:
+        return
+    try:
+        import cmpnd
+        cmpnd.configure(
+            api_key=key,
+            endpoint=os.environ.get('CMPND_ENDPOINT'),
+            project_tags=['oe2d-categorize'],
+        )
+        cmpnd.auto_instrument()
+    except Exception:
+        pass
+
+
+def run_rlm(signals: dict) -> dict | None:
+    '''Categorize with a DSPy RLM that inspects the file through tools.
+
+    The RLM writes Python in a sandbox and calls host-side tools (page_count,
+    page_table, page_words, zip_members, inspect_page). inspect_page renders a
+    page/sheet and runs a vision model on it, so scanned PDFs and visually
+    complex layouts are read from the image rather than guessed. Returns
+    orientation, grain, and quirks, or None if DSPy or a model is unavailable.
     '''
     try:
         import dspy
     except Exception:
         return None
+    from . import inspector, tools
+
+    student_model: str = os.environ.get('OE2D_LM', DEFAULT_STUDENT_LM)
+    vision_model: str = os.environ.get('OE2D_VISION_LM', DEFAULT_VISION_LM)
 
     class SourceCategorizer(dspy.Signature):
-        '''Categorize an election-results source page for extractor routing.
+        '''Categorize an election-results source file for extractor routing.
+
+        Look at the file with the tools before answering:
+        - page_count, page_table, page_words read text; for spreadsheets the
+          page argument is the sheet number. zip_members lists archive contents.
+        - inspect_page renders a page/sheet and returns what a vision model sees.
+          It is REQUIRED for scanned_pdf sources (no extractable text) and useful
+          to confirm rotated headers or side-by-side/stacked contests.
+        Many spreadsheets lead with a table-of-contents sheet, so look past it at
+        an actual contest sheet.
 
         orientation: 'candidate_columns' when each candidate is a column and
         precincts are rows; 'candidate_rows' when each candidate is a row.
-        grain: geographic grain of the data rows — 'precinct', 'district', or
-        'county'.
+        grain: geographic grain — 'precinct', 'district', or 'county'.
         quirks: any of 'rotated_headers', 'stacked_contests', 'side_by_side',
-        'multi_sheet_stitch'. Return an empty list if none apply. OCR-needed is
-        not a quirk; it is implied by the scanned_pdf container.
+        'multi_sheet_stitch'; empty list if none. OCR-needed is not a quirk; it
+        is implied by the scanned_pdf container.
         '''
-        file_name: str = dspy.InputField()
-        container: str = dspy.InputField()
-        page_count: int = dspy.InputField()
-        content_preview: str = dspy.InputField(desc='first rows of the first tabular page')
+        file_path: str = dspy.InputField(desc='Path to the source file for the tools')
+        container: str = dspy.InputField(desc='Detected container format')
+        page_count: int = dspy.InputField(desc='Pages (PDF) or sheets (spreadsheet)')
         orientation: Orientation = dspy.OutputField()
         grain: Grain = dspy.OutputField()
-        quirks: list[Quirk] = dspy.OutputField(desc='subset of the allowed quirk labels')
+        quirks: list[Quirk] = dspy.OutputField()
 
-    model: str = os.environ.get('OE2D_LM', 'bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0')
     try:
-        language_model = dspy.LM(model)
-        dspy.configure(lm=language_model)
-        categorizer = dspy.Predict(SourceCategorizer)
+        _instrument()
+        dspy.configure(lm=dspy.LM(student_model))
+        inspector.configure(dspy.LM(vision_model))
+        categorizer = dspy.RLM(
+            SourceCategorizer,
+            tools=[tools.page_count, tools.page_table, tools.page_words,
+                   tools.zip_members, tools.inspect_page],
+        )
         prediction = categorizer(
-            file_name=signals['file_name'],
+            file_path=signals['path'],
             container=signals['container'],
             page_count=signals['page_count'],
-            content_preview=signals['content_preview'],
         )
     except Exception as err:
-        print(f'LLM categorization unavailable: {err}', file=sys.stderr)
+        print(f'RLM categorization unavailable: {err}', file=sys.stderr)
         return None
 
     return {
@@ -217,17 +256,16 @@ def categorize(path: str) -> dict:
     file_name: str = os.path.basename(path)
     container: str = detect_container(path)
     pages: int = count_pages(path, container)
-    preview: str = content_preview(path, container)
     name_grain: str = grain_from_name(file_name)
 
     signals: dict = {
+        'path': path,
         'file_name': file_name,
         'container': container,
         'page_count': pages,
-        'content_preview': preview,
     }
 
-    llm: dict | None = run_llm(signals) if _llm_enabled() else None
+    llm: dict | None = run_rlm(signals) if _llm_enabled() else None
     if llm is not None:
         orientation: Orientation = llm['orientation']
         grain: Grain = llm['grain'] if llm['grain'] != 'unknown' else name_grain
