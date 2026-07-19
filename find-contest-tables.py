@@ -13,7 +13,7 @@ import pprint
 import typing
 import pdfplumber
 import pydantic
-import source_table
+from oe2d import source_table
 
 
 class ContestTable(pydantic.BaseModel):

@@ -21,7 +21,7 @@ import tempfile
 
 import openpyxl
 
-import source_table
+from .. import source_table
 from .. import categorize
 
 _ORIENTATIONS = {'c': 'candidate_columns', 'r': 'candidate_rows', 'u': 'unknown'}

@@ -31,7 +31,7 @@ import pypdf
 import xlrd
 import xlwt
 
-import source_table
+from .. import source_table
 from .. import categorize
 
 # SpreadsheetML namespace for XML-format .xls files.

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import zipfile
 
-import source_table
+from .. import source_table
 
 from . import inspector, rendering
 from .. import categorize

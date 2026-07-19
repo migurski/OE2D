@@ -1,3 +1,0 @@
-openpyxl
-pdfplumber
-xlrd==1.2.0

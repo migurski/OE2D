@@ -4,7 +4,7 @@ import os
 from oe2d import categorize
 from oe2d.categorize import fixture
 
-FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'fixtures')
+FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', 'source_table', 'fixtures')
 
 
 def _fixture(name: str) -> str:

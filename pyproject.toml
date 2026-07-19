@@ -23,8 +23,5 @@ oe2d-categorize-source = "oe2d.categorize:main"
 oe2d-make-fixture = "oe2d.categorize.fixture:main"
 oe2d-label-categories = "oe2d.categorize.label:main"
 
-# Reuse the existing top-level source_table.py without moving it, so the
-# pre-existing find-contest-*.py scripts keep importing it unchanged.
 [tool.setuptools]
 packages = ["oe2d", "oe2d.categorize"]
-py-modules = ["source_table"]

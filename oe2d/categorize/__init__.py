@@ -24,7 +24,7 @@ import dspy
 import pdfplumber
 import pydantic
 
-import source_table
+from .. import source_table
 
 
 # Allowed label vocabularies — these Literal types define the routing

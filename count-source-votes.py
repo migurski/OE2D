@@ -11,7 +11,7 @@ import dataclasses
 import os
 import typing
 
-import source_table
+from oe2d import source_table
 
 
 @dataclasses.dataclass
