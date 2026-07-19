@@ -35,7 +35,7 @@ def test_zip_member_tools_return_simple_types():
     zip_path = _fx('2024-armstrong-county-pa-precinct-level-results.zip')
     members = tools.zip_members(zip_path)
     assert members and all(isinstance(m, str) for m in members)
-    count = tools.page_count(zip_path, member=members[0])
+    count = tools.count_pages(zip_path, member=members[0])
     assert isinstance(count, int)
     rows = tools.page_table(zip_path, 1, member=members[0])
     assert isinstance(rows, list)

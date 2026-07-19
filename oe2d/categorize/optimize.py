@@ -73,7 +73,7 @@ def build_program(verbose: bool = False) -> dspy.Module:
     '''Construct the RLM categorizer program GEPA will optimize.'''
     return dspy.RLM(
         categorize.SourceCategorizer,
-        tools=[tools.page_count, tools.page_table, tools.page_words,
+        tools=[tools.count_pages, tools.page_table, tools.page_words,
                tools.zip_members, tools.inspect_page],
         verbose=verbose,
     )

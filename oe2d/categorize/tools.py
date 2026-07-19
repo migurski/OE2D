@@ -29,9 +29,12 @@ def zip_members(path: str) -> list[str]:
         return [name for name in archive.namelist() if not name.endswith('/')]
 
 
+# Named count_pages, not page_count, so it does not collide with the RLM's
+# page_count input field — a same-named input would shadow the tool in the
+# sandbox namespace, leaving the model unable to call it (it sees an int).
 # member is keyword-only: it names a file inside a .zip and is rarely needed, so
 # a stray positional (e.g. the container) cannot accidentally land there.
-def page_count(path: str, *, member: str | None = None) -> int:
+def count_pages(path: str, *, member: str | None = None) -> int:
     '''Number of pages (PDF) or sheets (spreadsheet) in a source or zip member.'''
     local: str = rendering.material_path(path, member)
     return source_table.page_count(local)

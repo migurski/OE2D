@@ -184,8 +184,9 @@ class SourceCategorizer(dspy.Signature):
     Look at the file with the tools before answering. Call them with just the
     file path and a page/sheet number — do NOT pass the container to them; pass
     member= (keyword) only to read a file inside a zip.
-    - page_count, page_table, page_words read text; for spreadsheets the page
-      argument is the sheet number. zip_members lists archive contents.
+    - count_pages, page_table, page_words read text; for spreadsheets the page
+      argument is the sheet number. zip_members lists archive contents. (The
+      page_count input already holds the top-level page/sheet count.)
     - inspect_page renders a page/sheet and returns what a vision model sees. It
       is REQUIRED for scanned_pdf sources (no extractable text) and useful to
       confirm rotated headers or side-by-side/stacked contests.
@@ -239,7 +240,7 @@ def _instrument() -> None:
 def run_rlm(signals: dict, verbose: bool = False) -> dict:
     '''Categorize with a DSPy RLM that inspects the file through tools.
 
-    The RLM writes Python in a sandbox and calls host-side tools (page_count,
+    The RLM writes Python in a sandbox and calls host-side tools (count_pages,
     page_table, page_words, zip_members, inspect_page). inspect_page renders a
     page/sheet and runs a vision model on it, so scanned PDFs and visually
     complex layouts are read from the image rather than guessed. Raises on any
@@ -254,7 +255,7 @@ def run_rlm(signals: dict, verbose: bool = False) -> dict:
     dspy.configure(lm=dspy.LM(MAVERICK_LM))
     categorizer = dspy.RLM(
         SourceCategorizer,
-        tools=[tools.page_count, tools.page_table, tools.page_words,
+        tools=[tools.count_pages, tools.page_table, tools.page_words,
                tools.zip_members, tools.inspect_page],
         verbose=verbose,
     )
