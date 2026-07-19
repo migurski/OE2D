@@ -9,6 +9,8 @@ from __future__ import annotations
 import logging
 import os
 
+import dspy
+
 from . import rendering
 
 logger = logging.getLogger(__name__)
@@ -34,8 +36,6 @@ def configure(vision_lm) -> None:
 def _get_program():
     global _program
     if _program is None:
-        import dspy
-
         class PageInspector(dspy.Signature):
             '''Report factual observations about an election-results page image.
 
@@ -56,8 +56,6 @@ def _get_program():
 
 def inspect_page(path: str, page: int = 1, member: str | None = None, question: str = '') -> str:
     '''Render a page/sheet and return a vision model's factual description.'''
-    import dspy
-
     png_path: str = rendering.render_page(path, page, member)
     logger.info(
         'inspect_page: rendered %s page %s%s -> %s (%d bytes); running vision',
