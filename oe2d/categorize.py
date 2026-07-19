@@ -3,9 +3,10 @@
 Usage: oe2d-categorize-source path/to/file
 
 Prints a JSON dict describing the source: its container format, table
-orientation, geographic grain, and layout quirks. A deterministic layer sniffs
-the container and page count; a DSPy RLM then inspects the file with tools
-(including a vision inspector) to fill in orientation, grain, and quirks.
+orientation, geographic grain, and layout properties. A deterministic layer
+sniffs the container and page count; a DSPy RLM then inspects the file with tools
+(including a vision inspector) to fill in orientation, grain, and the layout
+properties.
 Requires DSPy, Bedrock credentials, Deno, and LibreOffice — missing pieces fail
 loudly rather than degrading to a partial result.
 '''
@@ -46,19 +47,15 @@ _PAGED_CONTAINERS: tuple[str, ...] = ('vector_pdf', 'scanned_pdf', 'xlsx', 'xls_
 _EXT_CONTAINERS: dict[str, Container] = {'.xlsx': 'xlsx', '.csv': 'csv', '.txt': 'txt', '.zip': 'zip'}
 
 
-class Quirks(pydantic.BaseModel):
-    '''Layout quirks as boolean flags.
-
-    OCR-needed is not a flag — it is implied by the scanned_pdf container.
-    '''
-    rotated_headers: bool = False
-    stacked_contests: bool = False
-    side_by_side: bool = False
-    multi_sheet_stitch: bool = False
-
-
-# Quirk field names (e.g. for the labeler menu), kept in sync with the model.
-QUIRKS: tuple[str, ...] = tuple(Quirks.model_fields)
+# Layout properties — top-level boolean facts about how a source's tables are
+# laid out. OCR-needed is not one; it is implied by the scanned_pdf container.
+LAYOUT_PROPERTY_DESCRIPTIONS: dict[str, str] = {
+    'has_rotated_headers': 'Column headers are rotated / vertical text',
+    'has_stacked_contests': 'Two or more contests stacked vertically on one page or sheet',
+    'has_side_by_side': 'Two or more contests placed side by side',
+    'has_multi_sheet_stitch': 'Data split across sheets or pages that must be stitched together',
+}
+LAYOUT_PROPERTIES: tuple[str, ...] = tuple(LAYOUT_PROPERTY_DESCRIPTIONS)
 
 
 class SourceCategory(pydantic.BaseModel):
@@ -69,7 +66,14 @@ class SourceCategory(pydantic.BaseModel):
     page_count: int
     orientation: Orientation
     grain: Grain
-    quirks: Quirks
+    has_rotated_headers: bool = pydantic.Field(
+        False, description=LAYOUT_PROPERTY_DESCRIPTIONS['has_rotated_headers'])
+    has_stacked_contests: bool = pydantic.Field(
+        False, description=LAYOUT_PROPERTY_DESCRIPTIONS['has_stacked_contests'])
+    has_side_by_side: bool = pydantic.Field(
+        False, description=LAYOUT_PROPERTY_DESCRIPTIONS['has_side_by_side'])
+    has_multi_sheet_stitch: bool = pydantic.Field(
+        False, description=LAYOUT_PROPERTY_DESCRIPTIONS['has_multi_sheet_stitch'])
 
 
 def detect_container(path: str) -> Container:
@@ -181,16 +185,22 @@ class SourceCategorizer(dspy.Signature):
     orientation: 'candidate_columns' when each candidate is a column and
     precincts are rows; 'candidate_rows' when each candidate is a row.
     grain: geographic grain — 'precinct', 'district', or 'county'.
-    quirks: set each boolean flag that applies — rotated_headers,
-    stacked_contests, side_by_side, multi_sheet_stitch (all default false).
-    OCR-needed is not a flag; it is implied by the scanned_pdf container.
+    The has_* layout properties are boolean facts about the table layout; set
+    each true or false. OCR-needed is not one; it is implied by scanned_pdf.
     '''
     file_path: str = dspy.InputField(desc='Path to the source file for the tools')
     container: str = dspy.InputField(desc='Detected container format')
     page_count: int = dspy.InputField(desc='Pages (PDF) or sheets (spreadsheet)')
     orientation: Orientation = dspy.OutputField()
     grain: Grain = dspy.OutputField()
-    quirks: Quirks = dspy.OutputField()
+    has_rotated_headers: bool = dspy.OutputField(
+        desc=LAYOUT_PROPERTY_DESCRIPTIONS['has_rotated_headers'])
+    has_stacked_contests: bool = dspy.OutputField(
+        desc=LAYOUT_PROPERTY_DESCRIPTIONS['has_stacked_contests'])
+    has_side_by_side: bool = dspy.OutputField(
+        desc=LAYOUT_PROPERTY_DESCRIPTIONS['has_side_by_side'])
+    has_multi_sheet_stitch: bool = dspy.OutputField(
+        desc=LAYOUT_PROPERTY_DESCRIPTIONS['has_multi_sheet_stitch'])
 
 
 def _instrument() -> None:
@@ -240,7 +250,10 @@ def run_rlm(signals: dict, verbose: bool = False) -> dict:
     return {
         'orientation': prediction.orientation,
         'grain': prediction.grain,
-        'quirks': prediction.quirks,
+        'has_rotated_headers': prediction.has_rotated_headers,
+        'has_stacked_contests': prediction.has_stacked_contests,
+        'has_side_by_side': prediction.has_side_by_side,
+        'has_multi_sheet_stitch': prediction.has_multi_sheet_stitch,
     }
 
 
@@ -268,7 +281,10 @@ def categorize(path: str, verbose: bool = False) -> dict:
         page_count=pages,
         orientation=llm['orientation'],
         grain=grain,
-        quirks=llm['quirks'],
+        has_rotated_headers=llm['has_rotated_headers'],
+        has_stacked_contests=llm['has_stacked_contests'],
+        has_side_by_side=llm['has_side_by_side'],
+        has_multi_sheet_stitch=llm['has_multi_sheet_stitch'],
     )
     return category.model_dump()
 

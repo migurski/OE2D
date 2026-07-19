@@ -20,7 +20,7 @@ _program = None
 _DEFAULT_QUESTION = (
     'Describe this election-results page: are candidates in columns or rows, '
     'what is the geographic grain (precinct/district/county), and are there '
-    'layout quirks (rotated headers, stacked or side-by-side contests, a '
+    'layout properties (rotated headers, stacked or side-by-side contests, a '
     'table-of-contents/cover sheet, a scanned/bitmap page)?'
 )
 
@@ -29,7 +29,7 @@ class PageInspector(dspy.Signature):
     '''Report factual observations about an election-results page image.
 
     Say whether each candidate occupies a column or a row, the geographic grain,
-    and any layout quirks. Report only what is visible; do not guess beyond the
+    and any layout properties. Report only what is visible; do not guess beyond the
     image.
     '''
     image: dspy.Image = dspy.InputField(desc='A rendered page from a source file')

@@ -35,7 +35,7 @@ precinct-heavy skew.
   — `xlsx`, `xls`, `csv`, `txt`, `zip`, `docx`. PDFs span both vendor-normalized
   exports (usually vector) and county-original scans (often bitmap).
 - **grain**: precinct- vs district- vs county-level, from filename and content.
-- **structure / quirks**: summary-report vs precinct-report vs SOVC vs canvass;
+- **structure / layout properties**: summary-report vs precinct-report vs SOVC vs canvass;
   `multi-part` workbooks that need stitching (e.g. Otsego parts 1/2, Kalkaska
   #1/#2); the CA fixtures cover rotated headers (CW and CCW), no-vertical-lines
   stacked contests, and landscape side-by-side contests.

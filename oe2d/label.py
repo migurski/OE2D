@@ -4,7 +4,7 @@ Usage: oe2d-label-categories [--fixtures DIR] [--out FILE] [--redo]
 
 Walks each fixture, pre-fills the deterministic fields (container, page_count,
 grain hint), shows a content preview, and prompts for the judgment fields
-(orientation, quirks, and grain where the name is silent). Scanned PDFs and
+(orientation, layout properties, and grain where the name is silent). Scanned PDFs and
 other bitmap sources have no text preview, so `o` opens the file in your OS
 viewer. Records append to labels/category.jsonl as you go, and already-labeled
 fixtures are skipped on the next run unless --redo is given.
@@ -159,15 +159,16 @@ def _ask_grain(hint: str) -> str:
     return _GRAINS.get(reply, hint) if reply else hint
 
 
-def _ask_quirks() -> dict[str, bool]:
-    for index, quirk in enumerate(categorize.QUIRKS, 1):
-        print(f'    {index}) {quirk}')
-    reply: str = input('  quirks (comma nums, Enter=none): ').strip()
-    flags: dict[str, bool] = {name: False for name in categorize.QUIRKS}
+def _ask_layout() -> dict[str, bool]:
+    '''Ask which layout properties apply; return them as has_* boolean flags.'''
+    for index, name in enumerate(categorize.LAYOUT_PROPERTIES, 1):
+        print(f'    {index}) {name} — {categorize.LAYOUT_PROPERTY_DESCRIPTIONS[name]}')
+    reply: str = input('  layout properties (comma nums, Enter=none): ').strip()
+    flags: dict[str, bool] = {name: False for name in categorize.LAYOUT_PROPERTIES}
     for token in reply.split(','):
         token = token.strip()
-        if token.isdigit() and 1 <= int(token) <= len(categorize.QUIRKS):
-            flags[categorize.QUIRKS[int(token) - 1]] = True
+        if token.isdigit() and 1 <= int(token) <= len(categorize.LAYOUT_PROPERTIES):
+            flags[categorize.LAYOUT_PROPERTIES[int(token) - 1]] = True
     return flags
 
 
@@ -231,7 +232,7 @@ def label_one(path: str, previewer: Previewer, work_dir: str) -> dict | str | No
     if orientation is None:
         return None
     grain: str = _ask_grain(grain_hint)
-    quirks: dict[str, bool] = _ask_quirks()
+    layout: dict[str, bool] = _ask_layout()
     container = _ask_container(container)
 
     return {
@@ -239,7 +240,7 @@ def label_one(path: str, previewer: Previewer, work_dir: str) -> dict | str | No
         'container': container,
         'orientation': orientation,
         'grain': grain,
-        'quirks': quirks,
+        **layout,
     }
 
 
