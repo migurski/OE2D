@@ -13,7 +13,8 @@ import pytest
 from oe2d import categorize
 from oe2d.categorize import datasets
 
-_SMALL_FIXTURES = os.path.join(os.path.dirname(__file__), '..', 'source_table', 'fixtures')
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+_SMALL_FIXTURES = os.path.join(_REPO_ROOT, 'oe2d-data', 'fixtures', 'source_table')
 
 
 def _record(name: str, container_hint: str, **overrides) -> dict:

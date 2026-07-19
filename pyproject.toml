@@ -27,3 +27,8 @@ oe2d-optimize-categorizer = "oe2d.categorize.optimize:main"
 
 [tool.setuptools]
 packages = ["oe2d", "oe2d.categorize"]
+
+# The trained program ships as package data; the oe2d-data/ gold set and fixtures
+# are outside any package dir, so they are never included in the wheel.
+[tool.setuptools.package-data]
+"oe2d.categorize" = ["model/*.json"]

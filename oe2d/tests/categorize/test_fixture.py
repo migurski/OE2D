@@ -4,7 +4,8 @@ import os
 from oe2d import categorize
 from oe2d.categorize import fixture
 
-FIXTURES: str = os.path.join(os.path.dirname(__file__), '..', 'source_table', 'fixtures')
+_REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+FIXTURES: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'fixtures', 'source_table')
 
 
 def _fixture(name: str) -> str:

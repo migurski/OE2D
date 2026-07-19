@@ -170,6 +170,12 @@ def _raw_line_preview(path: str, rows: int) -> str:
 # the vision inspector. Hardcoded — no per-run model override needed.
 MAVERICK_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
 
+# The GEPA-optimized program, committed as package data. When present it is
+# loaded onto the RLM so an installed oe2d categorizes with the trained prompt;
+# when absent the categorizer runs the stock prompt. optimize.py writes here.
+OPTIMIZED_MODEL_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_categorizer.json')
+
 
 class SourceCategorizer(dspy.Signature):
     '''Categorize an election-results source file for extractor routing.
@@ -251,6 +257,10 @@ def run_rlm(signals: dict, verbose: bool = False) -> dict:
                tools.zip_members, tools.inspect_page],
         verbose=verbose,
     )
+    if os.path.exists(OPTIMIZED_MODEL_PATH):
+        categorizer.load(OPTIMIZED_MODEL_PATH)
+        if verbose:
+            print(f'loaded optimized program from {OPTIMIZED_MODEL_PATH}', file=sys.stderr)
     prediction = categorizer(
         file_path=signals['path'],
         container=signals['container'],

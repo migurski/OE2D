@@ -248,8 +248,8 @@ def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Guided labeling of categorization fixtures.',
     )
-    parser.add_argument('--fixtures', default='oe2d/tests/categorize/fixtures', help='Fixtures directory')
-    parser.add_argument('--out', default='oe2d/categorize/labels/category.jsonl', help='Gold JSONL output')
+    parser.add_argument('--fixtures', default='oe2d-data/fixtures/categorize', help='Fixtures directory')
+    parser.add_argument('--out', default='oe2d-data/labels/category.jsonl', help='Gold JSONL output')
     parser.add_argument('--redo', action='store_true', help='Relabel fixtures already in the output')
     args: argparse.Namespace = parser.parse_args()
 

@@ -1,6 +1,6 @@
 '''Load the categorization gold set into DSPy examples for GEPA optimization.
 
-Reads labels/category.jsonl, recomputes the deterministic inputs (container,
+Reads oe2d-data/labels/category.jsonl, recomputes the deterministic inputs (container,
 page_count) from each fixture so the training inputs never drift from what the
 CLI actually feeds the RLM, and wraps each row as a dspy.Example with the
 judgment fields (orientation, grain, the four has_*) as the expected outputs.
@@ -20,9 +20,10 @@ import dspy
 from .. import categorize
 
 # The gold JSONL stores repo-relative paths; resolve them against the repo root,
-# which is two levels up from this package (oe2d/categorize -> oe2d -> repo).
+# which is two levels up from this package (oe2d/categorize -> oe2d -> repo). The
+# gold set and fixtures live in the top-level oe2d-data/ tree, not in the wheel.
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_GOLD_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'labels', 'category.jsonl')
+_GOLD_PATH: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'labels', 'category.jsonl')
 
 # Inputs the RLM receives; outputs it must predict (the rest are deterministic).
 INPUT_FIELDS: tuple[str, ...] = ('file_path', 'container', 'page_count')

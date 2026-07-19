@@ -37,8 +37,9 @@ from . import datasets, metrics, tools
 STUDENT_MODEL: str = categorize.MAVERICK_LM
 REFLECTION_MODEL: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 
-_DEFAULT_OUT: str = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'labels', 'optimized_categorizer.json')
+# Default output is the package-data model path the CLI auto-loads, so a finished
+# run drops the optimized program right where oe2d-categorize-source picks it up.
+_DEFAULT_OUT: str = categorize.OPTIMIZED_MODEL_PATH
 
 # Repo root (oe2d/categorize -> oe2d -> repo); each GEPA run gets a visible
 # checkpoint dir here named gepa-<digest>, where the digest fingerprints the

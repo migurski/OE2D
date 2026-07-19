@@ -88,50 +88,70 @@ env vars.
 
 ## Package layout
 
+The shipped wheel is runtime-only: `oe2d/` code plus the trained model. The gold
+set and fixtures live in a top-level `oe2d-data/` tree that is outside any
+package dir, so setuptools never bundles it.
+
 ```
-oe2d/
+oe2d/                          # shipped wheel = runtime + trained model
   __init__.py
-  source_table.py            # deterministic tabular reader (PDF/xlsx/xls), shared
+  source_table.py              # deterministic tabular reader (PDF/xlsx/xls), shared
   categorize/
-    __init__.py              # the categorizer core (detect_*, SourceCategorizer, run_rlm, main)
-    tools.py                 # host-side RLM tools
-    inspector.py             # PageInspector vision program (image + question -> facts)
-    rendering.py             # single page/sheet -> compressed PNG (soffice resolver, optipng)
-    label.py                 # oe2d-label-categories: guided gold labeling
-    fixture.py               # oe2d-make-fixture: trim sources into small fixtures
-    labels/
-      seed_sources.tsv       # 97 curated sources to categorize (manifest)
-      category.jsonl         # 88 hand-labeled gold records
-      README.md              # taxonomy + coverage axes
-    README.md                # how the categorizer runs
+    __init__.py                # categorizer core (detect_*, SourceCategorizer, run_rlm, main); auto-loads model
+    tools.py                   # host-side RLM tools
+    inspector.py               # PageInspector vision program (image + question -> facts)
+    rendering.py               # single page/sheet -> compressed PNG (soffice resolver, optipng)
+    label.py                   # label-categories: guided gold labeling
+    fixture.py                 # make-fixture: trim sources into small fixtures
+    datasets.py                # gold JSONL -> dspy.Example, stratified split
+    metrics.py                 # score_category feedback metric for GEPA
+    optimize.py                # GEPA runner (writes model/optimized_categorizer.json)
+    model/
+      optimized_categorizer.json  # committed package data, auto-loaded (absent until a run finishes)
+      README.md
+    README.md                  # how the categorizer runs
   tests/
-    source_table/  test_source_table.py + fixtures/   (8 CA excerpts)
-    categorize/    test_*.py + fixtures/              (89 generated fixtures)
+    source_table/  test_source_table.py
+    categorize/    test_*.py
+
+oe2d-data/                     # top-level, committed, NOT in the wheel
+  fixtures/
+    source_table/              # 8 CA excerpts
+    categorize/                # 89 generated fixtures
+  labels/
+    seed_sources.tsv           # 97 curated sources (manifest)
+    category.jsonl             # 88 hand-labeled gold records (paths point at oe2d-data/fixtures/)
+    README.md                  # taxonomy + coverage axes
 ```
 
-Console scripts: `oe2d-categorize-source` (= `oe2d.categorize:main`),
-`oe2d-make-fixture`, `oe2d-label-categories`. `import source_table` no longer
-works — it's `from oe2d import source_table`.
+Console scripts (all in the package, so all still work): `oe2d-categorize-source`
+(= `oe2d.categorize:main`) is the runtime command; `oe2d-make-fixture`,
+`oe2d-label-categories`, and `oe2d-optimize-categorizer` are the training/data
+tooling. Only the code and the trained model ship in the wheel; `oe2d-data/`
+does not. `import source_table` no longer works — it's
+`from oe2d import source_table`.
 
 ## Running it
 
 ```
-pip install -e .                 # deps: dspy, boto3, pdfplumber, openpyxl, xlrd, xlwt, pypdf, pydantic
+pip install -e .                 # deps: dspy, boto3, python-dotenv, pdfplumber, openpyxl, xlrd, xlwt, pypdf, pydantic
 brew install --cask libreoffice  # office-format rendering (found in the app bundle)
 brew install deno optipng        # deno = RLM sandbox; optipng = image shrink (optional)
-export AWS_PROFILE=...            # Bedrock creds
-oe2d-categorize-source oe2d/tests/categorize/fixtures/allegan-mi-official-federal-state-and-judicial-votes.pdf
+export AWS_PROFILE=...            # Bedrock creds; .env in the repo root supplies CMPND_* for tracing
+oe2d-categorize-source oe2d-data/fixtures/categorize/allegan-mi-official-federal-state-and-judicial-votes.pdf
 ```
 
 The RLM's REPL steps stream to **stderr** by default (`--quiet` to silence);
-stdout stays pure JSON. `inspect_page` logs each render + the vision facts.
+stdout stays pure JSON. `inspect_page` logs each render + the vision facts. If
+`oe2d/categorize/model/optimized_categorizer.json` exists it is loaded onto the
+RLM automatically; otherwise the stock prompt runs.
 
 Container-only checks and tests run without creds/Deno; the full categorization
 does not.
 
 ## Data
 
-**Taxonomy / gold** — `oe2d/categorize/labels/`:
+**Taxonomy / gold** — `oe2d-data/labels/`:
 - `seed_sources.tsv` — 97 sources chosen to span every container × grain ×
   layout, per-shape-capped (≤8) so no PDF shape dominates, with raw-download
   URLs. Built from MI/PA 2024 general + CA fixtures.
@@ -139,10 +159,11 @@ does not.
   unresolvable). Distribution: vector_pdf 35, xlsx 25, scanned_pdf 13, xls_xml 7,
   zip 4, csv/txt/xls_binary/unknown 1 each.
 
-**Fixtures** — small, format-preserving excerpts generated by `oe2d-make-fixture`
-from the manifest. PDFs keep a few pages; spreadsheets ≤2 MB are copied whole
-(re-serializing breaks Quick Look and drops candidate sheets); larger ones are
-trimmed to a few sheets with a column cap. ~38 MB total, committed.
+**Fixtures** — `oe2d-data/fixtures/`, small format-preserving excerpts generated
+by `oe2d-make-fixture` from the manifest. PDFs keep a few pages; spreadsheets
+≤2 MB are copied whole (re-serializing breaks Quick Look and drops candidate
+sheets); larger ones are trimmed to a few sheets with a column cap. ~38 MB total,
+committed but never shipped in the wheel.
 
 **Labeling workflow** — `oe2d-label-categories` walks each fixture, pre-fills the
 deterministic fields, previews it (macOS Quick Look for PDFs; `open` in
@@ -201,7 +222,7 @@ with resume support.
 The three pieces are in place under `oe2d/categorize/`, modeled on
 `~/Documents/Email/train-spam-finder.py`:
 
-1. **`datasets.py`** — loads `labels/category.jsonl`; for each row recomputes the
+1. **`datasets.py`** — loads `oe2d-data/labels/category.jsonl`; for each row recomputes the
    deterministic inputs (`detect_container`, `count_pages`, absolute file path)
    so labels can't drift, wraps as `dspy.Example` with
    `.with_inputs('file_path', 'container', 'page_count')`, and splits train/val
@@ -216,18 +237,21 @@ The three pieces are in place under `oe2d/categorize/`, modeled on
 3. **`optimize.py`** (`oe2d-optimize-categorizer`) — builds the same
    `dspy.RLM(SourceCategorizer, tools=...)` the CLI runs, GEPA-compiles it with
    that metric, saves the optimized program to
-   `labels/optimized_categorizer.json`, and prints val accuracy per field. Task
-   LM = Maverick, reflection LM = Opus 4.5. Flags: `--max-metric-calls`,
-   `--reflection-minibatch-size`, `--num-threads`, `--val-fraction`, `-v`.
+   `oe2d/categorize/model/optimized_categorizer.json` (the path the CLI
+   auto-loads), and prints val accuracy per field. Task LM = Maverick, reflection
+   LM = Opus 4.5. Checkpoints to a repo-root `gepa-<digest>/` dir (digest of the
+   run config) so re-running resumes; a `gepa.stop` file stops gracefully. Flags:
+   `--max-metric-calls`, `--reflection-minibatch-size`, `--num-threads`,
+   `--num-retries`, `--val-fraction`, `--log-dir`, `-v`.
 
 Tests (`test_datasets.py`, `test_metrics.py`) are hermetic — they point the
 loader at a tiny temp gold set over the small `source_table` fixtures rather than
 opening all 88, and the metric tests use synthetic Examples. No creds needed; 81
 tests pass.
 
-**Still to do:** run it (on the Mac, with Bedrock creds + Deno + LibreOffice),
-inspect the evolved prompt, and wire the CLI to load
-`optimized_categorizer.json`. That closes **Milestone 1**.
+**Still to do:** run it (on the Mac, with Bedrock creds + Deno + LibreOffice) to
+produce `optimized_categorizer.json`, inspect the evolved prompt, and commit the
+artifact. The CLI already auto-loads it when present. That closes **Milestone 1**.
 
 Caveats for the run: 88 examples is small but workable for six fields; the
 deterministic fields are exact so only the hard predictions are optimized; a full

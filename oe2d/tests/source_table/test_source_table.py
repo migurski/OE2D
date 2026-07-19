@@ -4,7 +4,8 @@ import unittest
 
 from oe2d import source_table
 
-FIXTURES_DIR: str = os.path.join(os.path.dirname(__file__), 'fixtures')
+_REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+FIXTURES_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'fixtures', 'source_table')
 
 
 def _fixture(filename: str) -> str:
