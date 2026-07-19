@@ -16,7 +16,6 @@ from . import rendering
 logger = logging.getLogger(__name__)
 
 _program = None
-_vision_lm = None
 
 _DEFAULT_QUESTION = (
     'Describe this election-results page: are candidates in columns or rows, '
@@ -26,32 +25,22 @@ _DEFAULT_QUESTION = (
 )
 
 
-def configure(vision_lm) -> None:
-    '''Set the multimodal LM the inspector runs on, and reset the cached program.'''
-    global _vision_lm, _program
-    _vision_lm = vision_lm
-    _program = None
+class PageInspector(dspy.Signature):
+    '''Report factual observations about an election-results page image.
+
+    Say whether each candidate occupies a column or a row, the geographic grain,
+    and any layout quirks. Report only what is visible; do not guess beyond the
+    image.
+    '''
+    image: dspy.Image = dspy.InputField(desc='A rendered page from a source file')
+    question: str = dspy.InputField(desc='What to look for')
+    facts: str = dspy.OutputField(desc='Observed facts answering the question')
 
 
-def _get_program():
-    global _program
-    if _program is None:
-        class PageInspector(dspy.Signature):
-            '''Report factual observations about an election-results page image.
-
-            Say whether each candidate occupies a column or a row, the
-            geographic grain, and any layout quirks. Report only what is
-            visible; do not guess beyond the image.
-            '''
-            image: dspy.Image = dspy.InputField(desc='A rendered page from a source file')
-            question: str = dspy.InputField(desc='What to look for')
-            facts: str = dspy.OutputField(desc='Observed facts answering the question')
-
-        program = dspy.Predict(PageInspector)
-        if _vision_lm is not None:
-            program.set_lm(_vision_lm)
-        _program = program
-    return _program
+# Carries no LM of its own — runs on the ambient dspy.settings.lm (the Maverick
+# the RLM configures), so its vision call goes through the same instrumented path
+# as the RLM's own calls rather than a program-local set_lm.
+INSPECTOR = dspy.Predict(PageInspector)
 
 
 def inspect_page(path: str, page: int = 1, member: str | None = None, question: str = '') -> str:
@@ -64,7 +53,7 @@ def inspect_page(path: str, page: int = 1, member: str | None = None, question: 
         os.path.basename(png_path), os.path.getsize(png_path),
     )
     try:
-        prediction = _get_program()(
+        prediction = INSPECTOR(
             image=dspy.Image(png_path),
             question=question or _DEFAULT_QUESTION,
         )

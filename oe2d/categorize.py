@@ -157,6 +157,33 @@ def _raw_line_preview(path: str, rows: int) -> str:
 MAVERICK_LM = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
 
 
+class SourceCategorizer(dspy.Signature):
+    '''Categorize an election-results source file for extractor routing.
+
+    Look at the file with the tools before answering:
+    - page_count, page_table, page_words read text; for spreadsheets the page
+      argument is the sheet number. zip_members lists archive contents.
+    - inspect_page renders a page/sheet and returns what a vision model sees. It
+      is REQUIRED for scanned_pdf sources (no extractable text) and useful to
+      confirm rotated headers or side-by-side/stacked contests.
+    Many spreadsheets lead with a table-of-contents sheet, so look past it at an
+    actual contest sheet.
+
+    orientation: 'candidate_columns' when each candidate is a column and
+    precincts are rows; 'candidate_rows' when each candidate is a row.
+    grain: geographic grain — 'precinct', 'district', or 'county'.
+    quirks: any of 'rotated_headers', 'stacked_contests', 'side_by_side',
+    'multi_sheet_stitch'; empty list if none. OCR-needed is not a quirk; it is
+    implied by the scanned_pdf container.
+    '''
+    file_path: str = dspy.InputField(desc='Path to the source file for the tools')
+    container: str = dspy.InputField(desc='Detected container format')
+    page_count: int = dspy.InputField(desc='Pages (PDF) or sheets (spreadsheet)')
+    orientation: Orientation = dspy.OutputField()
+    grain: Grain = dspy.OutputField()
+    quirks: list[Quirk] = dspy.OutputField()
+
+
 def _instrument() -> None:
     '''Turn on cmpnd tracing when a key is configured; otherwise do nothing.'''
     key: str | None = os.environ.get('CMPND_API_KEY')
@@ -184,38 +211,12 @@ def run_rlm(signals: dict, verbose: bool = False) -> dict:
     missing runtime piece (Bedrock credentials, Deno, LibreOffice) rather than
     hiding it behind a partial result.
     '''
-    from . import inspector, tools
-
-    class SourceCategorizer(dspy.Signature):
-        '''Categorize an election-results source file for extractor routing.
-
-        Look at the file with the tools before answering:
-        - page_count, page_table, page_words read text; for spreadsheets the
-          page argument is the sheet number. zip_members lists archive contents.
-        - inspect_page renders a page/sheet and returns what a vision model sees.
-          It is REQUIRED for scanned_pdf sources (no extractable text) and useful
-          to confirm rotated headers or side-by-side/stacked contests.
-        Many spreadsheets lead with a table-of-contents sheet, so look past it at
-        an actual contest sheet.
-
-        orientation: 'candidate_columns' when each candidate is a column and
-        precincts are rows; 'candidate_rows' when each candidate is a row.
-        grain: geographic grain — 'precinct', 'district', or 'county'.
-        quirks: any of 'rotated_headers', 'stacked_contests', 'side_by_side',
-        'multi_sheet_stitch'; empty list if none. OCR-needed is not a quirk; it
-        is implied by the scanned_pdf container.
-        '''
-        file_path: str = dspy.InputField(desc='Path to the source file for the tools')
-        container: str = dspy.InputField(desc='Detected container format')
-        page_count: int = dspy.InputField(desc='Pages (PDF) or sheets (spreadsheet)')
-        orientation: Orientation = dspy.OutputField()
-        grain: Grain = dspy.OutputField()
-        quirks: list[Quirk] = dspy.OutputField()
+    from . import tools
 
     _instrument()
-    maverick = dspy.LM(MAVERICK_LM)
-    dspy.configure(lm=maverick)
-    inspector.configure(maverick)
+    # One ambient LM drives the RLM and, through the shared dspy.settings, the
+    # vision inspector too.
+    dspy.configure(lm=dspy.LM(MAVERICK_LM))
     categorizer = dspy.RLM(
         SourceCategorizer,
         tools=[tools.page_count, tools.page_table, tools.page_words,
