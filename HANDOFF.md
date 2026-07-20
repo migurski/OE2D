@@ -52,7 +52,7 @@ off the image. Output shape:
 as inputs; the RLM predicts orientation, grain, and the layout properties.
 
 There is **no deterministic-only fallback**: if a runtime piece is missing
-(DSPy, an OpenRouter key, Deno, LibreOffice) the command fails loudly rather
+(DSPy, a Fireworks key, Deno, LibreOffice) the command fails loudly rather
 than emitting a partial `llm_used=false` result.
 
 ## Architecture
@@ -80,8 +80,8 @@ the sandbox boundary:
   (`oe2d/categorize/inspector.py`) on the image, and returns the vision model's
   facts as **text**.
 
-**Model:** OpenRouter Llama-4 Maverick (`MAVERICK_LM`), hardcoded, drives both the
-RLM code-writing and the vision inspector (Maverick is multimodal). No override
+**Model:** Fireworks Kimi K2 (`TASK_LM`), hardcoded, drives both the
+RLM code-writing and the vision inspector (Kimi K2 is multimodal). No override
 env vars.
 
 **Tracing:** `cmpnd.auto_instrument()` turns on when `CMPND_API_KEY` is set.
@@ -137,7 +137,7 @@ does not. `import source_table` no longer works — it's
 pip install -e .                 # deps: dspy, boto3, python-dotenv, pdfplumber, openpyxl, xlrd, xlwt, pypdf, pydantic
 brew install --cask libreoffice  # office-format rendering (found in the app bundle)
 brew install deno optipng        # deno = RLM sandbox; optipng = image shrink (optional)
-# .env in the repo root supplies OPENROUTER_API_KEY (the runtime LM) and CMPND_* (tracing)
+# .env in the repo root supplies FIREWORKS_AI_API_KEY (the runtime LM) and CMPND_* (tracing)
 oe2d-categorize-source oe2d-data/fixtures/categorize/allegan-mi-official-federal-state-and-judicial-votes.pdf
 ```
 
@@ -238,7 +238,7 @@ The three pieces are in place under `oe2d/categorize/`, modeled on
    `dspy.RLM(SourceCategorizer, tools=...)` the CLI runs, GEPA-compiles it with
    that metric, saves the optimized program to
    `oe2d/categorize/model/optimized_categorizer.json` (the path the CLI
-   auto-loads), and prints val accuracy per field. Task LM = Maverick, reflection
+   auto-loads), and prints val accuracy per field. Task LM = Kimi K2, reflection
    LM = Opus 4.5. Checkpoints to a repo-root `gepa-<digest>/` dir (digest of the
    run config) so re-running resumes; a `gepa.stop` file stops gracefully. Flags:
    `--max-metric-calls`, `--reflection-minibatch-size`, `--num-threads`,
@@ -249,16 +249,18 @@ loader at a tiny temp gold set over the small `source_table` fixtures rather tha
 opening all 88, and the metric tests use synthetic Examples. No creds needed; 81
 tests pass.
 
-**Still to do:** run it (on the Mac, with an OpenRouter key for the task LM,
+**Still to do:** run it (on the Mac, with a Fireworks key for the task LM,
 Bedrock creds for the Opus reflection LM, + Deno + LibreOffice) to produce
 `optimized_categorizer.json`, inspect the evolved prompt, and commit the artifact.
 The CLI already auto-loads it when present. That closes **Milestone 1**.
 
 Caveats for the run: 88 examples is small but workable for six fields; the
 deterministic fields are exact so only the hard predictions are optimized; a full
-run makes many OpenRouter calls (and renders images via `inspect_page`), so watch
-cost and cmpnd traces. Note the runtime categorizer now needs only OpenRouter;
-Bedrock is required solely for the optimizer's Opus reflection LM.
+run makes many Fireworks calls (and renders images via `inspect_page`), so watch
+cost and cmpnd traces. Note the runtime categorizer now needs only Fireworks;
+Bedrock is required solely for the optimizer's Opus reflection LM. Kimi K2 is the
+only chat+vision model available on the current Fireworks account (Llama-4
+Maverick isn't deployed there).
 
 ## After the categorizer (roadmap)
 

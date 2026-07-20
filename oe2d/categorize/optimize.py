@@ -4,7 +4,7 @@ Usage: oe2d-optimize-categorizer [--out FILE] [--max-metric-calls N] ...
 
 Builds the same dspy.RLM(SourceCategorizer, tools=...) the CLI runs, then uses
 GEPA to evolve its prompt against labels/category.jsonl. The task LM is
-OpenRouter Maverick (multimodal, so it also drives the vision inspector); the
+Fireworks Kimi K2 (multimodal, so it also drives the vision inspector); the
 reflection LM is Bedrock Opus. The optimized program is saved as JSON and
 validation accuracy is printed per field.
 
@@ -13,7 +13,7 @@ digest fingerprints the run config (examples, split, models). Re-running resumes
 a matching run; changing the config forks a fresh dir instead of resuming against
 a mismatched checkpoint. Touching a gepa.stop file in the dir stops gracefully.
 
-Requires an OpenRouter key (task LM) plus Bedrock credentials (Opus reflection LM),
+Requires a Fireworks key (task LM) plus Bedrock credentials (Opus reflection LM),
 Deno, and LibreOffice, since GEPA actually runs the RLM over the fixtures.
 '''
 from __future__ import annotations
@@ -34,7 +34,7 @@ from . import datasets, metrics, tools
 # Task LM writes the RLM code and reads the page images; reflection LM rewrites
 # the prompt from the metric's feedback. A strong reflection model matters more
 # than a strong task model here.
-STUDENT_MODEL: str = categorize.MAVERICK_LM
+STUDENT_MODEL: str = categorize.TASK_LM
 REFLECTION_MODEL: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 
 # Default output is the package-data model path the CLI auto-loads, so a finished

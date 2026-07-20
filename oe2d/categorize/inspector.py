@@ -37,7 +37,7 @@ class PageInspector(dspy.Signature):
     facts: str = dspy.OutputField(desc='Observed facts answering the question')
 
 
-# Carries no LM of its own — runs on the ambient dspy.settings.lm (the Maverick
+# Carries no LM of its own — runs on the ambient dspy.settings.lm (the task LM
 # the RLM configures), so its vision call goes through the same instrumented path
 # as the RLM's own calls rather than a program-local set_lm.
 INSPECTOR = dspy.Predict(PageInspector)

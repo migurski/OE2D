@@ -34,10 +34,13 @@ raises rather than emitting a partial categorization.
   `brew install deno`.
 - **optipng** — optional; shrinks rendered images. `brew install optipng`.
 
-The model is hardcoded to Bedrock's Llama-4 Maverick (multimodal) for both the
-RLM and the vision inspector — no model override needed.
+The model is hardcoded to Fireworks' Kimi K2 (multimodal) for both the RLM and
+the vision inspector — no model override needed.
 
 ## Environment variables
 
-- `AWS_PROFILE` / `AWS_ACCESS_KEY_ID` — Bedrock credentials (required).
+- `FIREWORKS_AI_API_KEY` — Fireworks credentials for the task/vision LM (required).
 - `CMPND_API_KEY` / `CMPND_ENDPOINT` — turn on cmpnd tracing.
+
+The optimizer (`oe2d-optimize-categorizer`) additionally needs Bedrock
+credentials (`AWS_PROFILE`) for its Opus reflection LM.
