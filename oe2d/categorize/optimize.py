@@ -80,17 +80,32 @@ def build_program(verbose: bool = False) -> dspy.Module:
 
 
 def field_accuracy(program: dspy.Module, valset: list) -> dict[str, tuple[int, int]]:
-    '''Run the program over valset, returning (correct, scored) per field.'''
+    '''Run the program over valset, returning (correct, scored) per field.
+
+    A rollout that raises (e.g. the RLM emits a response the JSON adapter can't
+    parse) is counted as a miss on every field it would have been scored on,
+    mirroring how GEPA scores a failed rollout, rather than aborting the whole
+    eval — this runs after the optimized program is already saved.
+    '''
     correct: dict[str, int] = collections.defaultdict(int)
     scored: dict[str, int] = collections.defaultdict(int)
+    failures: int = 0
     for example in valset:
-        prediction = program(**{name: example.get(name) for name in datasets.INPUT_FIELDS})
+        try:
+            prediction = program(**{name: example.get(name) for name in datasets.INPUT_FIELDS})
+        except Exception as error:
+            failures += 1
+            print(f'  eval rollout failed ({type(error).__name__}); counting as a miss',
+                  file=sys.stderr)
+            prediction = None
         for name in datasets.OUTPUT_FIELDS:
             if name == 'grain' and example.grain == 'unknown':
                 continue
             scored[name] += 1
-            if getattr(prediction, name, None) == getattr(example, name, None):
+            if prediction is not None and getattr(prediction, name, None) == getattr(example, name, None):
                 correct[name] += 1
+    if failures:
+        print(f'  ({failures}/{len(valset)} val rollouts errored and scored 0)', file=sys.stderr)
     return {name: (correct[name], scored[name]) for name in datasets.OUTPUT_FIELDS}
 
 
