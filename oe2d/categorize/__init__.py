@@ -169,7 +169,7 @@ def _raw_line_preview(path: str, rows: int) -> str:
 # Fireworks' Kimi K2 (multimodal) drives both the RLM code-writing and the vision
 # inspector. Hardcoded — no per-run model override needed. litellm reads
 # FIREWORKS_AI_API_KEY (supplied by the repo .env).
-TASK_LM = 'fireworks_ai/accounts/fireworks/models/kimi-k2p6'
+TASK_LM = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 # The GEPA-optimized program, committed as package data. When present it is
 # loaded onto the RLM so an installed oe2d categorizes with the trained prompt;
