@@ -14,6 +14,14 @@ label. Keep synthetic rows in the TRAIN split only; validate on real pages
 Join to an image by rendering `path` page `fixture_page` (1-based). `path` is
 relative to THIS file's directory (`oe2d-data/labels/`), e.g.
 `../fixtures/categorize/<name>.pdf`; `segments.jsonl` uses the same convention.
+
+**Render DPI:** rasterize at a resolution that keeps the DENSEST target legible.
+The dense landscape SOVC tables (e.g. calhoun — many candidate columns) need
+~300 DPI; rendering.py's 220 default undersamples them (text and gridlines blur).
+Simpler pages are fine at 220. Use the same DPI for synthetic bases and real
+pages, and at inference, so training and serving match. (Same caveat applies to
+the categorizer's `inspect_page`, which currently renders at 220 — a candidate
+follow-up if its vision reads of dense pages look soft.)
 `source_page` is the page number in the upstream original (`segments.jsonl`), or
 null for synthetic rows.
 
@@ -37,9 +45,7 @@ null for synthetic rows.
   - `rotate` `{degrees, expand, fill}` — rotate by a known angle (positive =
     counter-clockwise, PIL); simulates scanner skew. `skew_degrees` = the angle,
     other labels inherit the base. 80 rows: 10 vector vendors × ±0.25–1.5° (kept
-    small — real scans are only slightly tilted). The loader must render the base
-    at inference DPI (~220), not a low preview resolution, so synthetic and real
-    images match.
+    small — real scans are only slightly tilted).
   - `crop_top` `{remove_fraction}` — drop the top slice (title + header band),
     leaving bare data rows — a stand-in for a mid-table continuation page.
     `contest_name_present` / `candidate_names_present` / `headers_present` =

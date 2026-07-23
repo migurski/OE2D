@@ -183,7 +183,9 @@ precincts_present is currently fully correlated with candidate_orientation.
   80 rotate rows (10 vendors x +/-0.25..1.5 deg — small, real scans barely tilt)
   for a skew regressor; 15 crop_top rows (drop the header band) for
   header/candidate-name negatives. NO images committed; loader renders bases at
-  inference DPI (~220), not a low preview res. Kept clean (no scan-noise
+  ~300 DPI for dense landscape SOVC tables (220 undersamples them; simpler pages
+  ok at 220) — see PAGE_PROPERTIES.md "Render DPI"; same DPI train+inference.
+  Kept clean (no scan-noise
   degradation, per Mike). Keep synthetic (transform present) in TRAIN only,
   validate on real. Now 155 rows = 60 real + 95 synthetic.
 - Net: candidate_orientation, contest_name_present, skew_degrees, and
