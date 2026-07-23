@@ -53,6 +53,13 @@ headers). Rules, with observed exceptions:
   remaining minor-party candidates (a column spill), not the same candidates
   with new precincts. Both files are therefore both-axes, not row-only.
 
+## Closing the gaps
+Skew and header/candidate-name negatives can't be learned from these real pages
+alone; `augmentations.jsonl` (see AUGMENTATIONS.md) adds synthetic examples via
+deterministic transforms of vector renders (rotation for skew, top-crop for
+header-absence) with exact labels. Keep synthetic rows in TRAIN only; validate on
+real pages.
+
 ## Known gaps (for a real single-image program)
 - Skew: only 8 scanned pages, and their angles are `null` (unmeasured). Train a
   numeric skew estimator via SYNTHETIC rotation of vector renders (free exact

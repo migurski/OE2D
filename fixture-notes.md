@@ -167,9 +167,26 @@ Key corrections from this pass:
   whether the SAME candidates reappear with NEW precincts.)
 - allegan p31 is the lone bare-data page (no title/headers/candidate names) —
   useful hard negative.
-Gaps recorded in PAGE_PROPERTIES.md: skew degrees are rough for the 8 scanned
-pages (do synthetic-rotation training + measure real skew); precincts_present is
-currently fully correlated with candidate_orientation.
+Gaps recorded in PAGE_PROPERTIES.md: skew degrees null for the 8 scanned pages;
+precincts_present is currently fully correlated with candidate_orientation.
+
+## DONE: closed the two optimizability gaps (skew + header negatives)
+- Header-omission finding: it is RARE and vendor-specific. genesee (green Clarity)
+  reprints the contest title + full candidate header band on EVERY continuation
+  page (verified p12/p13); only allegan omits headers on row-continuation. So
+  diverse real header-negatives don't exist in this corpus.
+- Real: extended allegan window p30-31 -> p30-32 (p32 is a second bare-data
+  negative; p33 is only the sparse contest tail, skipped). allegan now gives 2
+  real header/name negatives.
+- Synthetic: oe2d-data/labels/augmentations.jsonl (95 recipes) + AUGMENTATIONS.md.
+  80 rotate rows (10 vendors x +/-0.5..3 deg) for a skew regressor; 15 crop_top
+  rows (drop the header band) for header/candidate-name negatives. Recipes are
+  applied by the loader at train time; NO images committed. Keep synthetic in
+  TRAIN only, validate on real pages.
+- Net: candidate_orientation, contest_name_present, skew_degrees, and
+  headers/candidate_names are all now optimizable (with class weighting for the
+  still-minority header negatives). Still unaddressed: precincts_present
+  independence.
 
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
