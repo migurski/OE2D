@@ -88,6 +88,37 @@ results"); hillsdale is the green candidate-ROWS variant. Electionware (elk,
 adams; also armstrong/beaver/northampton/snyder) is the PA candidate-rows family,
 split by write-in explosion behavior.
 
+## DONE: variety batch 2 of 3 more PDF vendors
+  berrien   "Election Summary Report" (serif, no banding), COUNTY-level rollup:
+            candidate ROWS, Total-only columns, contests stacked several per page
+            (President+Senator p2 -> Congress 4th/5th + State Leg 37th p3). p2-3.
+  armstrong same serif "Election Summary Report" vendor but PER-BORO (Apollo Boro):
+            per-method columns (Election Day/Mail/Provisional/Total) + separate
+            write-in sub-table per contest; stats + President -> Senator/AG/Auditor.
+            p1-2. grain county->PRECINCT (it's a per-boro summary, not a county roll).
+  emmet     "Precinct Summary Results Report" (plain): candidate ROWS with
+            Absentee / Early Voting columns; per-precinct block of stacked contests
+            (stats+Straight Party+President -> Senator/Congress/State Leg). p1-2.
+All stitch=false (stacked contests continue across pages; no single table split).
+
+## VENDOR MAP so far (which fixtures share software) — avoid re-doing duplicates
+- MI SOVC tool (candidate COLUMNS, rotated headers): barry, calhoun, lapeer,
+  baraga, antrim, charlevoix, houghton, oscoda, wexford, alger, allegan, + the
+  scanned ones (gogebic, kalkaska, mackinac, montcalm, montmorency, otsego,
+  st-clair, benzie-scanned, allegan-scanned).
+- Green Clarity-style COLUMNS: livingston, genesee, ionia, ottawa (diff report
+  titles, same layout). [livingston DONE]
+- Green Clarity-style ROWS: hillsdale, clinton, beaver(PA, Electionware footer
+  though). [hillsdale DONE]
+- Electionware "Summary Results Report" ROWS: elk, adams, bay, mason, montour,
+  northampton, snyder. [elk, adams DONE]  Write-in explosion splits the family:
+  exploded (elk) spills one contest across pages; collapsed (adams) stacks.
+- Serif "Election Summary Report" ROWS: berrien(county), armstrong(boro),
+  bedford(PA primary). [berrien, armstrong DONE]
+- "Precinct Summary Results Report" (Absentee/Early cols): emmet. [DONE]
+Remaining unique-ish still TODO: bedford (primary variant of the serif vendor);
+the green/Electionware duplicates are LOW marginal value.
+
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
   keyword/"(Vote for" scan — different title format. ionia is the GREEN-BANDED
