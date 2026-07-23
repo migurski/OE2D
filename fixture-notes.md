@@ -152,9 +152,10 @@ and whether fixtures should be deskewed before OCR.
 ## DONE: per-page labels for a single-image program (page_properties.jsonl)
 59 page rows (one per rendered fixture page) with in-page facts: role,
 candidate_orientation, contest_name_present, candidate_names_present,
-headers_present, precincts_present, precinct_orientation, skew_degrees +
-skew_estimated. Schema + derivation documented in
-oe2d-data/labels/PAGE_PROPERTIES.md. This is a SEPARATE dataset from the per-file
+headers_present, precincts_present, precinct_orientation, skew_degrees (0.0
+vector exact / null scanned-unmeasured). Keyed by `path` relative to the labels
+dir (../fixtures/categorize/...); segments.jsonl uses the same. Schema +
+derivation documented in oe2d-data/labels/PAGE_PROPERTIES.md. This is a SEPARATE dataset from the per-file
 categorizer (category.jsonl); the images are shared but the labels are per-page.
 Built by joining segments roles + category.jsonl + a visual review of a contact
 sheet of every page's top strip.

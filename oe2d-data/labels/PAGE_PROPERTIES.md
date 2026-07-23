@@ -6,12 +6,13 @@ reports in-page facts to guide extraction (e.g. hint the pdfplumber table
 finder) — distinct from the per-*file* source categorizer (`category.jsonl`) and
 from inter-page / whole-document stitching, which live at other levels.
 
-Join to an image by rendering `file` page `fixture_page` (1-based) from
-`oe2d-data/fixtures/categorize/`. `source_page` is the page number in the
-upstream original (see `segments.jsonl`).
+Join to an image by rendering `path` page `fixture_page` (1-based). `path` is
+relative to THIS file's directory (`oe2d-data/labels/`), e.g.
+`../fixtures/categorize/<name>.pdf`; `segments.jsonl` uses the same convention.
+`source_page` is the page number in the upstream original (see `segments.jsonl`).
 
 ## Fields
-- `file`, `fixture_page`, `source_page`, `role` — identity + window role
+- `path`, `fixture_page`, `source_page`, `role` — identity + window role
   (`results` / `continuation-columns` / `continuation-rows`).
 - `orientation` — the fixture's overall candidate orientation (from category.jsonl).
 - `candidate_orientation` — candidates on THIS page in `columns` or `rows`.
@@ -20,10 +21,11 @@ upstream original (see `segments.jsonl`).
 - `headers_present` — are column/row headers (labeling the numbers) present?
 - `precincts_present` — is there a precinct AXIS on the page?
 - `precinct_orientation` — `rows` where present, else null.
-- `skew_degrees` — 0.0 for vector renders (exact). For scanned pages a ROUGH
-  visual estimate (see `skew_estimated`), NOT measured.
-- `skew_estimated` — true = scanned, skew is an unverified estimate; false =
-  vector, exactly 0.
+- `skew_degrees` — `0.0` for vector renders (exact: vector PDFs rasterize with no
+  skew). `null` for scanned pages (not yet measured — deliberately not fabricated;
+  the qualitative scan condition is in `fixture-notes.md`). So a number means a
+  known/exact angle and `null` means unmeasured; no separate estimated flag is
+  needed, and "is scanned" is already available via `category.jsonl`'s container.
 
 ## How the labels were derived
 Compiled from the `segments.jsonl` roles + per-file layout in `category.jsonl` +
@@ -52,10 +54,11 @@ headers). Rules, with observed exceptions:
   with new precincts. Both files are therefore both-axes, not row-only.
 
 ## Known gaps (for a real single-image program)
-- Skew: only 8 scanned pages, degrees are rough estimates. Train a numeric skew
-  estimator via SYNTHETIC rotation of vector renders (free exact ground truth);
-  use the scanned pages as validation. Measure real scanned skew before trusting
-  the estimates here.
+- Skew: only 8 scanned pages, and their angles are `null` (unmeasured). Train a
+  numeric skew estimator via SYNTHETIC rotation of vector renders (free exact
+  ground truth); use the scanned pages as validation. Measure real scanned skew
+  (fill in the nulls) before the scanned pages can serve as anything but eyeball
+  checks.
 - Vector auto-labeling: contest-name / header / rows-vs-cols for vector pages can
   be derived programmatically from pdfplumber word positions to expand the set
   cheaply; only scanned pages need vision/manual labels.
