@@ -5,14 +5,19 @@ flavors, csv, txt, docx) go through LibreOffice: soffice converts to PDF, then
 the page is rasterized. For spreadsheets a single sheet is isolated first so a
 requested sheet renders to its own page rather than paginating the whole book.
 optipng shrinks the result. Zip members are streamed out to a temp file.
+
+The same rasterization the RLM's inspect_page tool relies on is exposed as a
+CLI (oe2d-render-page) so a page image can be pulled out of any source by hand.
 '''
 from __future__ import annotations
 
+import argparse
 import functools
 import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import zipfile
@@ -152,7 +157,7 @@ def _optipng(png_path: str) -> None:
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
 
-def render_page(path: str, page: int = 1, member: str | None = None,
+def render_page(path: str, page: int, member: str | None = None,
                 resolution: int = RESOLUTION) -> str:
     '''Render one page (PDF) or sheet (spreadsheet) to a PNG; return its path.'''
     local: str = material_path(path, member)
@@ -172,3 +177,32 @@ def render_page(path: str, page: int = 1, member: str | None = None,
 
     _optipng(out_png)
     return out_png
+
+
+def main() -> None:
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        description='Render one page (PDF) or sheet (spreadsheet) of a source to a PNG.',
+    )
+    parser.add_argument('source', help='Source file path')
+    parser.add_argument('page', type=int,
+                        help='1-based page (PDF) or sheet (spreadsheet) to render')
+    parser.add_argument('--member', help='Zip member to render (for zip sources)')
+    parser.add_argument('--resolution', type=int, default=RESOLUTION,
+                        help='Rasterization DPI')
+    parser.add_argument('--out', help='Output PNG path (default: alongside the source)')
+    args: argparse.Namespace = parser.parse_args()
+
+    png_path: str = render_page(args.source, args.page, args.member, args.resolution)
+    if args.out:
+        shutil.copyfile(png_path, args.out)
+        out_path: str = args.out
+    else:
+        stem: str = _safe(args.member or os.path.basename(args.source))
+        out_path = f'{stem}-p{args.page}.png'
+        shutil.copyfile(png_path, out_path)
+    print(f'{out_path} ({os.path.getsize(out_path)} bytes)', file=sys.stderr)
+    print(out_path)
+
+
+if __name__ == '__main__':
+    main()
