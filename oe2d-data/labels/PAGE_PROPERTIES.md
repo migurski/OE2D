@@ -1,19 +1,25 @@
 # page_properties.jsonl — per-page (single-image) labels
 
-One row per rendered page of the re-excerpted fixtures (59 pages across 24
-fixtures). This is the training set for a **single-image** DSPy program that
-reports in-page facts to guide extraction (e.g. hint the pdfplumber table
-finder) — distinct from the per-*file* source categorizer (`category.jsonl`) and
-from inter-page / whole-document stitching, which live at other levels.
+Training set for a **single-image** DSPy program that reports in-page facts to
+guide extraction (e.g. hint the pdfplumber table finder) — distinct from the
+per-*file* source categorizer (`category.jsonl`) and from inter-page /
+whole-document stitching, which live at other levels.
+
+155 rows: **60 real** pages (from the re-excerpted fixtures) plus **95 synthetic**
+pages. A row is synthetic iff it carries a `transform` — the loader renders the
+base page and applies the transform to produce an image with an exactly known
+label. Keep synthetic rows in the TRAIN split only; validate on real pages
+(filter: `transform` present → train-only).
 
 Join to an image by rendering `path` page `fixture_page` (1-based). `path` is
 relative to THIS file's directory (`oe2d-data/labels/`), e.g.
 `../fixtures/categorize/<name>.pdf`; `segments.jsonl` uses the same convention.
-`source_page` is the page number in the upstream original (see `segments.jsonl`).
+`source_page` is the page number in the upstream original (`segments.jsonl`), or
+null for synthetic rows.
 
 ## Fields
 - `path`, `fixture_page`, `source_page`, `role` — identity + window role
-  (`results` / `continuation-columns` / `continuation-rows`).
+  (`results` / `continuation-columns` / `continuation-rows`; null for synthetic).
 - `orientation` — the fixture's overall candidate orientation (from category.jsonl).
 - `candidate_orientation` — candidates on THIS page in `columns` or `rows`.
 - `contest_name_present` — is a contest title visible on this page?
@@ -26,6 +32,16 @@ relative to THIS file's directory (`oe2d-data/labels/`), e.g.
   the qualitative scan condition is in `fixture-notes.md`). So a number means a
   known/exact angle and `null` means unmeasured; no separate estimated flag is
   needed, and "is scanned" is already available via `category.jsonl`'s container.
+- `transform`, `params` — SYNTHETIC rows only (absent on real pages). The
+  transform the loader applies to the base render:
+  - `rotate` `{degrees, expand, fill}` — rotate by a known angle (positive =
+    counter-clockwise, PIL); simulates scanner skew. `skew_degrees` = the angle,
+    other labels inherit the base. 80 rows: 10 vector vendors × ±0.5–3°.
+  - `crop_top` `{remove_fraction}` — drop the top slice (title + header band),
+    leaving bare data rows — a stand-in for a mid-table continuation page.
+    `contest_name_present` / `candidate_names_present` / `headers_present` =
+    false. 15 rows over diverse vector results pages.
+  All bases are vector results pages (crisp, skew-0, full headers).
 
 ## How the labels were derived
 Compiled from the `segments.jsonl` roles + per-file layout in `category.jsonl` +
@@ -53,20 +69,21 @@ headers). Rules, with observed exceptions:
   remaining minor-party candidates (a column spill), not the same candidates
   with new precincts. Both files are therefore both-axes, not row-only.
 
-## Closing the gaps
-Skew and header/candidate-name negatives can't be learned from these real pages
-alone; `augmentations.jsonl` (see AUGMENTATIONS.md) adds synthetic examples via
-deterministic transforms of vector renders (rotation for skew, top-crop for
-header-absence) with exact labels. Keep synthetic rows in TRAIN only; validate on
-real pages.
+## Why synthetic rows exist
+Two properties can't be learned from the real pages alone: **skew** (all vector
+renders are exactly 0°, and the 8 scanned pages are `null`/unmeasured — no signal)
+and **header/candidate-name absence** (header-omission turned out rare and
+vendor-specific — only allegan omits; the green-Clarity family and Electionware
+reprint headers every page — leaving 2 real negatives). The `rotate` and
+`crop_top` rows supply exact-labeled examples for these. Caveats: synthetic only,
+so train-only; `rotate` covers ±3° (real scans can be worse and add non-skew
+noise — hole-punches, contrast, handwriting, see fixture-notes.md); `crop_top`
+approximates one failure mode of header-absence, not all.
 
 ## Known gaps (for a real single-image program)
-- Skew: only 8 scanned pages, and their angles are `null` (unmeasured). Train a
-  numeric skew estimator via SYNTHETIC rotation of vector renders (free exact
-  ground truth); use the scanned pages as validation. Measure real scanned skew
-  (fill in the nulls) before the scanned pages can serve as anything but eyeball
-  checks.
+- Skew: validate on the 8 real scanned pages once their angles are measured
+  (fill the nulls); until then they're eyeball checks only.
 - Vector auto-labeling: contest-name / header / rows-vs-cols for vector pages can
-  be derived programmatically from pdfplumber word positions to expand the set
-  cheaply; only scanned pages need vision/manual labels.
+  be derived programmatically from pdfplumber word positions to expand the real
+  set cheaply; only scanned pages need vision/manual labels.
 - precincts_present ⟂ candidate_orientation not yet represented (see above).
