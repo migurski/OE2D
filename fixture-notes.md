@@ -127,6 +127,28 @@ COUNTY-level (Precincts Reported 40 of 40, single Total column); candidate rows;
 huge EXPLODED write-in lists. Label unchanged (candidate_rows, county, all flags
 false) — each contest is one-per-page here, no stacking or single-contest split.
 
+## SCANNED BITMAP QUALITY notes (Mike: come back to this later)
+Per-file scan condition observed while re-excerpting the scanned batch (matters
+for Textract/OCR downstream, and possibly a future has_* property or a
+pre-deskew step):
+- gogebic: MODERATE skew; crescent hole-punch / binder marks across the top of
+  every page; earlier saw handwritten "Official" annotations. Legible but tilted.
+- mackinac: GOOD scan quality overall, some skew. (Mike). NB filename says
+  "Closed Primary Nov 11" but CONTENT is the Nov 5 GENERAL (Harris/Trump) —
+  mislabeled source filename, not actually a primary.
+- huron: VERY HIGH scan quality, NO skew (Mike). Compact per-precinct vendor,
+  candidate columns fit one width; President rows continue p2->p3 then United
+  States Senator starts on p3 (row-continuation + stacked next contest).
+- cass: GOOD scan quality, very minimal skew (Mike). Candidate ROWS, TWO contests
+  side-by-side per page, stacked; cover sheet on p1 ("CANVASS OF VOTES CAST").
+- (fill in for the deferred scanned twins: kalkaska x2, montcalm, montmorency,
+  otsego, st-clair, benzie-scanned, allegan-scanned x2.)
+General: these scans render via pdfium at ~90-220 DPI; text is small and light,
+faint dotted gridlines, variable contrast. page_words returns EMPTY (no text
+layer) so all detection is visual. Skew VARIES page-to-page within a file.
+TODO later: quantify skew, decide whether to record a scan-quality/tilt signal,
+and whether fixtures should be deskewed before OCR.
+
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
   keyword/"(Vote for" scan — different title format. ionia is the GREEN-BANDED
