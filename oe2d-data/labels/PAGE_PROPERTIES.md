@@ -36,7 +36,10 @@ null for synthetic rows.
   transform the loader applies to the base render:
   - `rotate` `{degrees, expand, fill}` — rotate by a known angle (positive =
     counter-clockwise, PIL); simulates scanner skew. `skew_degrees` = the angle,
-    other labels inherit the base. 80 rows: 10 vector vendors × ±0.5–3°.
+    other labels inherit the base. 80 rows: 10 vector vendors × ±0.25–1.5° (kept
+    small — real scans are only slightly tilted). The loader must render the base
+    at inference DPI (~220), not a low preview resolution, so synthetic and real
+    images match.
   - `crop_top` `{remove_fraction}` — drop the top slice (title + header band),
     leaving bare data rows — a stand-in for a mid-table continuation page.
     `contest_name_present` / `candidate_names_present` / `headers_present` =
@@ -76,9 +79,10 @@ and **header/candidate-name absence** (header-omission turned out rare and
 vendor-specific — only allegan omits; the green-Clarity family and Electionware
 reprint headers every page — leaving 2 real negatives). The `rotate` and
 `crop_top` rows supply exact-labeled examples for these. Caveats: synthetic only,
-so train-only; `rotate` covers ±3° (real scans can be worse and add non-skew
-noise — hole-punches, contrast, handwriting, see fixture-notes.md); `crop_top`
-approximates one failure mode of header-absence, not all.
+so train-only; `rotate` covers only ±1.5° (real scans are slightly tilted) and
+is CLEANER than a real scan — it omits scan noise (hole-punches, contrast,
+handwriting, speckle; see fixture-notes.md); `crop_top` approximates one failure
+mode of header-absence, not all.
 
 ## Known gaps (for a real single-image program)
 - Skew: validate on the 8 real scanned pages once their angles are measured

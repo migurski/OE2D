@@ -180,10 +180,12 @@ precincts_present is currently fully correlated with candidate_orientation.
   real header/name negatives.
 - Synthetic: merged INTO page_properties.jsonl (not a separate file). A row is
   synthetic iff it has a `transform`; loader renders the base page + applies it.
-  80 rotate rows (10 vendors x +/-0.5..3 deg) for a skew regressor; 15 crop_top
-  rows (drop the header band) for header/candidate-name negatives. NO images
-  committed. Keep synthetic (transform present) in TRAIN only, validate on real.
-  Now 155 rows = 60 real + 95 synthetic.
+  80 rotate rows (10 vendors x +/-0.25..1.5 deg — small, real scans barely tilt)
+  for a skew regressor; 15 crop_top rows (drop the header band) for
+  header/candidate-name negatives. NO images committed; loader renders bases at
+  inference DPI (~220), not a low preview res. Kept clean (no scan-noise
+  degradation, per Mike). Keep synthetic (transform present) in TRAIN only,
+  validate on real. Now 155 rows = 60 real + 95 synthetic.
 - Net: candidate_orientation, contest_name_present, skew_degrees, and
   headers/candidate_names are all now optimizable (with class weighting for the
   still-minority header negatives). Still unaddressed: precincts_present
