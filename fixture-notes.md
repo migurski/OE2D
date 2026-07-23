@@ -41,25 +41,27 @@ Keep the chosen files and Mike's labels; only fix WHICH pages represent each.
 - Added fixture-notes.md (this file), segments.jsonl, oe2d-render-page CLI
   (commit 010d4df), and the earlier rendering CLI work.
 
-## PENDING: batch of 10 vector SOVC files — proposed, AWAITING MIKE'S CONFIRM
-All fetched+analyzed from upstream (files were in scratchpad, now gone — refetch).
-Proposed windows (source page ranges), varied big races:
+## DONE: batch of 10 vector SOVC files (Mike confirmed each via qlmanage)
+All re-excerpted from upstream, fixtures overwritten, has_side_by_side->false,
+manifest rows appended. Windows (source page ranges), varied big races:
   lapeer     President                       7-10   both-axes w=3
   baraga     President                       10-13  both-axes w=3
-  antrim     Governor of Wayne State U       27-29  both-axes w=3
+  antrim     Governor of Wayne State U       27-29  both-axes w=3 (col-split only;
+                                                     contest ends p29, no row page)
   charlevoix U.S. Senator                    13-15  both-axes w=2
   houghton   Rep. in Congress 1st            19-21  both-axes w=2
   oscoda     U.S. Senator                    13-14  row-only
   wexford    Rep. in Congress 1st            17-18  row-only
   alger      Rep. in State Legislature 109th 23-24  row-only
-  allegan    State Board of Education        30-31  row-only
-  jackson    President                       36-42  both-axes w=6  <-- OUTLIER
-Jackson is 7pp (President 6 cols wide). Recommended: TRIM to p36-39 (column-split
-only) to keep bounded — Mike to decide (keep 7pp / trim / swap contest).
-NEXT ACTIONS once confirmed: for each -> cut contiguous window with pypdf,
-overwrite oe2d-data/fixtures/categorize/<file>, check category.jsonl label (set
-has_side_by_side=false), append segments.jsonl. Then SPOT-CHECK the both-axes
-cuts by rendering (they are the higher risk) before committing.
+  allegan    State Board of Education        30-31  row-only (row-cont page does
+                                                     NOT repeat headers — identity
+                                                     only on the results page)
+  jackson    President                       36-39  both-axes w=3 (my detector
+                                                     over-counted w=6; real w=3, so
+                                                     p36-39 IS a full both-axes win)
+Corrections learned here: (a) header-repeat on row-continuation pages VARIES by
+vendor (calhoun/oscoda/wexford repeat; allegan/barry do NOT); (b) the precinct-
+repeat width detector can over-count — always eyeball both-axes cuts.
 
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
