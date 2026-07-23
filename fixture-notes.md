@@ -149,6 +149,27 @@ layer) so all detection is visual. Skew VARIES page-to-page within a file.
 TODO later: quantify skew, decide whether to record a scan-quality/tilt signal,
 and whether fixtures should be deskewed before OCR.
 
+## DONE: per-page labels for a single-image program (page_properties.jsonl)
+59 page rows (one per rendered fixture page) with in-page facts: role,
+candidate_orientation, contest_name_present, candidate_names_present,
+headers_present, precincts_present, precinct_orientation, skew_degrees +
+skew_estimated. Schema + derivation documented in
+oe2d-data/labels/PAGE_PROPERTIES.md. This is a SEPARATE dataset from the per-file
+categorizer (category.jsonl); the images are shared but the labels are per-page.
+Built by joining segments roles + category.jsonl + a visual review of a contact
+sheet of every page's top strip.
+Key corrections from this pass:
+- oscoda src14 / wexford src18: were mislabeled continuation-rows; they are
+  continuation-COLUMNS (second page shows the remaining minor-party candidates,
+  not new precincts). Fixed in segments.jsonl; both files are both-axes not
+  row-only. (My width detector under-counted; always confirm column-vs-row by
+  whether the SAME candidates reappear with NEW precincts.)
+- allegan p31 is the lone bare-data page (no title/headers/candidate names) —
+  useful hard negative.
+Gaps recorded in PAGE_PROPERTIES.md: skew degrees are rough for the 8 scanned
+pages (do synthetic-rotation training + measure real skew); precincts_present is
+currently fully correlated with candidate_orientation.
+
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
   keyword/"(Vote for" scan — different title format. ionia is the GREEN-BANDED
