@@ -63,6 +63,31 @@ Corrections learned here: (a) header-repeat on row-continuation pages VARIES by
 vendor (calhoun/oscoda/wexford repeat; allegan/barry do NOT); (b) the precinct-
 repeat width detector can over-count — always eyeball both-axes cuts.
 
+## DONE: variety batch of 4 non-SOVC PDF vendors (Mike confirmed each)
+Deliberately picked to add vendor/layout variety beyond the MI SOVC tool:
+  livingston  green-columns (Clarity/Scytl): Electors of President, col-continuation
+              p6-7. Contest NAME repeats on the continuation page (3rd header-repeat
+              behavior seen). stitch=true (single table split by columns).
+  hillsdale   green-ROWS: per-precinct block of STACKED contests spanning pages,
+              candidates in rows (Choice|Party|Early|AVCB|ElectionDay|Total).
+              p1-2. rotated_headers true->FALSE (headers are horizontal).
+              stitch stays false (no single contest split; contests each complete
+              on a page, only the precinct's set of contests continues).
+  elk (PA)    Electionware, candidate-rows: Presidential Electors with EXPLODED
+              write-in rows (DONALD TRUMP, GOD, BUDDY THE BIRDY, ...) that push the
+              single contest across p1-2. stitch=true (single contest split).
+  adams (PA)  Electionware, candidate-rows: COLLAPSED write-ins so each contest is
+              compact; contests STACKED (President, then Senator+AG on p2). p1-2.
+              stitch stays false (no split contest).
+Rulings applied (Mike): stitch = a SINGLE table/contest split across pages, NOT a
+precinct's stacked contests merely continuing onto the next page.
+Vendor map learned: livingston + genesee + ionia + ottawa are the SAME green
+Clarity-style vendor (candidate columns) in different report-title wrappers
+("Statement of Votes Cast" / "Official Canvass Report" / "...precinct-level
+results"); hillsdale is the green candidate-ROWS variant. Electionware (elk,
+adams; also armstrong/beaver/northampton/snyder) is the PA candidate-rows family,
+split by write-in explosion behavior.
+
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
   keyword/"(Vote for" scan — different title format. ionia is the GREEN-BANDED
