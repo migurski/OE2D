@@ -3,6 +3,116 @@
 Purpose: characterize how multi-page contest grids continue, to define training
 examples. To be turned into data later.
 
+---
+
+# >>> RESUME HERE (handoff, effort paused) <<<
+
+## Goal
+Replace the hasty front-sampled 4-page fixtures with faithful CONTEST-RESULTS
+page windows drawn from the UPSTREAM full originals, so the training set relies
+on page CONTENT (candidate names + vote values), not on vendor familiarity.
+Keep the chosen files and Mike's labels; only fix WHICH pages represent each.
+
+## Locked decisions
+- Commit contiguous re-excerpted PDFs (overwrite the existing fixture file so the
+  category.jsonl path mapping stays intact) + a provenance manifest.
+- Manifest = oe2d-data/labels/segments.jsonl, one JSON line per fixture:
+  {file, source_url, source_pages:[...], contest, roles:{page:role}}.
+  roles: "results" (contest-name page), "continuation-columns" (same precincts,
+  more candidate cols), "continuation-rows" (columns restart, next precincts).
+- Segment = BOUNDED WINDOW (~4pp) showing the split(s); vote values may be
+  incomplete on purpose.
+- Tool PROPOSES windows, Mike CONFIRMS per file / per batch.
+- Vary the contest across files, but only BIG races (President, US Senate, US
+  House, State House/Senate, statewide boards/regents/trustees, Gov of Wayne St,
+  AG, etc.) — never small county races.
+- Do NOT put fixture-generation code in the oe2d package (Mike). Throwaway
+  scripts only, in scratchpad (or a top-level scripts/ if ever justified).
+
+## DONE (committed b165146, on branch migurski/categorize-sources)
+- barry-mi-sovc-official-results.pdf -> President window, upstream pages 22-25
+  (both-axes split; portrait; 3 candidate-col pages wide; name only on p22).
+  Label fix: has_side_by_side true->false.
+- calhoun-mi-2024-sovfull.pdf -> President window, upstream pages 17-18 (row-only
+  split; all candidates fit one page width; title+headers repeat each page).
+  Label fix: has_side_by_side true->false.
+- has_side_by_side means >=2 CONTESTS side by side; a single-contest window is
+  always false, even with many candidate columns. (Mike ruled; apply to all.)
+- Added fixture-notes.md (this file), segments.jsonl, oe2d-render-page CLI
+  (commit 010d4df), and the earlier rendering CLI work.
+
+## PENDING: batch of 10 vector SOVC files — proposed, AWAITING MIKE'S CONFIRM
+All fetched+analyzed from upstream (files were in scratchpad, now gone — refetch).
+Proposed windows (source page ranges), varied big races:
+  lapeer     President                       7-10   both-axes w=3
+  baraga     President                       10-13  both-axes w=3
+  antrim     Governor of Wayne State U       27-29  both-axes w=3
+  charlevoix U.S. Senator                    13-15  both-axes w=2
+  houghton   Rep. in Congress 1st            19-21  both-axes w=2
+  oscoda     U.S. Senator                    13-14  row-only
+  wexford    Rep. in Congress 1st            17-18  row-only
+  alger      Rep. in State Legislature 109th 23-24  row-only
+  allegan    State Board of Education        30-31  row-only
+  jackson    President                       36-42  both-axes w=6  <-- OUTLIER
+Jackson is 7pp (President 6 cols wide). Recommended: TRIM to p36-39 (column-split
+only) to keep bounded — Mike to decide (keep 7pp / trim / swap contest).
+NEXT ACTIONS once confirmed: for each -> cut contiguous window with pypdf,
+overwrite oe2d-data/fixtures/categorize/<file>, check category.jsonl label (set
+has_side_by_side=false), append segments.jsonl. Then SPOT-CHECK the both-axes
+cuts by rendering (they are the higher risk) before committing.
+
+## DEFERRED (need separate handling, NOT started)
+- ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
+  keyword/"(Vote for" scan — different title format. ionia is the GREEN-BANDED
+  data-first vendor (its excerpt already shows real data; may need little/no fix).
+  Investigate each: dump page_words on early pages to see the title phrasing.
+- alcona (6pp), arenac (5pp), benzie-11-5 (9pp): small county docs with NO
+  statewide races; keyword falsely matched local Trustee/Treasurer. Decide per
+  file whether they even need re-excerpting.
+- SCANNED SOVC (gogebic, benzie-scanned, kalkaska, mackinac, montcalm,
+  montmorency, otsego, st-clair, allegan scanned twin): page_words is EMPTY, so
+  the text method fails — need a VISION (inspect_page) pass to find results
+  pages. Second phase.
+- bedford-pa (primary, summary-first): re-excerpt to its candidate-rows results
+  pages (the rowspan party-elector detail is deeper than page 1).
+- The Electionware PA files (elk, adams) and ionia already show data on page 1 —
+  lower priority; verify their excerpts capture a multi-page sequence.
+
+## How to rebuild the throwaway tooling (scratchpad is gone on resume)
+Env: .venv-linux ; run modules with the venv python. Fetch upstream via the URL
+in oe2d-data/labels/seed_sources.tsv, matched to a fixture by slugifying the
+seed 'file' name (lower, non-alnum->'-', [:80]) == fixture basename stem.
+Detection recipe (all from oe2d.source_table.page_words — do NOT rely on
+page_table; it returns nothing on these unruled SOVC pages):
+- Contest-start page: joined page text contains "(Vote for" or an office keyword;
+  the contest TITLE is the text before "(Vote for" (strip the running header
+  "Page: N of M <date> <time>").
+- WIDTH (candidate-col pages per precinct block) = count of CONSECUTIVE pages from
+  the start that share the same FIRST PRECINCT NAME. Get the first precinct by
+  grouping words into lines (bucket by top), and on each line take the text
+  BEFORE the first numeric token; keep the first line whose name contains
+  "City of"/"Township"/"Ward"/"Village" or matches /Precinct \d/.
+- Window: width==1 (row-only) -> [start, start+1]; width>1 (both-axes) ->
+  [start .. start+width] (name + column continuations + first row continuation),
+  optionally capped for very wide contests.
+Cut with pypdf (add_page for 0-based indices), write, overwrite fixture.
+
+## GOTCHAS (learned the hard way)
+- Page ORIENTATION does NOT predict the variant: landscape lapeer splits columns
+  (both-axes), portrait allegan fits all candidates (row-only). Use WIDTH, not
+  orientation.
+- pdfplumber reads ROTATED headers REVERSED ("sirraH"=Harris, "ytraP"=Party) —
+  useful as a rotated-headers signal, but breaks left-to-right token order.
+- Some SOVC pages have TWO "Precinct" tokens per row and leading Times
+  Cast/Registered/Total Votes summary columns, which poison naive column
+  signatures — that's why the precinct-repeat width method is used instead.
+- For both-axes contests the contest NAME is only on the first page; row-only
+  contests repeat the name+headers every page.
+- Excerpting SEVERS sequences; always go to the upstream original.
+- SCANNED files can be tilted/skewed and carry handwriting/hole-punch noise.
+
+---
+
 ## barry-mi-sovc-official-results.pdf
 - Container: vector_pdf, candidate_columns, precinct grain.
 - Labels: rotated_headers + side_by_side + multi_sheet_stitch.
@@ -265,3 +375,21 @@ need a vision (inspect_page) pass. Build vector path first, scanned second.
 - Implication: for these MI SOVC counties the xlsx is the DEGRADED copy (broken
   headers); the scanned PDF carries the real structure. Prefer the PDF as the
   training exemplar for this county, not the xlsx.
+
+## Re-excerpt progress + SOVC variants
+Done (upstream -> bounded window, fixture overwritten, label checked, manifest):
+- barry: President p22-25. BOTH-axes split (portrait, 3 candidate-column pages
+  wide). Column-continuation pages LOSE the contest name. side_by_side->false.
+- calhoun: President p17-18. ROW-ONLY split (landscape, all candidates fit one
+  page width, width=1). Contest title AND headers REPEAT on every page, so each
+  page is self-contained for identity; only precincts continue. side_by_side->false.
+
+=> Same SOVC vendor produces TWO variants by page orientation: portrait forces a
+   candidate-column split (both axes; name only on first page); landscape fits
+   all candidates (row-only stitch; name repeats). Keep both as distinct examples.
+=> The throwaway segtool heuristic is unreliable on this vendor (two "Precinct"
+   tokens per row; '(Vote for' repeats every page in landscape variant). Use it
+   as a hint only and confirm windows by eye.
+=> has_side_by_side means >=2 CONTESTS side by side; a single-contest window is
+   always false here even with many candidate columns. Mike ruled false (Barry),
+   applied to calhoun too.
