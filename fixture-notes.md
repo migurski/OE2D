@@ -116,8 +116,16 @@ All stitch=false (stacked contests continue across pages; no single table split)
 - Serif "Election Summary Report" ROWS: berrien(county), armstrong(boro),
   bedford(PA primary). [berrien, armstrong DONE]
 - "Precinct Summary Results Report" (Absentee/Early cols): emmet. [DONE]
-Remaining unique-ish still TODO: bedford (primary variant of the serif vendor);
-the green/Electionware duplicates are LOW marginal value.
+Remaining unique-ish still TODO: the green/Electionware duplicates are LOW
+marginal value.
+
+## DONE: bedford (PA closed PRIMARY, county-level serif Election Summary Report)
+Window p2-3: President of the United States (DEM) p2 -> United States Senator
+(DEM) p3. Distinctive: CLOSED PRIMARY so each contest is party-tagged "(DEM)"
+(the REP versions are elsewhere, p9+, non-contiguous so not in the window);
+COUNTY-level (Precincts Reported 40 of 40, single Total column); candidate rows;
+huge EXPLODED write-in lists. Label unchanged (candidate_rows, county, all flags
+false) — each contest is one-per-page here, no stacking or single-contest split.
 
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the
