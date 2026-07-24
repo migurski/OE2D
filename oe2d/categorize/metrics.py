@@ -63,9 +63,8 @@ def score_category(gold, pred, trace=None, pred_name=None, pred_trace=None):
     if misses:
         feedback: str = (
             f'Score {score:.2f}. Wrong fields:\n  - ' + '\n  - '.join(misses)
-            + '\nInspect the file with the tools (page_table/page_words for text, '
-            'inspect_page for the rendered image) before deciding orientation and '
-            'the layout properties.'
+            + '\nInspect the file with the text tools (page_table/page_words) '
+            'before deciding orientation and the layout properties.'
         )
     else:
         feedback = f'Score {score:.2f}. All scored fields correct: {", ".join(hits)}.'

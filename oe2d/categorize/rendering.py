@@ -6,8 +6,9 @@ the page is rasterized. For spreadsheets a single sheet is isolated first so a
 requested sheet renders to its own page rather than paginating the whole book.
 optipng shrinks the result. Zip members are streamed out to a temp file.
 
-The same rasterization the RLM's inspect_page tool relies on is exposed as a
-CLI (oe2d-render-page) so a page image can be pulled out of any source by hand.
+This rasterization backs the oe2d.pages analyzer (which renders a source page
+before reading it) and is exposed as a CLI (oe2d-render-page) so a page image can
+be pulled out of any source by hand.
 '''
 from __future__ import annotations
 

@@ -4,9 +4,8 @@ Usage: oe2d-optimize-categorizer [--out FILE] [--max-metric-calls N] ...
 
 Builds the same dspy.RLM(SourceCategorizer, tools=...) the CLI runs, then uses
 GEPA to evolve its prompt against labels/category.jsonl. The task LM is
-Fireworks Kimi K2 (multimodal, so it also drives the vision inspector); the
-reflection LM is Bedrock Opus. The optimized program is saved as JSON and
-validation accuracy is printed per field.
+Fireworks Kimi K2; the reflection LM is Bedrock Opus. The optimized program is
+saved as JSON and validation accuracy is printed per field.
 
 GEPA checkpoints after each step to a repo-root gepa-<digest> dir, where the
 digest fingerprints the run config (examples, split, models). Re-running resumes
@@ -31,9 +30,9 @@ from dspy.teleprompt import GEPA
 from .. import categorize
 from . import datasets, metrics, tools
 
-# Task LM writes the RLM code and reads the page images; reflection LM rewrites
-# the prompt from the metric's feedback. A strong reflection model matters more
-# than a strong task model here.
+# Task LM writes the RLM code that reads the file through the text tools;
+# reflection LM rewrites the prompt from the metric's feedback. A strong
+# reflection model matters more than a strong task model here.
 STUDENT_MODEL: str = categorize.TASK_LM
 REFLECTION_MODEL: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 
@@ -74,7 +73,7 @@ def build_program(verbose: bool = False) -> dspy.Module:
     return dspy.RLM(
         categorize.SourceCategorizer,
         tools=[tools.count_pages, tools.page_table, tools.page_words,
-               tools.zip_members, tools.inspect_page],
+               tools.zip_members],
         verbose=verbose,
     )
 
@@ -154,8 +153,8 @@ def main() -> None:
     reflection_lm: dspy.LM = dspy.LM(model=REFLECTION_MODEL, temperature=1.0, max_tokens=8192,
                                      num_retries=args.num_retries)
 
-    # The ambient LM drives both the RLM and, through dspy.settings, the vision
-    # inspector; the program's own LM is set to the same student model.
+    # The ambient LM drives the RLM; the program's own LM is set to the same
+    # student model.
     dspy.configure(lm=student_lm)
     program: dspy.Module = build_program(verbose=args.verbose)
     program.set_lm(student_lm)

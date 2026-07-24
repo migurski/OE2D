@@ -1,8 +1,7 @@
 '''Host-side tools for the RLM categorizer.
 
 Every tool returns a SIMPLE_TYPE (str, int, float, bool, list, dict, None) so
-its result crosses the Deno/Pyodide sandbox boundary intact. Image data never
-crosses: inspect_page runs a vision model host-side and returns text.
+its result crosses the Deno/Pyodide sandbox boundary intact.
 '''
 from __future__ import annotations
 
@@ -10,17 +9,16 @@ import zipfile
 
 from .. import source_table
 
-from . import inspector, rendering
+from . import rendering
 from .. import categorize
 
 # Keep tabular returns bounded so a wide sheet does not flood the REPL output.
 _MAX_ROWS = 100
 _MAX_COLS = 60
 
-# Returned for a PDF page with no extractable text, so the model reaches for the
-# vision tool instead of concluding the page is empty and guessing.
-_NO_TEXT_HINT = ('[no extractable text on this page — it is likely scanned; call '
-                 'inspect_page(path, page) to read it as an image]')
+# Returned for a PDF page with no extractable text, so the model records that the
+# page is likely scanned rather than concluding it is empty and guessing.
+_NO_TEXT_HINT = '[no extractable text on this page — it is likely scanned]'
 
 
 def zip_members(path: str) -> list[str]:
@@ -43,8 +41,8 @@ def count_pages(path: str, *, member: str | None = None) -> int:
 def page_table(path: str, page: int, *, member: str | None = None) -> list[list[str]]:
     '''Parsed rows of one page/sheet as lists of strings; empty if unreadable.
 
-    For spreadsheets page is the sheet number. Returns nothing for scanned
-    PDFs (no text) — use inspect_page to view those.
+    For spreadsheets page is the sheet number. A scanned PDF has no extractable
+    text, so it returns the no-text hint rather than rows.
     '''
     local: str = rendering.material_path(path, member)
     rows: list[list[str]] | None = source_table.page_table(local, page)
@@ -64,14 +62,3 @@ def page_words(path: str, page: int, *, member: str | None = None) -> list[dict]
     if categorize.detect_container(local) in ('vector_pdf', 'scanned_pdf'):
         return [{'text': _NO_TEXT_HINT}]
     return []
-
-
-def inspect_page(path: str, page: int = 1, question: str = '', *, member: str | None = None) -> str:
-    '''View a rendered page/sheet with a vision model and return observed facts.
-
-    Required for scanned PDFs, which have no extractable text. Also use to
-    confirm layout: candidates in columns vs rows, rotated headers, stacked or
-    side-by-side contests. For spreadsheets page is the sheet number; look past
-    a table-of-contents sheet at an actual contest sheet.
-    '''
-    return inspector.inspect_page(path, page, member=member, question=question)

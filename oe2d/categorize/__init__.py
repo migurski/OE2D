@@ -4,9 +4,8 @@ Usage: oe2d-categorize-source path/to/file
 
 Prints a JSON dict describing the source: its container format, table
 orientation, geographic grain, and layout properties. A deterministic layer
-sniffs the container and page count; a DSPy RLM then inspects the file with tools
-(including a vision inspector) to fill in orientation, grain, and the layout
-properties.
+sniffs the container and page count; a DSPy RLM then inspects the file with
+text tools to fill in orientation, grain, and the layout properties.
 Requires DSPy, an LM provider key, Deno, and LibreOffice —
 missing pieces fail loudly rather than degrading to a partial result.
 '''
@@ -166,9 +165,8 @@ def _raw_line_preview(path: str, rows: int) -> str:
     return '\n'.join(lines)
 
 
-# Fireworks' Kimi K2 (multimodal) drives both the RLM code-writing and the vision
-# inspector. Hardcoded — no per-run model override needed. litellm reads
-# FIREWORKS_AI_API_KEY (supplied by the repo .env).
+# Fireworks' Kimi K2 drives the RLM code-writing. Hardcoded — no per-run model
+# override needed. litellm reads FIREWORKS_AI_API_KEY (supplied by the repo .env).
 TASK_LM = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 # The GEPA-optimized program, committed as package data. When present it is
@@ -187,9 +185,8 @@ class SourceCategorizer(dspy.Signature):
     - count_pages, page_table, page_words read text; for spreadsheets the page
       argument is the sheet number. zip_members lists archive contents. (The
       page_count input already holds the top-level page/sheet count.)
-    - inspect_page renders a page/sheet and returns what a vision model sees. It
-      is REQUIRED for scanned_pdf sources (no extractable text) and useful to
-      confirm rotated headers or side-by-side/stacked contests.
+    A scanned_pdf source has no extractable text; the tools report that, so infer
+    what you can from the container, page count, and file name for those.
     Many spreadsheets lead with a table-of-contents sheet, so look past it at an
     actual contest sheet.
 
@@ -240,23 +237,19 @@ def _instrument() -> None:
 def run_rlm(signals: dict, verbose: bool = False) -> dict:
     '''Categorize with a DSPy RLM that inspects the file through tools.
 
-    The RLM writes Python in a sandbox and calls host-side tools (count_pages,
-    page_table, page_words, zip_members, inspect_page). inspect_page renders a
-    page/sheet and runs a vision model on it, so scanned PDFs and visually
-    complex layouts are read from the image rather than guessed. Raises on any
-    missing runtime piece (LM provider key, Deno, LibreOffice) rather than
+    The RLM writes Python in a sandbox and calls host-side text tools
+    (count_pages, page_table, page_words, zip_members) to read the file. Raises
+    on any missing runtime piece (LM provider key, Deno, LibreOffice) rather than
     hiding it behind a partial result.
     '''
     from . import tools
 
     _instrument()
-    # One ambient LM drives the RLM and, through the shared dspy.settings, the
-    # vision inspector too.
     dspy.configure(lm=dspy.LM(TASK_LM))
     categorizer = dspy.RLM(
         SourceCategorizer,
         tools=[tools.count_pages, tools.page_table, tools.page_words,
-               tools.zip_members, tools.inspect_page],
+               tools.zip_members],
         verbose=verbose,
     )
     if os.path.exists(OPTIMIZED_MODEL_PATH):
