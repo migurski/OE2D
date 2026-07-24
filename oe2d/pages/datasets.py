@@ -51,8 +51,13 @@ def record_to_example(record: dict) -> dspy.Example:
     '''Build one dspy.Example: the page image in, the in-page properties out.
 
     A null precinct_orientation in the gold data is normalized to 'none' to match
-    the signature's Literal, which has no null member. skew_degrees is left as
-    None when unmeasured (scanned pages); the metric skips scoring it in that case.
+    the signature's Literal, which has no null member.
+
+    eval_kind marks how the metric scores this example: a rotate augmentation
+    (which carries a real known angle) is scored on skew only; every other page
+    (real, or a header-crop) is scored on the content fields only, and its skew
+    (0.0 for vector, null for scanned) is ignored. It is a FIELD, not a private
+    attribute, so it survives through GEPA into the metric call.
     '''
     fields: dict = {'image': dspy.Image(image_path(record))}
     for name in OUTPUT_FIELDS:
@@ -60,6 +65,7 @@ def record_to_example(record: dict) -> dspy.Example:
         if name == 'precinct_orientation' and value is None:
             value = 'none'
         fields[name] = value
+    fields['eval_kind'] = 'skew' if record.get('transform') == 'rotate' else 'content'
     return dspy.Example(**fields).with_inputs(*INPUT_FIELDS)
 
 
@@ -67,27 +73,37 @@ def load_examples(labels_path: str = _LABELS_PATH) -> list[dspy.Example]:
     '''Load every gold record whose image exists as a dspy.Example.'''
     examples: list[dspy.Example] = []
     for record in load_records(labels_path):
+        if not os.path.exists(image_path(record)):
+            continue
         example = record_to_example(record)
         example._synthetic = bool(record.get('synthetic'))
+        example._transform = record.get('transform')       # 'rotate' | 'crop_top' | None
         example._fixture = record.get('source_fixture', record['image'])
-        if os.path.exists(image_path(record)):
-            examples.append(example)
+        examples.append(example)
     return examples
 
 
 def split(examples: list[dspy.Example], val_fraction: float = 0.25) -> tuple[list[dspy.Example], list[dspy.Example]]:
-    '''Split into train/val by source fixture, keeping synthetic rows train-only.
+    '''Split into train/val by source fixture, routing each kind of page.
 
-    Real examples are grouped by fixture; the fixtures are sorted and every
-    round(1/val_fraction)-th one is a validation fixture. Validation gets only the
-    real pages from those fixtures. Training gets the real pages from the remaining
-    fixtures plus the synthetic pages — but ONLY synthetics derived from a training
-    fixture: a synthetic rotate/crop of a val fixture's page is dropped, or its
-    (transformed) content would leak into training against its own val pages.
+    Real pages are grouped by fixture; the fixtures are sorted and every
+    round(1/val_fraction)-th one is a validation fixture.
+
+    - Real (content) pages: val fixtures -> val, train fixtures -> train.
+    - Rotate augmentations (skew examples): a rotation of a VAL fixture's page
+      goes to VAL as the skew holdout (a legitimate held-out skew test — skew is
+      geometric, not learnable from the page's content); a rotation of a train
+      fixture goes to train. Rotations of dropped fixtures (e.g. removed by a
+      --max-examples subsample) are dropped.
+    - Crop augmentations (content examples): train fixtures only. A crop of a val
+      fixture is dropped so the CONTENT validation stays real-pages-only (no
+      synthetic content variants inflating the content metric).
+
     Deterministic — no random state.
     '''
     real: list[dspy.Example] = [ex for ex in examples if not getattr(ex, '_synthetic', False)]
-    synthetic: list[dspy.Example] = [ex for ex in examples if getattr(ex, '_synthetic', False)]
+    rotates: list[dspy.Example] = [ex for ex in examples if getattr(ex, '_transform', None) == 'rotate']
+    crops: list[dspy.Example] = [ex for ex in examples if getattr(ex, '_transform', None) == 'crop_top']
 
     by_fixture: dict[str, list[dspy.Example]] = collections.defaultdict(list)
     for example in real:
@@ -103,12 +119,17 @@ def split(examples: list[dspy.Example], val_fraction: float = 0.25) -> tuple[lis
             valset.extend(by_fixture[fixture])
         else:
             trainset.extend(by_fixture[fixture])
-    # A synthetic is trained on only when its base fixture's real pages are in
-    # train — not merely "not in val". This drops synthetics whose base is a val
-    # fixture (leak) AND synthetics whose base was dropped entirely (e.g. by a
-    # --max-examples subsample), so a quick pass never trains on orphans.
     train_fixtures: set[str] = set(by_fixture) - val_fixtures
-    trainset.extend(ex for ex in synthetic if getattr(ex, '_fixture', None) in train_fixtures)
+
+    for example in rotates:
+        fixture = getattr(example, '_fixture', None)
+        if fixture in val_fixtures:
+            valset.append(example)          # skew holdout
+        elif fixture in train_fixtures:
+            trainset.append(example)
+    for example in crops:
+        if getattr(example, '_fixture', None) in train_fixtures:
+            trainset.append(example)
     return trainset, valset
 
 

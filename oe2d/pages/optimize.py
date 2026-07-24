@@ -45,14 +45,21 @@ _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspat
 
 
 def run_digest(examples: list, val_fraction: float) -> str:
-    '''Fingerprint the run config so a changed setup forks a new checkpoint dir.'''
+    '''Fingerprint the run config so a changed setup forks a new checkpoint dir.
+
+    Builds a per-example string (fixture, eval_kind, and every output field) and
+    hashes the SORTED set of them, so the digest is independent of example order
+    (and of object identity) — the same data always yields the same checkpoint dir.
+    '''
+    rows: list[str] = []
+    for example in examples:
+        fields: list[str] = [getattr(example, '_fixture', ''),
+                             getattr(example, 'eval_kind', 'content')]
+        fields += [f'{name}={getattr(example, name, None)!r}' for name in OUTPUT_FIELDS]
+        rows.append('|'.join(fields))
     parts: list[str] = [
         f'val={val_fraction}', f'student={STUDENT_MODEL}', f'reflect={REFLECTION_MODEL}',
-    ]
-    for example in sorted(examples, key=lambda ex: getattr(ex, '_fixture', '') + str(id(ex))):
-        fields: list[str] = [getattr(example, '_fixture', '')]
-        fields += [f'{name}={getattr(example, name, None)!r}' for name in OUTPUT_FIELDS]
-        parts.append('|'.join(fields))
+    ] + sorted(rows)
     return hashlib.sha256('\n'.join(parts).encode()).hexdigest()[:8]
 
 
@@ -61,38 +68,55 @@ def build_program() -> dspy.Module:
     return dspy.Predict(PageAnalysis)
 
 
-def field_accuracy(program: dspy.Module, valset: list) -> dict[str, tuple[int, int]]:
-    '''Run the program over valset, returning (correct, scored) per field.
+def content_accuracy(program: dspy.Module, examples: list) -> dict[str, tuple[int, int]]:
+    '''Per content-field (correct, scored) over the content examples in a set.
 
     A rollout that raises is counted as a miss on every field, mirroring how GEPA
-    scores a failed rollout, rather than aborting the whole eval. skew_degrees is
-    scored within tolerance and skipped when the gold angle is null.
+    scores a failed rollout, rather than aborting the whole eval.
     '''
+    content: list = [ex for ex in examples if getattr(ex, 'eval_kind', 'content') != 'skew']
     correct: dict[str, int] = collections.defaultdict(int)
     scored: dict[str, int] = collections.defaultdict(int)
     failures: int = 0
-    for example in valset:
+    for example in content:
         try:
             prediction = program(image=example.image)
         except Exception as error:
             failures += 1
-            print(f'  eval rollout failed ({type(error).__name__}); counting as a miss',
+            print(f'  content rollout failed ({type(error).__name__}); counting as a miss',
                   file=sys.stderr)
             prediction = None
-        for name in OUTPUT_FIELDS:
-            gold = getattr(example, name, None)
-            if name == 'skew_degrees' and gold is None:
-                continue
+        for name in metrics.CONTENT_WEIGHTS:
             scored[name] += 1
             pred = getattr(prediction, name, None) if prediction is not None else None
-            if name == 'skew_degrees':
-                if prediction is not None and metrics._skew_ok(pred, gold):
-                    correct[name] += 1
-            elif pred == gold:
+            if pred == getattr(example, name, None):
                 correct[name] += 1
     if failures:
-        print(f'  ({failures}/{len(valset)} val rollouts errored and scored 0)', file=sys.stderr)
-    return {name: (correct[name], scored[name]) for name in OUTPUT_FIELDS}
+        print(f'  ({failures}/{len(content)} content rollouts errored and scored 0)', file=sys.stderr)
+    return {name: (correct[name], scored[name]) for name in metrics.CONTENT_WEIGHTS}
+
+
+def skew_report(program: dspy.Module, examples: list) -> tuple[int, int, float, int]:
+    '''Over the skew examples (rotated pages), return (scored, within_tol, mae, failures).'''
+    skew: list = [ex for ex in examples if getattr(ex, 'eval_kind', None) == 'skew']
+    scored: int = 0
+    within: int = 0
+    abs_error: float = 0.0
+    failures: int = 0
+    for example in skew:
+        try:
+            prediction = program(image=example.image)
+            pred_value = float(prediction.skew_degrees)
+        except Exception:
+            failures += 1
+            continue
+        gold_value = float(example.skew_degrees)
+        scored += 1
+        abs_error += abs(pred_value - gold_value)
+        if metrics._skew_ok(pred_value, gold_value):
+            within += 1
+    mae: float = abs_error / scored if scored else 0.0
+    return scored, within, mae, failures
 
 
 def main() -> None:
@@ -132,8 +156,10 @@ def main() -> None:
         real = datasets.subsample(real, args.max_examples)
         print(f'Subsampled to {len(real)} real pages for a quick pass.', flush=True)
     trainset, valset = datasets.split(real + synthetic, val_fraction=args.val_fraction)
-    print(f'Loaded {len(trainset)} train (incl. synthetic) + {len(valset)} val (real only).',
-          flush=True)
+    val_content: int = sum(getattr(ex, 'eval_kind', 'content') != 'skew' for ex in valset)
+    val_skew: int = sum(getattr(ex, 'eval_kind', None) == 'skew' for ex in valset)
+    print(f'Loaded {len(trainset)} train + {len(valset)} val '
+          f'({val_content} content, {val_skew} skew-holdout).', flush=True)
 
     student_lm: dspy.LM = dspy.LM(model=STUDENT_MODEL, temperature=1.0, max_tokens=4096,
                                   num_retries=args.num_retries)
@@ -171,10 +197,19 @@ def main() -> None:
     optimized.save(args.out)
     print(f'\nOptimized program saved to {args.out}')
 
-    print('\nValidation accuracy per field:')
-    for name, (hit, total) in field_accuracy(optimized, valset).items():
+    print('\nContent accuracy per field (real val pages):')
+    for name, (hit, total) in content_accuracy(optimized, valset).items():
         pct: str = f'{hit / total:.0%}' if total else 'n/a'
         print(f'  {name:24} {hit}/{total} = {pct}')
+
+    scored, within, mae, failures = skew_report(optimized, valset)
+    print('\nSkew (rotated val-fixture holdout):')
+    if scored:
+        print(f'  within {metrics.SKEW_TOLERANCE_DEGREES} deg: {within}/{scored} = '
+              f'{within / scored:.0%}; mean abs error {mae:.2f} deg'
+              + (f'; {failures} failed' if failures else ''))
+    else:
+        print('  no skew holdout in this split (val fixtures have no rotations)')
 
 
 if __name__ == '__main__':
