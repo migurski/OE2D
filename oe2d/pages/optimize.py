@@ -109,6 +109,10 @@ def main() -> None:
                         help='litellm retries per LM call (exponential backoff) for throttling')
     parser.add_argument('--log-dir', default=None,
                         help='GEPA checkpoint dir (default gepa-<digest> at the repo root)')
+    parser.add_argument('--max-examples', type=int, default=None,
+                        help='Cap the REAL pages to a stratified subsample for a quick pass '
+                             '(spread across fixtures; shrinks the baseline eval so reflections '
+                             'start sooner). Synthetics of dropped fixtures are dropped too')
     parser.add_argument('--val-fraction', type=float, default=0.25)
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
@@ -120,7 +124,13 @@ def main() -> None:
     pages._instrument()
 
     print('Loading per-page gold set...', flush=True)
-    trainset, valset = datasets.load_split(val_fraction=args.val_fraction)
+    examples: list = datasets.load_examples()
+    real: list = [ex for ex in examples if not getattr(ex, '_synthetic', False)]
+    synthetic: list = [ex for ex in examples if getattr(ex, '_synthetic', False)]
+    if args.max_examples:
+        real = datasets.subsample(real, args.max_examples)
+        print(f'Subsampled to {len(real)} real pages for a quick pass.', flush=True)
+    trainset, valset = datasets.split(real + synthetic, val_fraction=args.val_fraction)
     print(f'Loaded {len(trainset)} train (incl. synthetic) + {len(valset)} val (real only).',
           flush=True)
 

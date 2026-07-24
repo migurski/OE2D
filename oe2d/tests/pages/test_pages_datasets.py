@@ -63,6 +63,19 @@ def test_split_is_deterministic():
     assert [e._fixture for e in first[1]] == [e._fixture for e in second[1]]
 
 
+def test_subsample_spreads_across_fixtures_deterministically():
+    examples = []
+    for c in 'abcd':
+        for page in range(3):                       # 3 pages per fixture
+            examples.append(_example(f'../fixtures/categorize/{c}.pdf', False))
+    picked = datasets.subsample(examples, 4)
+    assert len(picked) == 4
+    assert len({ex._fixture for ex in picked}) == 4, 'one page from each of the 4 fixtures first'
+    assert [e._fixture for e in datasets.subsample(examples, 6)] == \
+           [e._fixture for e in datasets.subsample(examples, 6)], 'deterministic'
+    assert datasets.subsample(examples, 999) is examples, 'n >= len returns the input'
+
+
 def test_record_to_example_normalizes_precinct_orientation():
     # a candidate-rows page has null precinct_orientation in the labels; the
     # example must carry the signature's concrete 'none' instead.

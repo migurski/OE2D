@@ -103,8 +103,44 @@ def split(examples: list[dspy.Example], val_fraction: float = 0.25) -> tuple[lis
             valset.extend(by_fixture[fixture])
         else:
             trainset.extend(by_fixture[fixture])
-    trainset.extend(ex for ex in synthetic if getattr(ex, '_fixture', None) not in val_fixtures)
+    # A synthetic is trained on only when its base fixture's real pages are in
+    # train — not merely "not in val". This drops synthetics whose base is a val
+    # fixture (leak) AND synthetics whose base was dropped entirely (e.g. by a
+    # --max-examples subsample), so a quick pass never trains on orphans.
+    train_fixtures: set[str] = set(by_fixture) - val_fixtures
+    trainset.extend(ex for ex in synthetic if getattr(ex, '_fixture', None) in train_fixtures)
     return trainset, valset
+
+
+def subsample(examples: list[dspy.Example], n: int) -> list[dspy.Example]:
+    '''Deterministically take up to n examples, spread across source fixtures.
+
+    Round-robins across the fixtures (sorted) so a small slice still spans as many
+    vendors/layouts as possible. Used for a quick optimization pass; run it on the
+    real examples before split() so validation keeps real pages from several
+    fixtures.
+    '''
+    if n >= len(examples):
+        return examples
+    by_fixture: dict[str, list[dspy.Example]] = collections.defaultdict(list)
+    for example in examples:
+        by_fixture[getattr(example, '_fixture', '')].append(example)
+    order: list[str] = sorted(by_fixture)
+    picked: list[dspy.Example] = []
+    depth: int = 0
+    while len(picked) < n:
+        advanced: bool = False
+        for fixture in order:
+            group: list[dspy.Example] = by_fixture[fixture]
+            if depth < len(group):
+                picked.append(group[depth])
+                advanced = True
+                if len(picked) >= n:
+                    break
+        if not advanced:
+            break
+        depth += 1
+    return picked
 
 
 def load_split(labels_path: str = _LABELS_PATH, val_fraction: float = 0.25) -> tuple[list[dspy.Example], list[dspy.Example]]:
