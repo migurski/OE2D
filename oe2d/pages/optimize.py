@@ -27,6 +27,7 @@ import sys
 
 import dspy
 from dspy.teleprompt import GEPA
+from dspy.teleprompt.gepa import instruction_proposal
 
 from .. import categorize
 from .. import pages
@@ -149,12 +150,19 @@ def main() -> None:
     print(f'{"Resuming" if resuming else "Starting"} GEPA run in {log_dir}', flush=True)
     print(f'  (touch {os.path.join(log_dir, "gepa.stop")} to stop gracefully)', flush=True)
 
+    # The example input is a page IMAGE. Without a multimodal instruction
+    # proposer, GEPA stringifies inputs into the reflection prompt, and str() of a
+    # dspy.Image is its base64 — which blows past the reflection LM's context
+    # window. MultiModalInstructionProposer keeps the image an object and sends it
+    # to the (multimodal) Opus reflection LM as a real image block, so the prompt
+    # stays small and the reflection can actually see the page.
     optimizer: GEPA = GEPA(
         metric=metrics.score_page,
         max_metric_calls=args.max_metric_calls,
         reflection_minibatch_size=args.reflection_minibatch_size,
         num_threads=args.num_threads,
         reflection_lm=reflection_lm,
+        instruction_proposer=instruction_proposal.MultiModalInstructionProposer(),
         log_dir=log_dir,
     )
     optimized: dspy.Module = optimizer.compile(program, trainset=trainset, valset=valset)
