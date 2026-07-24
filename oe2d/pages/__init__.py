@@ -84,33 +84,32 @@ class PageAnalysis(dspy.Signature):
     You are shown a single page image, not a whole document. Describe only what is
     visible on THIS page; do not infer contests or precincts that would be on other
     pages.
-
-    candidate_orientation: 'columns' when each candidate/party is a column (and
-      precincts run down the rows), 'rows' when each candidate/party is a row.
-    contest_name_present: is a contest/office title visible on this page? (A
-      continuation page that just carries more columns or more precinct rows often
-      has none.)
-    candidate_names_present: are candidate or party names visible on this page?
-      (False on a bare data-only continuation page.)
-    headers_present: are column/row headers labeling the numbers present here?
-    precinct_scope: 'multi_precinct' when the page lays out many precincts along an
-      axis; 'per_precinct' when the page is a single precinct named in a heading,
-      with its results below; 'county' when the page shows county-wide aggregates
-      with no precinct dimension.
-    precinct_orientation: for multi_precinct, whether precincts are 'rows' or
-      'columns'; otherwise 'none'.
-    skew_degrees: rotation of the page off horizontal, in degrees (0.0 if
-      straight; positive = counter-clockwise). Scanned pages are often slightly
-      tilted; a clean vector page is 0.0.
     '''
     image: dspy.Image = dspy.InputField(desc='A single rendered election-results page')
-    candidate_orientation: CandidateOrientation = dspy.OutputField()
-    contest_name_present: bool = dspy.OutputField()
-    candidate_names_present: bool = dspy.OutputField()
-    headers_present: bool = dspy.OutputField()
-    precinct_scope: PrecinctScope = dspy.OutputField()
-    precinct_orientation: PrecinctAxis = dspy.OutputField()
-    skew_degrees: float = dspy.OutputField(desc='Degrees off horizontal; 0.0 if straight')
+    candidate_orientation: CandidateOrientation = dspy.OutputField(
+        desc="'columns' when each candidate/party is a column (and precincts run "
+             "down the rows); 'rows' when each candidate/party is a row")
+    contest_name_present: bool = dspy.OutputField(
+        desc='Is a contest/office title visible on this page? A continuation page '
+             'that just carries more candidate columns or more precinct rows often '
+             'has none')
+    candidate_names_present: bool = dspy.OutputField(
+        desc='Are candidate or party names visible on this page? False on a bare '
+             'data-only continuation page')
+    headers_present: bool = dspy.OutputField(
+        desc='Are column/row headers labeling the numbers present on this page?')
+    precinct_scope: PrecinctScope = dspy.OutputField(
+        desc="'multi_precinct' when the page lays out many precincts along an axis; "
+             "'per_precinct' when the page is a single precinct named in a heading "
+             "with its results below; 'county' when the page shows county-wide "
+             "aggregates with no precinct dimension")
+    precinct_orientation: PrecinctAxis = dspy.OutputField(
+        desc="For a multi_precinct page, whether precincts are 'rows' or 'columns'; "
+             "otherwise 'none'")
+    skew_degrees: float = dspy.OutputField(
+        desc='Rotation of the page off horizontal, in degrees: 0.0 if straight, '
+             'positive = counter-clockwise. Scanned pages are often slightly '
+             'tilted; a clean vector page is 0.0')
 
 
 def _instrument() -> None:
