@@ -28,3 +28,27 @@ def test_detect_recovers_known_angle(tmp_path, applied):
 
 def test_straight_page_is_near_zero():
     assert abs(deskew.detect_skew(_PAGE)) <= 0.2
+
+
+# Hand-measured skew of the committed real scanned pages (degrees CCW), with a
+# per-page tolerance. These pin the detector to REAL scans, not just synthetic
+# rotations. gogebic p2 (0.20 deg on a sparse, noisy continuation page) sits below
+# the method's sensitivity floor and reads ~0, so it gets a looser tolerance that
+# documents that known limitation rather than hiding it.
+_REAL_SKEW = {
+    'gogebic-mi-official-statement-of-votes-cast-with-certification-11-5-2024-p1.png': (0.37, 0.12),
+    'gogebic-mi-official-statement-of-votes-cast-with-certification-11-5-2024-p2.png': (0.20, 0.25),
+    'mackinac-mi-statement-of-votes-cast-closed-primary-nov-11-2024-p1.png': (0.35, 0.12),
+    'mackinac-mi-statement-of-votes-cast-closed-primary-nov-11-2024-p2.png': (0.30, 0.12),
+    'huron-mi-official-results-per-precinct-p1.png': (0.0, 0.12),
+    'huron-mi-official-results-per-precinct-p2.png': (0.0, 0.12),
+    '2024-cass-county-mi-precinct-level-results-p1.png': (0.0, 0.12),
+    '2024-cass-county-mi-precinct-level-results-p2.png': (0.0, 0.12),
+}
+
+
+@pytest.mark.parametrize('name,truth_tol', _REAL_SKEW.items())
+def test_detect_matches_measured_real_scans(name, truth_tol):
+    truth, tol = truth_tol
+    estimate = deskew.detect_skew(os.path.join(_IMAGES, name))
+    assert abs(estimate - truth) <= tol, f'{name}: measured {truth}, detected {estimate}'
