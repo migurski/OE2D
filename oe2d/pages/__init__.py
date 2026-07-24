@@ -5,11 +5,14 @@ Usage: oe2d-analyze-page path/to/page.png
 
 Prints a JSON dict of per-page properties a downstream extractor can route on:
 candidate orientation (columns vs rows), whether contest names / candidate names
-/ headers are visible on THIS page, the precinct scope and axis, and the page's
-skew in degrees. This is a single-image DSPy program (`dspy.Predict`), distinct
-from the per-file source categorizer in `oe2d.categorize` (which reasons over a
-whole file with tools) and from any inter-page table stitching, which happens at
-a different level.
+/ headers are visible on THIS page, and the precinct scope and axis. This is a
+single-image DSPy program (`dspy.Predict`), distinct from the per-file source
+categorizer in `oe2d.categorize` (which reasons over a whole file with tools) and
+from any inter-page table stitching, which happens at a different level.
+
+Page skew is NOT one of these fields — a VLM can't estimate fine rotation from an
+image — so it is measured separately and deterministically in oe2d.pages.deskew
+(oe2d-detect-skew).
 
 A source that is not already an image is rendered to one first (a page of a PDF,
 a sheet of a spreadsheet) via oe2d.categorize.rendering, so the same program
@@ -57,14 +60,18 @@ PRECINCT_AXES: tuple[str, ...] = typing.get_args(PrecinctAxis)
 
 
 class PageProperties(pydantic.BaseModel):
-    '''In-page facts about a single rendered election-results page.'''
+    '''In-page facts about a single rendered election-results page.
+
+    Skew is deliberately NOT here: a VLM can't estimate fine (sub-2 deg) page
+    rotation from an image — it defaults to ~0 regardless — so skew is detected
+    with a deterministic projection-profile method instead (see oe2d.pages.deskew).
+    '''
     candidate_orientation: CandidateOrientation
     contest_name_present: bool
     candidate_names_present: bool
     headers_present: bool
     precinct_scope: PrecinctScope
     precinct_orientation: PrecinctAxis
-    skew_degrees: float
 
 
 # The output fields the program predicts, in a stable order for datasets/metrics.
@@ -106,10 +113,6 @@ class PageAnalysis(dspy.Signature):
     precinct_orientation: PrecinctAxis = dspy.OutputField(
         desc="For a multi_precinct page, whether precincts are 'rows' or 'columns'; "
              "otherwise 'none'")
-    skew_degrees: float = dspy.OutputField(
-        desc='Rotation of the page off horizontal, in degrees: 0.0 if straight, '
-             'positive = counter-clockwise. Scanned pages are often slightly '
-             'tilted; a clean vector page is 0.0')
 
 
 def _instrument() -> None:
@@ -167,7 +170,6 @@ def analyze_image(image_path: str) -> dict:
         headers_present=prediction.headers_present,
         precinct_scope=prediction.precinct_scope,
         precinct_orientation=prediction.precinct_orientation,
-        skew_degrees=float(prediction.skew_degrees),
     )
     return properties.model_dump()
 

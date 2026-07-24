@@ -27,6 +27,7 @@ oe2d-optimize-categorizer = "oe2d.categorize.optimize:main"
 oe2d-render-page = "oe2d.categorize.rendering:main"
 oe2d-analyze-page = "oe2d.pages:main"
 oe2d-optimize-pages = "oe2d.pages.optimize:main"
+oe2d-detect-skew = "oe2d.pages.deskew:main"
 
 [tool.setuptools]
 packages = ["oe2d", "oe2d.categorize", "oe2d.pages"]

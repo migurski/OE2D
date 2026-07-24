@@ -199,6 +199,20 @@ precinct axis still correlated with orientation (see the precinct_scope note bel
   headers/candidate_names are all now optimizable (with class weighting for the
   still-minority header negatives).
 
+## UPDATE: skew DROPPED from the page program; done deterministically instead
+First page GEPA run: content fields 100% (solved by the stock VLM; best_idx=0,
+no lift), skew only 53% within 0.5deg / 0.78deg MAE — the VLM effectively outputs
+~0 regardless, i.e. it cannot estimate fine rotation. So skew was removed from the
+oe2d.pages program entirely and is now measured by a deterministic projection-
+profile detector, oe2d.pages.deskew (oe2d-detect-skew), which recovers known
+angles exactly (0.00deg err on the +/-1.5deg validation). Consequences: the 80
+synthetic rotate rows/images were deleted (they existed only for skew); the
+dataset is now 75 = 60 real + 15 crop_top; the everything-is-content metric
+reverted to content-only; page_properties.jsonl was already superseded by
+oe2d-data/pages/labels.jsonl (no skew field). If real-scan deskew accuracy
+matters, spot-check oe2d-detect-skew on the scanned pages (noisier than the clean
+vector validation).
+
 ## DONE: decorrelate precincts from orientation via precinct_scope
 Replaced the precincts_present boolean (100% determined by candidate_orientation)
 with precinct_scope {multi_precinct, per_precinct, county}. Rule: candidate_columns

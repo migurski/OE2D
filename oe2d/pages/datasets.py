@@ -52,12 +52,6 @@ def record_to_example(record: dict) -> dspy.Example:
 
     A null precinct_orientation in the gold data is normalized to 'none' to match
     the signature's Literal, which has no null member.
-
-    eval_kind marks how the metric scores this example: a rotate augmentation
-    (which carries a real known angle) is scored on skew only; every other page
-    (real, or a header-crop) is scored on the content fields only, and its skew
-    (0.0 for vector, null for scanned) is ignored. It is a FIELD, not a private
-    attribute, so it survives through GEPA into the metric call.
     '''
     fields: dict = {'image': dspy.Image(image_path(record))}
     for name in OUTPUT_FIELDS:
@@ -65,7 +59,6 @@ def record_to_example(record: dict) -> dspy.Example:
         if name == 'precinct_orientation' and value is None:
             value = 'none'
         fields[name] = value
-    fields['eval_kind'] = 'skew' if record.get('transform') == 'rotate' else 'content'
     return dspy.Example(**fields).with_inputs(*INPUT_FIELDS)
 
 
@@ -84,26 +77,18 @@ def load_examples(labels_path: str = _LABELS_PATH) -> list[dspy.Example]:
 
 
 def split(examples: list[dspy.Example], val_fraction: float = 0.25) -> tuple[list[dspy.Example], list[dspy.Example]]:
-    '''Split into train/val by source fixture, routing each kind of page.
+    '''Split into train/val by source fixture, keeping synthetic pages train-only.
 
     Real pages are grouped by fixture; the fixtures are sorted and every
-    round(1/val_fraction)-th one is a validation fixture.
-
-    - Real (content) pages: val fixtures -> val, train fixtures -> train.
-    - Rotate augmentations (skew examples): a rotation of a VAL fixture's page
-      goes to VAL as the skew holdout (a legitimate held-out skew test — skew is
-      geometric, not learnable from the page's content); a rotation of a train
-      fixture goes to train. Rotations of dropped fixtures (e.g. removed by a
-      --max-examples subsample) are dropped.
-    - Crop augmentations (content examples): train fixtures only. A crop of a val
-      fixture is dropped so the CONTENT validation stays real-pages-only (no
-      synthetic content variants inflating the content metric).
-
-    Deterministic — no random state.
+    round(1/val_fraction)-th one is a validation fixture. Validation gets only the
+    real pages of those fixtures, so it reflects real performance. Synthetic pages
+    (the header-crop negatives) go to train, and only when their base fixture is a
+    TRAIN fixture -- a crop of a val fixture is dropped (it is a synthetic content
+    variant of a val page), as is a crop of a fixture removed by a --max-examples
+    subsample. Deterministic -- no random state.
     '''
     real: list[dspy.Example] = [ex for ex in examples if not getattr(ex, '_synthetic', False)]
-    rotates: list[dspy.Example] = [ex for ex in examples if getattr(ex, '_transform', None) == 'rotate']
-    crops: list[dspy.Example] = [ex for ex in examples if getattr(ex, '_transform', None) == 'crop_top']
+    synthetic: list[dspy.Example] = [ex for ex in examples if getattr(ex, '_synthetic', False)]
 
     by_fixture: dict[str, list[dspy.Example]] = collections.defaultdict(list)
     for example in real:
@@ -120,16 +105,7 @@ def split(examples: list[dspy.Example], val_fraction: float = 0.25) -> tuple[lis
         else:
             trainset.extend(by_fixture[fixture])
     train_fixtures: set[str] = set(by_fixture) - val_fixtures
-
-    for example in rotates:
-        fixture = getattr(example, '_fixture', None)
-        if fixture in val_fixtures:
-            valset.append(example)          # skew holdout
-        elif fixture in train_fixtures:
-            trainset.append(example)
-    for example in crops:
-        if getattr(example, '_fixture', None) in train_fixtures:
-            trainset.append(example)
+    trainset.extend(ex for ex in synthetic if getattr(ex, '_fixture', None) in train_fixtures)
     return trainset, valset
 
 
