@@ -222,8 +222,12 @@ def analyze_image(image_path: str) -> dict:
     '''Run the analyzer on an already-rendered page image; return a plain dict.'''
     _instrument()
     # The task LM is the shared Kimi K2 (multimodal) model defined once in
-    # oe2d.categorize; this program reads only the page image with it.
-    dspy.configure(lm=dspy.LM(categorize.TASK_LM))
+    # oe2d.categorize; this program reads only the page image with it. Inference
+    # wants a settled classifier, not GEPA-style exploration: temperature 0 keeps
+    # the six-field answer stable, and a larger max_tokens leaves headroom so a
+    # page the model reasons about at length doesn't truncate mid-answer (the Kimi
+    # 'code' model can otherwise repeat itself up to the cap at high temperature).
+    dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
     analyzer: PageAnalyzer = build_analyzer()
     prediction = analyzer(image=dspy.Image(image_path))
     properties = PageProperties(
