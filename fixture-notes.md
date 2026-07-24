@@ -152,7 +152,7 @@ and whether fixtures should be deskewed before OCR.
 ## DONE: per-page labels for a single-image program (page_properties.jsonl)
 59 page rows (one per rendered fixture page) with in-page facts: role,
 candidate_orientation, contest_name_present, candidate_names_present,
-headers_present, precincts_present, precinct_orientation, skew_degrees (0.0
+headers_present, precinct_scope, precinct_orientation, skew_degrees (0.0
 vector exact / null scanned-unmeasured). Keyed by `path` relative to the labels
 dir (../fixtures/categorize/...); segments.jsonl uses the same. Schema +
 derivation documented in oe2d-data/labels/PAGE_PROPERTIES.md. This is a SEPARATE dataset from the per-file
@@ -168,7 +168,7 @@ Key corrections from this pass:
 - allegan p31 is the lone bare-data page (no title/headers/candidate names) —
   useful hard negative.
 Gaps recorded in PAGE_PROPERTIES.md: skew degrees null for the 8 scanned pages;
-precincts_present is currently fully correlated with candidate_orientation.
+precinct axis still correlated with orientation (see the precinct_scope note below).
 
 ## DONE: closed the two optimizability gaps (skew + header negatives)
 - Header-omission finding: it is RARE and vendor-specific. genesee (green Clarity)
@@ -190,8 +190,20 @@ precincts_present is currently fully correlated with candidate_orientation.
   validate on real. Now 155 rows = 60 real + 95 synthetic.
 - Net: candidate_orientation, contest_name_present, skew_degrees, and
   headers/candidate_names are all now optimizable (with class weighting for the
-  still-minority header negatives). Still unaddressed: precincts_present
-  independence.
+  still-minority header negatives).
+
+## DONE: decorrelate precincts from orientation via precinct_scope
+Replaced the precincts_present boolean (100% determined by candidate_orientation)
+with precinct_scope {multi_precinct, per_precinct, county}. Rule: candidate_columns
+-> multi_precinct; candidate_rows per-precinct blocks (hillsdale/elk/adams/
+armstrong/emmet) -> per_precinct; candidate_rows county aggregates (berrien/
+bedford/cass) -> county. Candidate-rows pages now split per_precinct(52) vs
+county(14), so scope is no longer predictable from orientation. precinct_orientation
+kept but sharpened: axis direction only when multi_precinct (rows now), null else.
+STILL correlated (needs real data, not relabeling): the precinct AXIS (rows vs
+columns) and the candidate-columns side — need precincts-as-columns/transposed
+layouts and single-precinct-or-county candidate-columns pages, likely from the
+spreadsheet modality.
 
 ## DEFERRED (need separate handling, NOT started)
 - ionia, livingston, ottawa, genesee, hillsdale: no big race detected by the

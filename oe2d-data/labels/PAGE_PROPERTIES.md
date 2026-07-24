@@ -33,8 +33,15 @@ null for synthetic rows.
 - `contest_name_present` — is a contest title visible on this page?
 - `candidate_names_present` — are candidate/party names visible on this page?
 - `headers_present` — are column/row headers (labeling the numbers) present?
-- `precincts_present` — is there a precinct AXIS on the page?
-- `precinct_orientation` — `rows` where present, else null.
+- `precinct_scope` — the page's precinct dimension: `multi_precinct` (many
+  precincts along an axis, e.g. SOVC rows), `per_precinct` (the page IS one named
+  precinct, identity in the banner/header), or `county` (aggregate totals, no
+  precinct). Replaces the old `precincts_present` boolean, which was fully
+  determined by `candidate_orientation`; `precinct_scope` splits the candidate-
+  rows pages into per_precinct vs county, information orientation never carried.
+- `precinct_orientation` — the precinct AXIS direction, only when
+  `multi_precinct`: `rows` (today) or `columns` (once transposed layouts are
+  added); null for `per_precinct` / `county`.
 - `skew_degrees` — `0.0` for vector renders (exact: vector PDFs rasterize with no
   skew). `null` for scanned pages (not yet measured — deliberately not fabricated;
   the qualitative scan condition is in `fixture-notes.md`). So a number means a
@@ -56,12 +63,16 @@ null for synthetic rows.
 Compiled from the `segments.jsonl` roles + per-file layout in `category.jsonl` +
 direct visual review of a contact sheet of every page's top strip (titles /
 headers). Rules, with observed exceptions:
-- `candidate_columns` layouts put precincts on the ROW axis → `precincts_present`
-  true, `candidate_orientation` columns. `candidate_rows` layouts are per-precinct
-  (or county) blocks with candidates in rows and the precinct as a section header,
-  not an axis → `precincts_present` false. (So in THIS dataset precincts_present
-  is fully correlated with candidate_orientation — a known limitation; add pages
-  that break it if the program needs to disentangle them.)
+- `candidate_columns` layouts put precincts on the ROW axis → `precinct_scope`
+  multi_precinct, `precinct_orientation` rows. `candidate_rows` layouts are either
+  per-precinct blocks (candidates in rows, precinct named in the header →
+  `per_precinct`) or county aggregates (→ `county`); neither has an in-page
+  precinct axis, so `precinct_orientation` is null. `precinct_scope` thus
+  decorrelates from orientation on the candidate-rows side (per_precinct vs
+  county). The AXIS direction and the columns side are still correlated (all
+  candidate-columns pages are multi_precinct/rows) — no candidate-columns
+  single-precinct/county pages and no precincts-as-columns pages exist in the
+  corpus yet; those need real off-diagonal data (likely spreadsheets).
 - Contest title: always on `results` pages. `candidate_rows` vendors reprint or
   start a titled contest on every page → true throughout. `candidate_columns`
   vendors drop the title on continuation pages → false, EXCEPT: livingston
@@ -96,4 +107,8 @@ mode of header-absence, not all.
 - Vector auto-labeling: contest-name / header / rows-vs-cols for vector pages can
   be derived programmatically from pdfplumber word positions to expand the real
   set cheaply; only scanned pages need vision/manual labels.
-- precincts_present ⟂ candidate_orientation not yet represented (see above).
+- precinct AXIS (rows vs columns) and the candidate-columns side still track
+  orientation: need real pages with precincts as COLUMNS (transposed layouts) and
+  candidate-columns pages that are single-precinct or county. Most likely found in
+  the spreadsheet modality (precincts often run across the top). `precinct_scope`
+  already decorrelates the rows side without new data.
