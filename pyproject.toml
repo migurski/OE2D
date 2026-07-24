@@ -25,11 +25,14 @@ oe2d-make-fixture = "oe2d.categorize.fixture:main"
 oe2d-label-categories = "oe2d.categorize.label:main"
 oe2d-optimize-categorizer = "oe2d.categorize.optimize:main"
 oe2d-render-page = "oe2d.categorize.rendering:main"
+oe2d-analyze-page = "oe2d.pages:main"
+oe2d-optimize-pages = "oe2d.pages.optimize:main"
 
 [tool.setuptools]
-packages = ["oe2d", "oe2d.categorize"]
+packages = ["oe2d", "oe2d.categorize", "oe2d.pages"]
 
-# The trained program ships as package data; the oe2d-data/ gold set and fixtures
-# are outside any package dir, so they are never included in the wheel.
+# The trained programs ship as package data; the oe2d-data/ gold sets, fixtures,
+# and page images are outside any package dir, so they are never in the wheel.
 [tool.setuptools.package-data]
 "oe2d.categorize" = ["model/*.json"]
+"oe2d.pages" = ["model/*.json"]

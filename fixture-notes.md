@@ -149,7 +149,14 @@ layer) so all detection is visual. Skew VARIES page-to-page within a file.
 TODO later: quantify skew, decide whether to record a scan-quality/tilt signal,
 and whether fixtures should be deskewed before OCR.
 
-## DONE: per-page labels for a single-image program (page_properties.jsonl)
+## DONE: per-page labels for a single-image program
+NOTE (superseded): the per-page dataset below started as
+oe2d-data/labels/page_properties.jsonl + PAGE_PROPERTIES.md. It now lives as the
+oe2d.pages training set: committed page images in oe2d-data/pages/images/ with
+oe2d-data/pages/labels.jsonl (image path + property fields + provenance), and
+oe2d-data/pages/README.md. page_properties.jsonl/PAGE_PROPERTIES.md were removed;
+the notes below record the derivation history.
+
 59 page rows (one per rendered fixture page) with in-page facts: role,
 candidate_orientation, contest_name_present, candidate_names_present,
 headers_present, precinct_scope, precinct_orientation, skew_degrees (0.0
