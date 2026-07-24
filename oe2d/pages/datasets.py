@@ -19,7 +19,7 @@ import os
 
 import dspy
 
-from . import OUTPUT_FIELDS
+from . import CONTENT_FIELDS
 
 # labels.jsonl lives beside the images under the top-level oe2d-data tree (not in
 # the wheel); resolve it and the image paths against the repo root, two levels up
@@ -54,7 +54,7 @@ def record_to_example(record: dict) -> dspy.Example:
     the signature's Literal, which has no null member.
     '''
     fields: dict = {'image': dspy.Image(image_path(record))}
-    for name in OUTPUT_FIELDS:
+    for name in CONTENT_FIELDS:
         value = record.get(name)
         if name == 'precinct_orientation' and value is None:
             value = 'none'

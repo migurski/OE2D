@@ -5,22 +5,31 @@ Usage: oe2d-analyze-page path/to/page.png
 
 Prints a JSON dict of per-page properties a downstream extractor can route on:
 candidate orientation (columns vs rows), whether contest names / candidate names
-/ headers are visible on THIS page, and the precinct scope and axis. This is a
-single-image DSPy program (`dspy.Predict`), distinct from the per-file source
-categorizer in `oe2d.categorize` (which reasons over a whole file with tools) and
-from any inter-page table stitching, which happens at a different level.
+/ headers are visible on THIS page, the precinct scope and axis, and the page's
+skew in degrees. This is a single-image DSPy program (the composite PageAnalyzer),
+distinct from the per-file source categorizer in `oe2d.categorize` (which reasons
+over a whole file with tools) and from any inter-page table stitching, which
+happens at a different level.
 
-Page skew is NOT one of these fields — a VLM can't estimate fine rotation from an
-image — so it is measured separately and deterministically in oe2d.pages.deskew
-(oe2d-detect-skew).
+skew_degrees is the one non-VLM field: a VLM can't estimate fine rotation from an
+image, so PageAnalyzer measures it deterministically with oe2d.pages.deskew on the
+same image (also exposed on its own as oe2d-detect-skew).
 
 A source that is not already an image is rendered to one first (a page of a PDF,
 a sheet of a spreadsheet) via oe2d.categorize.rendering, so the same program
 serves both raw page images and pages pulled from source files.
+
+The program is a composite dspy.Module (PageAnalyzer): its forward() runs the VLM
+content prediction AND measures skew deterministically in-module, so a page's full
+per-page facts — the six VLM content fields plus skew_degrees — come back as one
+prediction. Skew is not an LM output; it is computed by oe2d.pages.deskew on the
+same image, folded into the program so there is no separate step to run.
 '''
 from __future__ import annotations
 
 import argparse
+import base64
+import io
 import json
 import logging
 import os
@@ -30,8 +39,10 @@ import typing
 import dotenv
 import dspy
 import pydantic
+from PIL import Image
 
 from .. import categorize
+from . import deskew
 
 
 # Extensions we treat as already-rendered page images; anything else is rendered.
@@ -62,9 +73,11 @@ PRECINCT_AXES: tuple[str, ...] = typing.get_args(PrecinctAxis)
 class PageProperties(pydantic.BaseModel):
     '''In-page facts about a single rendered election-results page.
 
-    Skew is deliberately NOT here: a VLM can't estimate fine (sub-2 deg) page
-    rotation from an image — it defaults to ~0 regardless — so skew is detected
-    with a deterministic projection-profile method instead (see oe2d.pages.deskew).
+    The first six fields are VLM content predictions. skew_degrees is different:
+    a VLM can't estimate fine (sub-2 deg) page rotation from an image — it defaults
+    to ~0 regardless — so it is measured deterministically by oe2d.pages.deskew and
+    folded in by the PageAnalyzer module. It is a program output but NOT a trained
+    or scored field (see CONTENT_FIELDS / metrics.FIELD_WEIGHTS).
     '''
     candidate_orientation: CandidateOrientation
     contest_name_present: bool
@@ -72,10 +85,20 @@ class PageProperties(pydantic.BaseModel):
     headers_present: bool
     precinct_scope: PrecinctScope
     precinct_orientation: PrecinctAxis
+    # Detector-sourced (deskew), positive = counter-clockwise; NOT a VLM output.
+    skew_degrees: float
 
 
-# The output fields the program predicts, in a stable order for datasets/metrics.
-OUTPUT_FIELDS: tuple[str, ...] = tuple(PageProperties.model_fields)
+# The VLM content fields — what the trained predictor emits and what datasets and
+# metrics work over. Skew is excluded here on purpose (it is not learned).
+CONTENT_FIELDS: tuple[str, ...] = (
+    'candidate_orientation', 'contest_name_present', 'candidate_names_present',
+    'headers_present', 'precinct_scope', 'precinct_orientation',
+)
+
+# Every field the composite program returns: the content fields plus the
+# detector-sourced skew. Kept in the PageProperties order.
+OUTPUT_FIELDS: tuple[str, ...] = CONTENT_FIELDS + ('skew_degrees',)
 
 
 # The trained program, committed as package data. Loaded onto the predictor when
@@ -147,9 +170,49 @@ def render_source(path: str, page: int = 1, member: str | None = None,
     return rendering.render_page(path, page, member, resolution=resolution)
 
 
-def build_analyzer() -> dspy.Module:
-    '''Construct the page-analysis predictor, loading the trained prompt if present.'''
-    analyzer: dspy.Module = dspy.Predict(PageAnalysis)
+def _image_to_pil(image: dspy.Image) -> Image.Image:
+    '''Recover a PIL image from a dspy.Image so skew can be measured on it.
+
+    A dspy.Image built from a path stores its bytes as a base64 data URI in .url
+    (verified format 'data:image/png;base64,<b64>'); decode that. A .url that is a
+    plain filesystem path (no data: scheme) is opened directly.
+    '''
+    url: str = image.url
+    if url.startswith('data:'):
+        _, _, encoded = url.partition(',')
+        return Image.open(io.BytesIO(base64.b64decode(encoded)))
+    return Image.open(url)
+
+
+class PageAnalyzer(dspy.Module):
+    '''The full per-page program: VLM content prediction plus deterministic skew.
+
+    forward() runs the trained content predictor and, on the same image, measures
+    skew with the projection-profile detector, returning both as one prediction.
+    Skew adds no LM overhead — it is a direct numeric computation, not a tool the
+    LM decides to call.
+    '''
+    def __init__(self) -> None:
+        super().__init__()
+        self.analyze: dspy.Module = dspy.Predict(PageAnalysis)
+
+    def forward(self, image: dspy.Image) -> dspy.Prediction:
+        content = self.analyze(image=image)
+        skew: float = deskew.detect_skew_pil(_image_to_pil(image))
+        return dspy.Prediction(
+            candidate_orientation=content.candidate_orientation,
+            contest_name_present=content.contest_name_present,
+            candidate_names_present=content.candidate_names_present,
+            headers_present=content.headers_present,
+            precinct_scope=content.precinct_scope,
+            precinct_orientation=content.precinct_orientation,
+            skew_degrees=skew,
+        )
+
+
+def build_analyzer() -> PageAnalyzer:
+    '''Construct the composite page analyzer, loading the trained prompt if present.'''
+    analyzer: PageAnalyzer = PageAnalyzer()
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         analyzer.load(OPTIMIZED_MODEL_PATH)
     return analyzer
@@ -161,7 +224,7 @@ def analyze_image(image_path: str) -> dict:
     # The task LM is the shared Kimi K2 (multimodal) model defined once in
     # oe2d.categorize; this program reads only the page image with it.
     dspy.configure(lm=dspy.LM(categorize.TASK_LM))
-    analyzer: dspy.Module = build_analyzer()
+    analyzer: PageAnalyzer = build_analyzer()
     prediction = analyzer(image=dspy.Image(image_path))
     properties = PageProperties(
         candidate_orientation=prediction.candidate_orientation,
@@ -170,6 +233,7 @@ def analyze_image(image_path: str) -> dict:
         headers_present=prediction.headers_present,
         precinct_scope=prediction.precinct_scope,
         precinct_orientation=prediction.precinct_orientation,
+        skew_degrees=float(prediction.skew_degrees),
     )
     return properties.model_dump()
 

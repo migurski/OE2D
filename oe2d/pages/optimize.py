@@ -2,11 +2,11 @@
 
 Usage: oe2d-optimize-pages [--out FILE] [--max-metric-calls N] ...
 
-Builds the same dspy.Predict(PageAnalysis) the CLI runs and uses GEPA to evolve
-its prompt against oe2d-data/pages/labels.jsonl. The task LM is the shared
-Fireworks Kimi K2 (multimodal) vision model; the reflection LM is Bedrock Opus.
-The optimized program is saved as JSON and validation accuracy is printed per
-field.
+Builds the same composite PageAnalyzer the CLI runs and uses GEPA to evolve the
+prompt of its inner content predictor against oe2d-data/pages/labels.jsonl. The
+task LM is the shared Fireworks Kimi K2 (multimodal) vision model; the reflection
+LM is Bedrock Opus. The optimized program is saved as JSON and validation accuracy
+is printed per content field (skew is deterministic and outside the objective).
 
 GEPA checkpoints to a repo-root gepa-<digest> dir, where the digest fingerprints
 the run config (examples, split, models); re-running resumes a matching run.
@@ -31,7 +31,7 @@ from dspy.teleprompt.gepa import instruction_proposal
 
 from .. import categorize
 from .. import pages
-from . import OUTPUT_FIELDS, PageAnalysis, datasets, metrics
+from . import CONTENT_FIELDS, datasets, metrics
 
 # The task LM reads the page image; the reflection LM rewrites the prompt from the
 # metric's feedback. A strong reflection model matters most here.
@@ -54,7 +54,7 @@ def run_digest(examples: list, val_fraction: float) -> str:
     rows: list[str] = []
     for example in examples:
         fields: list[str] = [getattr(example, '_fixture', '')]
-        fields += [f'{name}={getattr(example, name, None)!r}' for name in OUTPUT_FIELDS]
+        fields += [f'{name}={getattr(example, name, None)!r}' for name in CONTENT_FIELDS]
         rows.append('|'.join(fields))
     parts: list[str] = [
         f'val={val_fraction}', f'student={STUDENT_MODEL}', f'reflect={REFLECTION_MODEL}',
@@ -63,8 +63,13 @@ def run_digest(examples: list, val_fraction: float) -> str:
 
 
 def build_program() -> dspy.Module:
-    '''Construct the page-analysis program GEPA will optimize.'''
-    return dspy.Predict(PageAnalysis)
+    '''Construct the composite page-analysis program GEPA will optimize.
+
+    GEPA evolves the prompt of the inner named `analyze` dspy.Predict; the skew
+    computation in forward() is deterministic and outside the GEPA objective (the
+    metric scores only content fields), so it neither helps nor hurts the search.
+    '''
+    return pages.PageAnalyzer()
 
 
 def field_accuracy(program: dspy.Module, valset: list) -> dict[str, tuple[int, int]]:

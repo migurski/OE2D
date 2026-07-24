@@ -67,13 +67,14 @@ def _best_angle(ink: np.ndarray, center: float, half_width: float, step: float) 
     return float(max(angles, key=lambda a: _sharpness(ink, a)))
 
 
-def detect_skew(image_path: str, max_angle: float = _MAX_ANGLE) -> float:
-    '''Estimate a page image's skew in degrees (positive = counter-clockwise).
+def detect_skew_pil(image: 'Image.Image', max_angle: float = _MAX_ANGLE) -> float:
+    '''Estimate an already-loaded page image's skew in degrees (+ = counter-clockwise).
 
     Coarse-to-fine projection-profile search over [-max_angle, +max_angle].
-    Returns the tilt; rotate the page by -result to straighten it.
+    Returns the tilt; rotate the page by -result to straighten it. Works on a PIL
+    image already in memory so the composite analyzer can measure skew on the same
+    image it hands the VLM, without a second disk read.
     '''
-    image: Image.Image = Image.open(image_path)
     if max(image.size) > _WORK_EDGE:
         scale: float = _WORK_EDGE / max(image.size)
         image = image.resize((max(1, int(image.width * scale)),
@@ -81,6 +82,14 @@ def detect_skew(image_path: str, max_angle: float = _MAX_ANGLE) -> float:
     ink: np.ndarray = _ink(image)
     coarse: float = _best_angle(ink, 0.0, max_angle, _COARSE_STEP)
     return round(_best_angle(ink, coarse, _COARSE_STEP, _FINE_STEP), 2)
+
+
+def detect_skew(image_path: str, max_angle: float = _MAX_ANGLE) -> float:
+    '''Estimate a page image's skew in degrees (positive = counter-clockwise).
+
+    Thin wrapper over detect_skew_pil that opens the file first.
+    '''
+    return detect_skew_pil(Image.open(image_path), max_angle)
 
 
 def main() -> None:
