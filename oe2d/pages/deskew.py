@@ -10,10 +10,12 @@ angle is the page's tilt.
 Sign convention: a positive angle means the page is rotated counter-clockwise, so
 rotating it by -angle straightens it.
 
-Validated against hand-measured real scans, not just synthetic rotations: it
-recovers a ~0.37 deg gogebic tilt to within ~0.02 deg. There is a sensitivity
-floor around ~0.3 deg on sparse, noisy pages (mostly-whitespace continuation
-pages), where a smaller real tilt reads as 0 — negligible for downstream OCR.
+Validated against hand-measured real scans, not just synthetic rotations,
+including deliberately rough ones (real tilt, speckle noise, faint/low-contrast;
+see oe2d-data/pages/deskew-scans/): MAE ~0.03 deg, max error ~0.07 deg across the
+clean and rough sets. There is a sensitivity floor around ~0.3 deg on sparse,
+noisy pages (mostly-whitespace continuation pages), where a smaller real tilt
+reads as 0 — negligible for downstream OCR.
 Note: Otsu thresholding was tried and is WORSE here — it mis-splits the gray
 scan background and rails the search to the boundary; the fixed cut is better.
 

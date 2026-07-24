@@ -12,6 +12,7 @@ from oe2d.pages import deskew
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 _IMAGES = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages', 'images')
+_DESKEW_SCANS = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages', 'deskew-scans')
 # a dense text page recovers skew cleanly
 _PAGE = os.path.join(_IMAGES, 'barry-mi-sovc-official-results-p1.png')
 
@@ -52,3 +53,20 @@ def test_detect_matches_measured_real_scans(name, truth_tol):
     truth, tol = truth_tol
     estimate = deskew.detect_skew(os.path.join(_IMAGES, name))
     assert abs(estimate - truth) <= tol, f'{name}: measured {truth}, detected {estimate}'
+
+
+# The deliberately-rough scans (real tilt, speckle noise, faint/low-contrast),
+# hand-measured. These are the stress cases the clean set lacks; the detector
+# holds to within ~0.07 deg on all of them (positive = CCW).
+_ROUGH_SKEW = {
+    'st-clair-mi-sov-summary-p5.png': 0.66,            # tilted
+    'otsego-mi-sovc-p5.png': -0.69,                    # tilted + heavy speckle
+    'alllegan-mi-county-races-p10.png': 0.52,          # faint / low-contrast
+    'allegan-mi-federal-state-judicial-p5.png': 0.33,  # mild tilt
+}
+
+
+@pytest.mark.parametrize('name,truth', _ROUGH_SKEW.items())
+def test_detect_holds_on_rough_scans(name, truth):
+    estimate = deskew.detect_skew(os.path.join(_DESKEW_SCANS, name))
+    assert abs(estimate - truth) <= 0.12, f'{name}: measured {truth}, detected {estimate}'

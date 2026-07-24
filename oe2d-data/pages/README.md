@@ -13,6 +13,11 @@ detected deterministically in `oe2d.pages.deskew`, not learned.
   the fixtures in `oe2d-data/fixtures/categorize/`, density-tiered (dense
   candidate-column tables at 300 DPI, sparser candidate-row pages at 220) and run
   through `optipng`.
+- `deskew-scans/` — a handful of deliberately ROUGH real scans (real tilt,
+  speckle, faint/low-contrast) with hand-measured skew angles, used only to
+  validate the `oe2d.pages.deskew` detector (see its test). Not part of the
+  content training set — their layouts duplicate SOVC vendors already covered;
+  they exist to stress skew detection, not content.
 - `labels.jsonl` — one row per image:
   - `image` — path relative to this directory (`images/<name>.png`).
   - `source_fixture`, `fixture_page` — provenance: which fixture page this came
