@@ -12,7 +12,8 @@ program then maps each target to the run(s) whose on-page contest title and matc
 candidates correspond -- the judgment calls, e.g. "Representative in Congress" ==
 "U.S. House", "Electors of President" == "President", "U.S." vs "US".
 
-Usage: oe2d-locate-contests file.pdf --target "President=Harris,Walz,Trump,Vance"
+Usage: oe2d-locate-contests file.pdf --target President --target "U.S. Senate (full term)" \
+           --context "presidential race, Harris vs Trump; the full-term Senate seat"
        oe2d-locate-contests --gold barry            # run a labeled fixture
 '''
 from __future__ import annotations
@@ -186,24 +187,32 @@ def _is_banner(line: str) -> bool:
             or bool(re.match(r'^[\d/:\s%.,\-]+$', line.strip())))
 
 
-def _title_lines(text: str) -> list[str]:
-    '''Contest-title lines on a page: the "vote for" marker line, prefixed with the line
-    above only when the marker line has no contest name before the marker (Electionware
-    "PRESIDENTIAL ELECTORS / Vote For 1"). A page banner above the marker is dropped.'''
+def _title_regions(text: str) -> list[tuple[str, str]]:
+    '''Contest titles on a page paired with the text under each (title line through the line
+    before the next title). The title is the "vote for" marker line, prefixed with the line
+    above only when the marker line has no contest name before it (Electionware "PRESIDENTIAL
+    ELECTORS / Vote For 1"); a page banner above the marker is dropped. The region is where a
+    contest's candidates sit, for reading back later.'''
     lines: list[str] = text.splitlines()
-    titles: list[str] = []
-    for i, line in enumerate(lines):
-        match = _CONTEST_MARKER.search(line)
-        if not match:
-            continue
-        before: str = line[:match.start()]
+    markers: list[int] = [i for i, line in enumerate(lines) if _CONTEST_MARKER.search(line)]
+    regions: list[tuple[str, str]] = []
+    for pos, i in enumerate(markers):
+        match = _CONTEST_MARKER.search(lines[i])
+        before: str = lines[i][:match.start()]
         if len(re.findall(r'[A-Za-z]', before)) >= 4:      # contest name already on this line
-            title: str = line.strip()
+            title: str = lines[i].strip()
         else:
             above: str = lines[i - 1].strip() if i > 0 else ''
-            title = (('' if _is_banner(above) else above) + ' ' + line.strip()).strip()
-        titles.append(title[:160])
-    return titles
+            title = (('' if _is_banner(above) else above) + ' ' + lines[i].strip()).strip()
+        end: int = markers[pos + 1] if pos + 1 < len(markers) else len(lines)
+        region: str = '\n'.join(lines[i:end]).strip()
+        regions.append((title[:160], region))
+    return regions
+
+
+def _title_lines(text: str) -> list[str]:
+    '''Just the contest-title strings on a page (see _title_regions).'''
+    return [title for title, _ in _title_regions(text)]
 
 
 def _title_matches(target: Target, title: str) -> bool:
@@ -309,11 +318,11 @@ def build_evidence(hits: list[UnitHit], targets: list[Target], max_gap: int = DE
 
 
 class TitleEvidence(pydantic.BaseModel):
-    '''One distinct contest title observed in a document, with supporting signals.'''
+    '''One distinct contest title observed in a document, with the text under it.'''
     title: str = pydantic.Field(desc='The observed contest-title text, verbatim')
     units: list[int] = pydantic.Field(desc='Units where this title appears')
-    header_tokens: list[str] = pydantic.Field(
-        default_factory=list, desc='Candidate/party tokens seen on those units')
+    sample: str = pydantic.Field(
+        default='', desc='Text under the title on its first page (its candidate rows)')
 
 
 class MatchContestTitles(dspy.Signature):
@@ -321,8 +330,9 @@ class MatchContestTitles(dspy.Signature):
 
     Detection of the titles is already done deterministically; your job is the interpretation
     the strings cannot do. A document can hold hundreds of contest titles, so do NOT expect
-    them in the prompt -- EXPLORE with the tools: search the titles by keyword, and look up
-    which titles appeared alongside a candidate. Titles vary widely by jurisdiction and vendor:
+    them in the prompt -- EXPLORE with the tools: search the titles by keyword, and read the
+    candidate rows under a title (inspect_title) to confirm the race by who ran in it. Titles
+    vary widely by jurisdiction and vendor:
     "U.S. House" may appear as "Representative in Congress", "House of Representatives", or
     "Congressional District N"; "State House" as "Representative in State Legislature" or
     "State Assembly"; "President" as "Electors of President and Vice-President", "Presidential
@@ -338,14 +348,14 @@ class MatchContestTitles(dspy.Signature):
         desc='The observed titles (verbatim) that are the target contest')
 
 
-def contest_evidence(path: str, target: Target, unit_count: int | None = None,
+def contest_evidence(path: str, unit_count: int | None = None,
                      page_budget: int | None = None) -> tuple[dict[int, list[str]],
-                                                              list[TitleEvidence], int]:
-    '''Read the document once: title index + distinct-title evidence for the target.
+                                                             list[TitleEvidence], int]:
+    '''Read the document once (target-agnostic): title index + distinct-title evidence.
 
-    Deterministic detection only -- returns every distinct contest title, the units it
-    appears on, and which of the target's candidate/party hint tokens were seen there.
-    Interpretation (which titles ARE the target) is left to MatchContestTitles.
+    Deterministic detection only -- every distinct contest title, the units it appears on,
+    and the text under its first occurrence (its candidate rows, for reading back via a
+    tool). Interpretation -- which titles ARE the target -- is the LLM's job.
     '''
     if unit_count is None:
         unit_count = count_units(path)
@@ -353,17 +363,17 @@ def contest_evidence(path: str, target: Target, unit_count: int | None = None,
     index: dict[int, list[str]] = {}
     by_title: dict[str, dict] = {}
     for unit, text in enumerate(pagetext.layout_texts(path, limit), 1):
-        titles: list[str] = _title_lines(text)
-        if not titles:
+        regions: list[tuple[str, str]] = _title_regions(text)
+        if not regions:
             continue
-        index[unit] = titles
-        found: list[str] = token_hits(target.hints, text) if target.hints else []
-        for title in titles:
-            slot = by_title.setdefault(title, {'units': [], 'toks': set()})
+        index[unit] = [title for title, _ in regions]
+        for title, region in regions:
+            slot = by_title.setdefault(title, {'units': [], 'sample': ''})
             slot['units'].append(unit)
-            slot['toks'].update(found)
+            if not slot['sample']:
+                slot['sample'] = region[:800]
     evidence: list[TitleEvidence] = [
-        TitleEvidence(title=title, units=sorted(slot['units']), header_tokens=sorted(slot['toks']))
+        TitleEvidence(title=title, units=sorted(slot['units']), sample=slot['sample'])
         for title, slot in by_title.items()]
     return index, evidence, unit_count
 
@@ -395,7 +405,7 @@ class ContestLocator(dspy.Module):
         self._evidence: list[TitleEvidence] = []
         self.match: dspy.Module = dspy.ReAct(
             MatchContestTitles,
-            tools=[self.search_titles, self.titles_with_candidate, self.list_titles],
+            tools=[self.search_titles, self.inspect_title, self.list_titles],
             max_iters=8)
 
     def search_titles(self, keyword: str) -> list[str]:
@@ -405,37 +415,39 @@ class ContestLocator(dspy.Module):
         seen: list[str] = list(dict.fromkeys(e.title for e in self._evidence if low in e.title.lower()))
         return seen[:30]
 
-    def titles_with_candidate(self, name: str) -> list[str]:
-        '''Return observed titles whose pages showed the given candidate/party token --
-        strong confirmation of which title is the race a candidate ran in.'''
-        low: str = name.lower()
-        return list(dict.fromkeys(
-            e.title for e in self._evidence if any(low in h.lower() for h in e.header_tokens)))[:30]
+    def inspect_title(self, title: str) -> str:
+        '''Return the text under an observed title (its candidate rows) so you can confirm
+        the race by the candidates who ran in it. Pass a title verbatim from search_titles.'''
+        want: str = title.strip().lower()
+        for e in self._evidence:
+            if e.title.strip().lower() == want or want in e.title.strip().lower():
+                return e.sample or '(no rows captured)'
+        return '(no such title)'
 
     def list_titles(self) -> list[str]:
         '''Return all distinct observed contest titles (an overview; may be long).'''
         return list(dict.fromkeys(e.title for e in self._evidence))[:250]
 
-    def _interpret(self, target: Target, evidence: list[TitleEvidence]) -> list[str]:
-        self._evidence = evidence
+    def _interpret(self, target: Target) -> list[str]:
         try:
             prediction = self.match(contest=target.contest, context=target.context)
             matched: list[str] = [t for t in prediction.matching_titles
-                                  if any(t.strip() == e.title.strip() for e in evidence)]
+                                  if any(t.strip() == e.title.strip() for e in self._evidence)]
             if matched:
                 return matched
         except Exception:
             pass
-        return [e.title for e in evidence if _title_matches(target, e.title)]
+        return [e.title for e in self._evidence if _title_matches(target, e.title)]
 
     def forward(self, file_path: str, targets: list[Target], unit_count: int | None = None,
                 max_gap: int = DEFAULT_MAX_GAP, page_budget: int | None = None) -> dspy.Prediction:
+        index, evidence, units = contest_evidence(file_path, unit_count, page_budget)
+        self._evidence = evidence          # the tools read this document's titles
+        logger.info('detected %d distinct titles on %d pages', len(evidence), len(index))
         locations: list[ContestLocation] = []
         for target in targets:
-            index, evidence, units = contest_evidence(file_path, target, unit_count, page_budget)
-            logger.info('detected %d distinct titles on %d pages; interpreting for %r',
-                        len(evidence), len(index), target.contest)
-            matched: list[str] = self._interpret(target, evidence)
+            logger.info('interpreting for %r', target.contest)
+            matched: list[str] = self._interpret(target)
             logger.info('interpreted %r -> %d matching title(s)', target.contest, len(matched))
             spans: list[tuple[int, int]] = segments_for_titles(index, matched, units)
             locations.append(ContestLocation(target=target.contest, ranges=spans,
@@ -479,7 +491,8 @@ def locate(file_path: str, targets: list[Target], max_gap: int = DEFAULT_MAX_GAP
 
 
 def parse_target(spec: str, context: str = '') -> Target:
-    '''Parse a "Contest=tok1,tok2,..." CLI target spec, with optional free-form context.'''
+    '''Parse a CLI target: normally just a contest label ("President"). A legacy
+    "Contest=tok,tok" form still sets hint tokens for the deterministic --scan-only path.'''
     contest, _, rest = spec.partition('=')
     hints: list[str] = [h.strip() for h in rest.split(',') if h.strip()]
     return Target(contest=contest.strip(), context=context, hints=hints)
@@ -490,9 +503,11 @@ def main() -> None:
         description='Locate target contests in a source file, returning unit ranges.')
     parser.add_argument('path', nargs='?', help='Source file (PDF/spreadsheet)')
     parser.add_argument('--target', action='append', default=[],
-                        help='Repeatable "Contest=candidate,candidate,..." spec')
+                        help='Repeatable contest label, e.g. --target President '
+                             '--target "U.S. Senate (full term)"')
     parser.add_argument('--context', default='',
-                        help='Free-form race knowledge applied to the --target contests')
+                        help='Free-form prose about the races and candidates, shared by all '
+                             '--target contests (the LLM uses it to interpret the titles)')
     parser.add_argument('--gold', help='Run a labeled fixture by name substring (uses its gold targets)')
     parser.add_argument('--max-gap', type=int, default=DEFAULT_MAX_GAP)
     parser.add_argument('--budget', type=int, default=None, help='Cap units scanned')
@@ -530,12 +545,12 @@ def main() -> None:
         return
 
     if args.titles:
+        index, evidence, units = contest_evidence(path, page_budget=args.budget)
         for target in targets:
-            index, evidence, units = contest_evidence(path, target, page_budget=args.budget)
             matched = [e.title for e in evidence if _title_matches(target, e.title)]
             print(json.dumps({
                 'target': target.contest,
-                'observed_titles': [e.model_dump() for e in evidence],
+                'observed_titles': [e.title for e in evidence],
                 'deterministic_matches': matched,
                 'segments': segments_for_titles(index, matched, units)}, indent=2))
         return

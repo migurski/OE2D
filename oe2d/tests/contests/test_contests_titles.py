@@ -87,16 +87,14 @@ def test_segments_for_titles_selects_only_chosen_titles():
     assert spans == [(5, 9)]                      # only the chosen title, to doc end
 
 
-def test_contest_evidence_distinct_titles_with_header_tokens(monkeypatch):
+def test_contest_evidence_distinct_titles_with_sample(monkeypatch):
     pages = {2: 'President/Vice-President of the United States (Vote for 1)\nHarris Trump Walz',
              3: 'United States Senator (Vote for 1)\nSlotkin Rogers'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
-    target = contests.Target(contest='President', hints=['Harris', 'Trump', 'Walz'])
-    index, evidence, units = contests.contest_evidence('x.pdf', target, unit_count=3)
-    titles = {e.title for e in evidence}
-    assert any('President/Vice-President' in t for t in titles)
+    index, evidence, units = contests.contest_evidence('x.pdf', unit_count=3)  # target-agnostic
     pres = next(e for e in evidence if 'President/Vice-President' in e.title)
-    assert set(pres.header_tokens) >= {'Harris', 'Trump', 'Walz'} and pres.units == [2]
+    assert pres.units == [2]
+    assert 'Harris' in pres.sample and 'Trump' in pres.sample     # candidate rows under the title
 
 
 def test_locator_uses_llm_chosen_titles(monkeypatch):
@@ -136,13 +134,14 @@ def test_locator_title_search_tools():
     loc = contests.ContestLocator()
     loc._evidence = [
         contests.TitleEvidence(title='PRESIDENT AND VICE PRESIDENT - Vote for One',
-                               units=[1, 8], header_tokens=['Harris', 'Trump']),
+                               units=[1, 8], sample='Kamala D. Harris ... Donald J. Trump ...'),
         contests.TitleEvidence(title='U.S. SENATOR, FULL TERM - Vote for One', units=[1],
-                               header_tokens=['Schiff']),
+                               sample='Adam B. Schiff ... Steve Garvey ...'),
         contests.TitleEvidence(title='U.S. SENATOR, PARTIAL/UNEXPIRED TERM - Vote for One',
-                               units=[1], header_tokens=['Schiff']),
+                               units=[1], sample='Adam B. Schiff ... Steve Garvey ...'),
     ]
     assert loc.search_titles('senator') == ['U.S. SENATOR, FULL TERM - Vote for One',
                                             'U.S. SENATOR, PARTIAL/UNEXPIRED TERM - Vote for One']
-    assert loc.titles_with_candidate('harris') == ['PRESIDENT AND VICE PRESIDENT - Vote for One']
+    assert 'Harris' in loc.inspect_title('PRESIDENT AND VICE PRESIDENT - Vote for One')
+    assert loc.inspect_title('no such contest') == '(no such title)'
     assert len(loc.list_titles()) == 3
