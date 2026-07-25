@@ -38,6 +38,14 @@ def _canned(pages):
     return lambda path, limit: [pages.get(u, '') for u in range(1, limit + 1)]
 
 
+def test_pages_of_spans_flattens_to_sorted_set():
+    # scattered singletons (stacked precinct report) -> explicit page list
+    assert contests.pages_of_spans([(1, 1), (7, 7), (13, 13)]) == [1, 7, 13]
+    # a contiguous block -> a consecutive run; overlaps/dupes collapse
+    assert contests.pages_of_spans([(22, 25), (24, 26)]) == [22, 23, 24, 25, 26]
+    assert contests.pages_of_spans([]) == []
+
+
 def test_contest_title_index_records_titles_per_unit(monkeypatch):
     pages = {2: 'President/Vice-President of the United States (Vote for 1)',
              3: 'United States Senator (Vote for 1)', 4: 'precinct rows only'}
@@ -140,7 +148,7 @@ def test_locator_uses_llm_chosen_titles(monkeypatch):
         matching_titles=['Representative in Congress 1st District (Vote for 1)'])
     target = contests.Target(contest='U.S. House', context='House race, Bergman vs Barr')
     pred = loc(file_path='x.pdf', targets=[target], unit_count=6)
-    assert pred.locations[0].ranges == [(2, 3)]         # Congress title -> next title - 1
+    assert pred.locations[0].pages == [2, 3]             # Congress title -> next title - 1, as a page set
 
 
 def test_locator_falls_back_to_deterministic_when_llm_fails(monkeypatch):
@@ -151,7 +159,7 @@ def test_locator_falls_back_to_deterministic_when_llm_fails(monkeypatch):
         raise RuntimeError('no LM configured')
     loc.match = boom
     pred = loc(file_path='x.pdf', targets=[contests.Target(contest='President')], unit_count=6)
-    assert pred.locations[0].ranges == [(2, 3)]         # deterministic _title_matches carried it
+    assert pred.locations[0].pages == [2, 3]             # deterministic _title_matches carried it
 
 
 def test_title_matches_rejects_other_contests():

@@ -54,9 +54,12 @@ class Target(pydantic.BaseModel):
 
 
 class ContestLocation(pydantic.BaseModel):
-    '''Where a target contest was found: unit range(s) and the observed title.'''
+    '''Where a target contest was found: the SET of units carrying its votes, and the
+    observed title. The page set is the single representation -- a contest's pages are often
+    scattered (stacked precinct reports, compound docs), so an explicit sorted list is the
+    truth; contiguous blocks are just the special case where the list happens to be a run.'''
     target: str
-    ranges: list[tuple[int, int]]
+    pages: list[int]
     observed_title: str | None = None
 
 
@@ -359,6 +362,16 @@ def scan_for_targets(path: str, targets: list[Target], unit_count: int | None = 
     return hits
 
 
+def pages_of_spans(spans: list[tuple[int, int]]) -> list[int]:
+    '''Flatten (start, end) segments into the sorted set of pages they cover -- the single
+    output representation. Scattered contests (stacked/compound) become an explicit list;
+    a contiguous block becomes a consecutive run. Segments are inclusive of both ends.'''
+    pages: set[int] = set()
+    for start, end in spans:
+        pages.update(range(start, end + 1))
+    return sorted(pages)
+
+
 def assemble_ranges(units: list[int], max_gap: int = DEFAULT_MAX_GAP) -> list[tuple[int, int]]:
     '''Group unit numbers into contiguous ranges, bridging gaps of up to max_gap.'''
     ordered: list[int] = sorted(set(units))
@@ -543,7 +556,7 @@ class ContestLocator(dspy.Module):
             matched: list[str] = self._interpret(target)
             logger.info('interpreted %r -> %d matching title(s)', target.contest, len(matched))
             spans: list[tuple[int, int]] = segments_for_titles(index, matched, units)
-            locations.append(ContestLocation(target=target.contest, ranges=spans,
+            locations.append(ContestLocation(target=target.contest, pages=pages_of_spans(spans),
                                              observed_title=matched[0] if matched else None))
         return dspy.Prediction(locations=locations)
 
