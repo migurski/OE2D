@@ -6,3 +6,4 @@ gepa-*/
 .gepa/
 build/
 *.egg-info/
+.aws/
