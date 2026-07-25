@@ -31,6 +31,8 @@ import pydantic
 
 from .. import categorize, pagetext, source_table
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 _FUZZY_THRESHOLD: float = 0.85
 DEFAULT_MAX_GAP: int = 2
 
@@ -404,7 +406,10 @@ class ContestLocator(dspy.Module):
         locations: list[ContestLocation] = []
         for target in targets:
             index, evidence, units = contest_evidence(file_path, target, unit_count, page_budget)
+            logger.info('detected %d distinct titles on %d pages; interpreting for %r',
+                        len(evidence), len(index), target.contest)
             matched: list[str] = self._interpret(target, evidence)
+            logger.info('interpreted %r -> %d matching title(s)', target.contest, len(matched))
             spans: list[tuple[int, int]] = segments_for_titles(index, matched, units)
             locations.append(ContestLocation(target=target.contest, ranges=spans,
                                              observed_title=matched[0] if matched else None))
@@ -468,12 +473,16 @@ def main() -> None:
                         help='Deterministic name scan + runs only; no LLM, no API')
     parser.add_argument('--titles', action='store_true',
                         help='Deterministic title detection + segments only; no LLM, no API')
-    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Log scan progress to stderr (per-page reads, OCR, interpret)')
+    parser.add_argument('--debug', action='store_true',
+                        help='Also log dspy internals (prompts/responses)')
     args: argparse.Namespace = parser.parse_args()
 
-    if args.verbose:
+    if args.verbose or args.debug:
         logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(message)s')
-        logging.getLogger('dspy').setLevel(logging.INFO)
+        logging.getLogger('oe2d').setLevel(logging.INFO)
+        logging.getLogger('dspy').setLevel(logging.INFO if args.debug else logging.WARNING)
 
     from . import datasets
     if args.gold:

@@ -8,11 +8,15 @@ to locate contests without paid services. Not tabular; just "turn a unit into te
 '''
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
+import time
 
 from . import source_table
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 # tesseract page-seg modes to union: 3 (default body text) + 11 (sparse text, which
 # recovers isolated contest-title lines that mode 3 drops on dense results pages).
@@ -60,12 +64,23 @@ def layout_texts(path: str, limit: int) -> list[str]:
         return [unit_text(path, unit) for unit in range(1, limit + 1)]
     import pdfplumber
     texts: list[str] = []
+    ocr_count: int = 0
+    logger.info('reading %d pages for contest titles...', limit)
+    started: float = time.monotonic()
+    last_log: float = started
     with pdfplumber.open(path) as pdf:
         for unit in range(1, limit + 1):
             text: str = pdf.pages[unit - 1].extract_text() or ''
-            if _alpha_words(text) < 5:      # blank, scanned, or banner-only -> OCR
+            if _alpha_words(text) < 5:      # blank, scanned, or banner-only -> OCR (slow)
                 text = ocr_page(path, unit)
+                ocr_count += 1
             texts.append(text)
+            now: float = time.monotonic()
+            if now - last_log >= 10:        # progress at most every ~10s, adapts to speed
+                logger.info('  page %d/%d (%d OCR so far, %.0fs elapsed)',
+                            unit, limit, ocr_count, now - started)
+                last_log = now
+    logger.info('read %d pages (%d OCR) in %.0fs', limit, ocr_count, time.monotonic() - started)
     return texts
 
 
