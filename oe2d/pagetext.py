@@ -42,6 +42,33 @@ def unit_text(path: str, unit: int) -> str:
     return ''
 
 
+def _alpha_words(text: str) -> int:
+    return sum(1 for w in text.split() if any(c.isalpha() for c in w))
+
+
+def layout_texts(path: str, limit: int) -> list[str]:
+    '''Per-unit FULL page text with headings, for locating contest titles.
+
+    Unlike unit_text -- which returns table-cell text (good for matching candidate values,
+    but source_table drops the contest-title heading that sits above the results table) --
+    this preserves headings. For PDFs it reads pdfplumber's page text in one open; a page
+    with too little text (a scan, or a dead text layer that carries only a page banner)
+    falls back to local OCR. Non-PDFs use unit_text per unit. List index i is unit i+1.
+    '''
+    ext: str = os.path.splitext(path)[1].lower()
+    if ext != '.pdf':
+        return [unit_text(path, unit) for unit in range(1, limit + 1)]
+    import pdfplumber
+    texts: list[str] = []
+    with pdfplumber.open(path) as pdf:
+        for unit in range(1, limit + 1):
+            text: str = pdf.pages[unit - 1].extract_text() or ''
+            if _alpha_words(text) < 5:      # blank, scanned, or banner-only -> OCR
+                text = ocr_page(path, unit)
+            texts.append(text)
+    return texts
+
+
 def ocr_page(path: str, unit: int, resolution: int = 300) -> str:
     '''Render a page/sheet to an image and OCR it locally with tesseract (free).'''
     from .categorize import rendering

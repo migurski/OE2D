@@ -137,6 +137,89 @@ def count_units(path: str) -> int:
         return 1
 
 
+# A contest heading carries a "vote for [not more than] N" marker in every vendor seen
+# (Dominion, ClearBallot, Electionware, PA primary). Deriving the gold by hand showed the
+# TITLE is the durable locate signal -- candidate names are routinely rotated, char-spaced,
+# or column-split and fail to match -- so the title index is the backbone of the span.
+_CONTEST_MARKER: re.Pattern = re.compile(r'vote for', re.I)
+_TITLE_STOP: frozenset[str] = frozenset({
+    'of', 'the', 'for', 'in', 'and', 'a', 'to', 'at', 'us', 'u', 's', 'united', 'states',
+    'vote', 'not', 'more', 'than', 'district', 'member',
+})
+
+
+def _significant_words(label: str) -> set[str]:
+    '''Distinctive lowercase words of a contest label (drop stopwords and parties).'''
+    return {w for w in re.findall(r'[a-z]+', label.lower())
+            if w not in _TITLE_STOP and not _is_party(w)}
+
+
+def contest_title_index(path: str, unit_count: int | None = None,
+                        page_budget: int | None = None) -> dict[int, str]:
+    '''Map each unit bearing contest-title line(s) to ALL its titles (cheap text / OCR).
+
+    Reads every unit (no early stop) because a contest can recur anywhere in a by-precinct
+    document. Captures every "vote for" title on a page, since summary/precinct layouts
+    stack several contests per page. Returns {} when the text carries no titles.
+    '''
+    if unit_count is None:
+        unit_count = count_units(path)
+    limit: int = min(unit_count, page_budget) if page_budget else unit_count
+    index: dict[int, list[str]] = {}
+    for unit, text in enumerate(pagetext.layout_texts(path, limit), 1):
+        titles: list[str] = _title_lines(text)
+        if titles:
+            index[unit] = titles
+    return index
+
+
+def _title_lines(text: str) -> list[str]:
+    '''Contest-title lines on a page: each "vote for" marker line joined with the line
+    above it, since some vendors (Electionware "PRESIDENTIAL ELECTORS / Vote For 1") put
+    the contest name on the preceding line.'''
+    lines: list[str] = text.splitlines()
+    titles: list[str] = []
+    for i, line in enumerate(lines):
+        if _CONTEST_MARKER.search(line):
+            above: str = lines[i - 1].strip() if i > 0 else ''
+            titles.append((above + ' ' + line.strip())[:160])
+    return titles
+
+
+def _word_similar(want: str, have: str) -> bool:
+    '''Loose word match tolerant of vendor wording: exact, containment, or a shared
+    5+ char prefix -- so president~presidential and senate~senator match, house!~congress.'''
+    if want == have or want in have or have in want:
+        return True
+    return len(want) >= 5 and len(have) >= 5 and want[:5] == have[:5]
+
+
+def _title_matches(target: Target, title: str) -> bool:
+    '''Whether a title names the target contest: every significant target word has a
+    similar word in the title.'''
+    want: set[str] = _significant_words(target.contest)
+    have: list[str] = re.findall(r'[a-z]+', title.lower())
+    return bool(want) and all(any(_word_similar(w, h) for h in have) for w in want)
+
+
+def title_segments(index: dict[int, list[str]], target: Target,
+                   unit_count: int) -> list[tuple[int, int]]:
+    '''Spans for a target from the title index: each matching title to the next title - 1.
+
+    A unit matches if ANY of its titles names the target. Works for by_contest (one span)
+    and by_precinct (a span per recurrence). Empty when no title names the target (garbled
+    wording, e.g. "U.S. House" vs "Representative in Congress" -- names/LLM cover that) or
+    no titles were found at all.
+    '''
+    starts: list[int] = sorted(index)
+    spans: list[tuple[int, int]] = []
+    for pos, unit in enumerate(starts):
+        if any(_title_matches(target, title) for title in index[unit]):
+            end: int = (starts[pos + 1] - 1) if pos + 1 < len(starts) else unit_count
+            spans.append((unit, end))
+    return spans
+
+
 def scan_for_targets(path: str, targets: list[Target], unit_count: int | None = None,
                      max_gap: int = DEFAULT_MAX_GAP, page_budget: int | None = None) -> list[UnitHit]:
     '''Deterministic per-unit cheap-text scan -> hit list.
