@@ -300,8 +300,8 @@ def main() -> None:
 
     from . import datasets
     if args.gold:
-        path, targets, gold = datasets.gold_request(args.gold)
-        print(f'# {os.path.basename(path)}  (gold range {gold})', file=sys.stderr)
+        path, targets, gold = datasets.fixture_request(args.gold)
+        print(f'# {os.path.basename(path)}  (fixture gold range {gold})', file=sys.stderr)
     else:
         if not args.path or not args.target:
             parser.error('give a path and at least one --target, or use --gold')
