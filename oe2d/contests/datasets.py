@@ -45,8 +45,12 @@ def load_originals(path: str = _ORIGINALS_PATH) -> list[dict]:
 
 
 def row_target(row: dict) -> Target:
-    '''The Target (contest + hint tokens) for a gold row (either set).'''
-    return Target(contest=row['target'], hints=list(row.get('candidates', [])))
+    '''The Target (contest + free-form context + hint tokens) for a gold row (either set).'''
+    candidates: list[str] = list(row.get('candidates', []))
+    names: list[str] = [c for c in candidates if len(c) > 3]      # drop DEM/REP-style codes
+    context: str = (f'{row["target"]} race; candidates include {", ".join(names)}'
+                    if names else f'{row["target"]} race')
+    return Target(contest=row['target'], context=context, hints=candidates)
 
 
 def fixture_path(row: dict) -> str:

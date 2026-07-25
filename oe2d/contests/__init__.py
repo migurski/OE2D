@@ -39,11 +39,15 @@ OPTIMIZED_MODEL_PATH: str = os.path.join(
 
 
 class Target(pydantic.BaseModel):
-    '''A contest to find, plus free-form tokens that aid finding it.'''
+    '''A contest to find, plus knowledge that aids finding and interpreting it.'''
     contest: str
+    context: str = pydantic.Field(
+        default='',
+        description='Free-form knowledge about the race and its candidates, e.g. '
+                    '"presidential race between Trump and Harris, third-party Stein and Oliver"')
     hints: list[str] = pydantic.Field(
         default_factory=list,
-        description='Candidate names, running mates, parties -- any tokens marking the contest')
+        description='Candidate names, running mates, parties -- tokens for the cheap name scan')
 
 
 class ContestLocation(pydantic.BaseModel):
@@ -173,16 +177,25 @@ def contest_title_index(path: str, unit_count: int | None = None,
     return index
 
 
+def _is_banner(line: str) -> bool:
+    '''A page banner / boilerplate line (page number, timestamp), not a contest name.'''
+    low: str = line.strip().lower()
+    return (not low or low.startswith('page') or low.startswith('sovc')
+            or bool(re.match(r'^[\d/:\s%.,\-]+$', line.strip())))
+
+
 def _title_lines(text: str) -> list[str]:
     '''Contest-title lines on a page: each "vote for" marker line joined with the line
     above it, since some vendors (Electionware "PRESIDENTIAL ELECTORS / Vote For 1") put
-    the contest name on the preceding line.'''
+    the contest name on the preceding line. A page banner above the marker is dropped.'''
     lines: list[str] = text.splitlines()
     titles: list[str] = []
     for i, line in enumerate(lines):
         if _CONTEST_MARKER.search(line):
             above: str = lines[i - 1].strip() if i > 0 else ''
-            titles.append((above + ' ' + line.strip())[:160])
+            if _is_banner(above):
+                above = ''
+            titles.append((above + ' ' + line.strip()).strip()[:160])
     return titles
 
 
@@ -290,35 +303,112 @@ def build_evidence(hits: list[UnitHit], targets: list[Target], max_gap: int = DE
     return evidence
 
 
-class LocateContests(dspy.Signature):
-    '''Assign each requested target contest to the unit range(s) where its results appear.
+class TitleEvidence(pydantic.BaseModel):
+    '''One distinct contest title observed in a document, with supporting signals.'''
+    title: str = pydantic.Field(desc='The observed contest-title text, verbatim')
+    units: list[int] = pydantic.Field(desc='Units where this title appears')
+    header_tokens: list[str] = pydantic.Field(
+        default_factory=list, desc='Candidate/party tokens seen on those units')
 
-    You receive deterministic scan evidence: candidate runs (contiguous unit ranges) with the
-    contest titles observed on those units and which target hint tokens matched. On-page contest
-    titles often differ in wording from the requested target -- "Representative in Congress" is a
-    "U.S. House" race, "Electors of President" is "President", "U.S." vs "US", "House" vs "Congress".
-    Use judgment to map each target to the run(s) whose observed titles and matched candidates truly
-    correspond. Keep the unit ranges from the evidence; do not invent unit numbers. Omit a target
-    with no corresponding run.
+
+class MatchContestTitles(dspy.Signature):
+    '''Decide which of a document's observed contest titles are the requested target contest.
+
+    Detection of the titles is already done deterministically; your job is the interpretation
+    the strings cannot do. Titles vary widely by jurisdiction and vendor -- "U.S. House" may
+    appear as "Representative in Congress", "House of Representatives", or "Congressional
+    District N"; "State House" as "Representative in State Legislature" or "State Assembly";
+    "President" as "Electors of President and Vice-President" or "Presidential Electors".
+    Use the free-form context (the race, its candidates) and the observed header tokens to
+    confirm a match, and to disambiguate near-duplicates -- different districts, and full-term
+    vs partial-term seats -- choosing the one the target refers to. Return the matching titles
+    exactly as given in the observed list; return none if no observed title is the target.
     '''
-    targets: list[Target] = dspy.InputField(desc='Contests to locate, with hint tokens')
-    evidence: list[RunEvidence] = dspy.InputField(desc='Deterministic candidate runs from the scan')
-    locations: list[ContestLocation] = dspy.OutputField(desc='Confirmed target -> unit ranges')
+    contest: str = dspy.InputField(desc='The target contest label to find')
+    context: str = dspy.InputField(desc='Free-form knowledge about the race and its candidates')
+    observed: list[TitleEvidence] = dspy.InputField(
+        desc="The document's distinct contest titles with supporting header tokens")
+    matching_titles: list[str] = dspy.OutputField(
+        desc='The observed titles (verbatim) that are the target contest')
+
+
+def contest_evidence(path: str, target: Target, unit_count: int | None = None,
+                     page_budget: int | None = None) -> tuple[dict[int, list[str]],
+                                                              list[TitleEvidence], int]:
+    '''Read the document once: title index + distinct-title evidence for the target.
+
+    Deterministic detection only -- returns every distinct contest title, the units it
+    appears on, and which of the target's candidate/party hint tokens were seen there.
+    Interpretation (which titles ARE the target) is left to MatchContestTitles.
+    '''
+    if unit_count is None:
+        unit_count = count_units(path)
+    limit: int = min(unit_count, page_budget) if page_budget else unit_count
+    index: dict[int, list[str]] = {}
+    by_title: dict[str, dict] = {}
+    for unit, text in enumerate(pagetext.layout_texts(path, limit), 1):
+        titles: list[str] = _title_lines(text)
+        if not titles:
+            continue
+        index[unit] = titles
+        found: list[str] = token_hits(target.hints, text) if target.hints else []
+        for title in titles:
+            slot = by_title.setdefault(title, {'units': [], 'toks': set()})
+            slot['units'].append(unit)
+            slot['toks'].update(found)
+    evidence: list[TitleEvidence] = [
+        TitleEvidence(title=title, units=sorted(slot['units']), header_tokens=sorted(slot['toks']))
+        for title, slot in by_title.items()]
+    return index, evidence, unit_count
+
+
+def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
+                        unit_count: int) -> list[tuple[int, int]]:
+    '''Title-to-next-title spans for a chosen set of observed title strings.'''
+    wanted: set[str] = {title.strip() for title in matched_titles}
+    starts: list[int] = sorted(index)
+    spans: list[tuple[int, int]] = []
+    for pos, unit in enumerate(starts):
+        if any(title.strip() in wanted for title in index[unit]):
+            end: int = (starts[pos + 1] - 1) if pos + 1 < len(starts) else unit_count
+            spans.append((unit, end))
+    return spans
 
 
 class ContestLocator(dspy.Module):
-    '''Deterministic cheap-text scan, then LLM target assignment over the evidence.'''
+    '''Deterministic title detection, LLM title interpretation, deterministic segmentation.
+
+    detect (contest_evidence) -> interpret (MatchContestTitles: which titles are the target,
+    using free-form context) -> segment (segments_for_titles: each matched title to the next).
+    The deterministic prefix match (_title_matches) is the fallback when the LLM is
+    unavailable or returns nothing, so the program still runs offline.
+    '''
     def __init__(self) -> None:
         super().__init__()
-        self.locate: dspy.Module = dspy.Predict(LocateContests)
+        self.match: dspy.Module = dspy.Predict(MatchContestTitles)
+
+    def _interpret(self, target: Target, evidence: list[TitleEvidence]) -> list[str]:
+        try:
+            prediction = self.match(contest=target.contest, context=target.context,
+                                    observed=evidence)
+            matched: list[str] = [t for t in prediction.matching_titles
+                                  if any(t.strip() == e.title.strip() for e in evidence)]
+            if matched:
+                return matched
+        except Exception:
+            pass
+        return [e.title for e in evidence if _title_matches(target, e.title)]
 
     def forward(self, file_path: str, targets: list[Target], unit_count: int | None = None,
                 max_gap: int = DEFAULT_MAX_GAP, page_budget: int | None = None) -> dspy.Prediction:
-        if unit_count is None:
-            unit_count = count_units(file_path)
-        hits: list[UnitHit] = scan_for_targets(file_path, targets, unit_count, max_gap, page_budget)
-        evidence: list[RunEvidence] = build_evidence(hits, targets, max_gap, unit_count=unit_count)
-        return self.locate(targets=targets, evidence=evidence)
+        locations: list[ContestLocation] = []
+        for target in targets:
+            index, evidence, units = contest_evidence(file_path, target, unit_count, page_budget)
+            matched: list[str] = self._interpret(target, evidence)
+            spans: list[tuple[int, int]] = segments_for_titles(index, matched, units)
+            locations.append(ContestLocation(target=target.contest, ranges=spans,
+                                             observed_title=matched[0] if matched else None))
+        return dspy.Prediction(locations=locations)
 
 
 def _instrument() -> None:
@@ -356,11 +446,11 @@ def locate(file_path: str, targets: list[Target], max_gap: int = DEFAULT_MAX_GAP
             else dict(location) for location in prediction.locations]
 
 
-def parse_target(spec: str) -> Target:
-    '''Parse a "Contest=tok1,tok2,..." CLI target spec.'''
+def parse_target(spec: str, context: str = '') -> Target:
+    '''Parse a "Contest=tok1,tok2,..." CLI target spec, with optional free-form context.'''
     contest, _, rest = spec.partition('=')
     hints: list[str] = [h.strip() for h in rest.split(',') if h.strip()]
-    return Target(contest=contest.strip(), hints=hints)
+    return Target(contest=contest.strip(), context=context, hints=hints)
 
 
 def main() -> None:
@@ -369,11 +459,15 @@ def main() -> None:
     parser.add_argument('path', nargs='?', help='Source file (PDF/spreadsheet)')
     parser.add_argument('--target', action='append', default=[],
                         help='Repeatable "Contest=candidate,candidate,..." spec')
+    parser.add_argument('--context', default='',
+                        help='Free-form race knowledge applied to the --target contests')
     parser.add_argument('--gold', help='Run a labeled fixture by name substring (uses its gold targets)')
     parser.add_argument('--max-gap', type=int, default=DEFAULT_MAX_GAP)
     parser.add_argument('--budget', type=int, default=None, help='Cap units scanned')
     parser.add_argument('--scan-only', action='store_true',
-                        help='Deterministic scan + runs only; no LLM, no API')
+                        help='Deterministic name scan + runs only; no LLM, no API')
+    parser.add_argument('--titles', action='store_true',
+                        help='Deterministic title detection + segments only; no LLM, no API')
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
 
@@ -388,7 +482,7 @@ def main() -> None:
     else:
         if not args.path or not args.target:
             parser.error('give a path and at least one --target, or use --gold')
-        path, targets = args.path, [parse_target(spec) for spec in args.target]
+        path, targets = args.path, [parse_target(spec, args.context) for spec in args.target]
 
     if args.scan_only:
         units = count_units(path)
@@ -397,6 +491,17 @@ def main() -> None:
         evidence = build_evidence(hits, targets, args.max_gap, unit_count=units)
         print(json.dumps({'units_hit': [h.unit for h in hits],
                           'runs': [e.model_dump() for e in evidence]}, indent=2))
+        return
+
+    if args.titles:
+        for target in targets:
+            index, evidence, units = contest_evidence(path, target, page_budget=args.budget)
+            matched = [e.title for e in evidence if _title_matches(target, e.title)]
+            print(json.dumps({
+                'target': target.contest,
+                'observed_titles': [e.model_dump() for e in evidence],
+                'deterministic_matches': matched,
+                'segments': segments_for_titles(index, matched, units)}, indent=2))
         return
 
     print(json.dumps(locate(path, targets, args.max_gap, args.budget), indent=2))
