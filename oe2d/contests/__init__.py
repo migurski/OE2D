@@ -187,34 +187,37 @@ def _is_banner(line: str) -> bool:
 
 
 def _title_lines(text: str) -> list[str]:
-    '''Contest-title lines on a page: each "vote for" marker line joined with the line
-    above it, since some vendors (Electionware "PRESIDENTIAL ELECTORS / Vote For 1") put
-    the contest name on the preceding line. A page banner above the marker is dropped.'''
+    '''Contest-title lines on a page: the "vote for" marker line, prefixed with the line
+    above only when the marker line has no contest name before the marker (Electionware
+    "PRESIDENTIAL ELECTORS / Vote For 1"). A page banner above the marker is dropped.'''
     lines: list[str] = text.splitlines()
     titles: list[str] = []
     for i, line in enumerate(lines):
-        if _CONTEST_MARKER.search(line):
+        match = _CONTEST_MARKER.search(line)
+        if not match:
+            continue
+        before: str = line[:match.start()]
+        if len(re.findall(r'[A-Za-z]', before)) >= 4:      # contest name already on this line
+            title: str = line.strip()
+        else:
             above: str = lines[i - 1].strip() if i > 0 else ''
-            if _is_banner(above):
-                above = ''
-            titles.append((above + ' ' + line.strip()).strip()[:160])
+            title = (('' if _is_banner(above) else above) + ' ' + line.strip()).strip()
+        titles.append(title[:160])
     return titles
 
 
-def _word_similar(want: str, have: str) -> bool:
-    '''Loose word match tolerant of vendor wording: exact, containment, or a shared
-    5+ char prefix -- so president~presidential and senate~senator match, house!~congress.'''
-    if want == have or want in have or have in want:
-        return True
-    return len(want) >= 5 and len(have) >= 5 and want[:5] == have[:5]
-
-
 def _title_matches(target: Target, title: str) -> bool:
-    '''Whether a title names the target contest: every significant target word has a
-    similar word in the title.'''
+    '''Conservative EXACT-word check, for the offline fallback and the eval floor only.
+
+    Every significant target word must appear verbatim in the title. It deliberately does
+    NO fuzzy matching -- wording variants (senate~senator, presidential~president, "U.S.
+    House"~"Representative in Congress") are the LLM's job, handled by the ReAct search tools
+    (which substring-match on a keyword the model chooses). Keeping this dumb avoids the
+    endless tail of a hand-rolled similarity function.
+    '''
     want: set[str] = _significant_words(target.contest)
-    have: list[str] = re.findall(r'[a-z]+', title.lower())
-    return bool(want) and all(any(_word_similar(w, h) for h in have) for w in want)
+    have: set[str] = set(re.findall(r'[a-z]+', title.lower()))
+    return bool(want) and want <= have
 
 
 def title_segments(index: dict[int, list[str]], target: Target,
@@ -314,22 +317,23 @@ class TitleEvidence(pydantic.BaseModel):
 
 
 class MatchContestTitles(dspy.Signature):
-    '''Decide which of a document's observed contest titles are the requested target contest.
+    '''Find which of a document's observed contest titles are the requested target contest.
 
     Detection of the titles is already done deterministically; your job is the interpretation
-    the strings cannot do. Titles vary widely by jurisdiction and vendor -- "U.S. House" may
-    appear as "Representative in Congress", "House of Representatives", or "Congressional
-    District N"; "State House" as "Representative in State Legislature" or "State Assembly";
-    "President" as "Electors of President and Vice-President" or "Presidential Electors".
-    Use the free-form context (the race, its candidates) and the observed header tokens to
-    confirm a match, and to disambiguate near-duplicates -- different districts, and full-term
-    vs partial-term seats -- choosing the one the target refers to. Return the matching titles
-    exactly as given in the observed list; return none if no observed title is the target.
+    the strings cannot do. A document can hold hundreds of contest titles, so do NOT expect
+    them in the prompt -- EXPLORE with the tools: search the titles by keyword, and look up
+    which titles appeared alongside a candidate. Titles vary widely by jurisdiction and vendor:
+    "U.S. House" may appear as "Representative in Congress", "House of Representatives", or
+    "Congressional District N"; "State House" as "Representative in State Legislature" or
+    "State Assembly"; "President" as "Electors of President and Vice-President", "Presidential
+    Electors", or "PRESIDENT AND VICE PRESIDENT". Search several wordings. Use the context (the
+    race, its candidates) to confirm a match and to disambiguate near-duplicates -- different
+    districts, and full-term vs partial/unexpired-term seats -- choosing the one the target
+    refers to. Return the matching titles verbatim as the tools reported them; return none if
+    the document has no such contest.
     '''
     contest: str = dspy.InputField(desc='The target contest label to find')
     context: str = dspy.InputField(desc='Free-form knowledge about the race and its candidates')
-    observed: list[TitleEvidence] = dspy.InputField(
-        desc="The document's distinct contest titles with supporting header tokens")
     matching_titles: list[str] = dspy.OutputField(
         desc='The observed titles (verbatim) that are the target contest')
 
@@ -378,21 +382,44 @@ def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
 
 
 class ContestLocator(dspy.Module):
-    '''Deterministic title detection, LLM title interpretation, deterministic segmentation.
+    '''Deterministic title detection, tool-driven interpretation, deterministic segmentation.
 
-    detect (contest_evidence) -> interpret (MatchContestTitles: which titles are the target,
-    using free-form context) -> segment (segments_for_titles: each matched title to the next).
-    The deterministic prefix match (_title_matches) is the fallback when the LLM is
-    unavailable or returns nothing, so the program still runs offline.
+    detect (contest_evidence) -> interpret (a ReAct agent that SEARCHES the observed titles
+    via tools and returns which are the target, using free-form context) -> segment
+    (segments_for_titles: each matched title to the next). The model queries the title index
+    rather than being handed hundreds of titles, so context stays bounded no matter how large
+    the ballot. The deterministic prefix match (_title_matches) is the offline fallback.
     '''
     def __init__(self) -> None:
         super().__init__()
-        self.match: dspy.Module = dspy.Predict(MatchContestTitles)
+        self._evidence: list[TitleEvidence] = []
+        self.match: dspy.Module = dspy.ReAct(
+            MatchContestTitles,
+            tools=[self.search_titles, self.titles_with_candidate, self.list_titles],
+            max_iters=8)
+
+    def search_titles(self, keyword: str) -> list[str]:
+        '''Return observed contest titles containing the keyword (case-insensitive substring).
+        Try several wordings for a contest (e.g. "congress", "representative", "house").'''
+        low: str = keyword.lower()
+        seen: list[str] = list(dict.fromkeys(e.title for e in self._evidence if low in e.title.lower()))
+        return seen[:30]
+
+    def titles_with_candidate(self, name: str) -> list[str]:
+        '''Return observed titles whose pages showed the given candidate/party token --
+        strong confirmation of which title is the race a candidate ran in.'''
+        low: str = name.lower()
+        return list(dict.fromkeys(
+            e.title for e in self._evidence if any(low in h.lower() for h in e.header_tokens)))[:30]
+
+    def list_titles(self) -> list[str]:
+        '''Return all distinct observed contest titles (an overview; may be long).'''
+        return list(dict.fromkeys(e.title for e in self._evidence))[:250]
 
     def _interpret(self, target: Target, evidence: list[TitleEvidence]) -> list[str]:
+        self._evidence = evidence
         try:
-            prediction = self.match(contest=target.contest, context=target.context,
-                                    observed=evidence)
+            prediction = self.match(contest=target.contest, context=target.context)
             matched: list[str] = [t for t in prediction.matching_titles
                                   if any(t.strip() == e.title.strip() for e in evidence)]
             if matched:
@@ -443,7 +470,7 @@ def locate(file_path: str, targets: list[Target], max_gap: int = DEFAULT_MAX_GAP
            page_budget: int | None = None) -> list[dict]:
     '''Locate targets in a file with the full program; return plain dicts.'''
     _instrument()
-    dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=4096))
+    dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
     locator: ContestLocator = build_locator()
     prediction = locator(file_path=file_path, targets=targets, max_gap=max_gap,
                          page_budget=page_budget)

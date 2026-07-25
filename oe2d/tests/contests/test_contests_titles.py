@@ -6,21 +6,18 @@ files, no pdfplumber, no OCR.
 from oe2d import contests
 
 
-def test_word_similar_tolerates_vendor_wording():
-    assert contests._word_similar('president', 'presidential')   # exact-vs-longer
-    assert contests._word_similar('senate', 'senator')           # 5-char shared prefix
-    assert contests._word_similar('board', 'board')              # exact
-    assert not contests._word_similar('house', 'congress')       # genuine wording gap
-
-
-def test_title_matches_across_vendor_titles():
+def test_title_matches_is_conservative_exact_word_overlap():
+    # Exact only: matches when every significant target word is present verbatim...
     pres = contests.Target(contest='President', hints=[])
     assert contests._title_matches(pres, 'President/Vice-President of the United States (Vote for 1)')
-    assert contests._title_matches(pres, 'PRESIDENTIAL ELECTORS Vote For 1')          # Electionware
+    board = contests.Target(contest='State Board of Education', hints=[])
+    assert contests._title_matches(board, 'Member of the State Board of Education (Vote for 2)')
+    # ...and deliberately does NOT do fuzzy wording -- that is the LLM/tools' job:
+    assert not contests._title_matches(pres, 'PRESIDENTIAL ELECTORS Vote For 1')       # presidential != president
     senate = contests.Target(contest='U.S. Senate', hints=[])
-    assert contests._title_matches(senate, 'United States Senator (Vote for 1)')      # senate~senator
+    assert not contests._title_matches(senate, 'United States Senator (Vote for 1)')   # senate != senator
     house = contests.Target(contest='U.S. House', hints=[])
-    assert not contests._title_matches(house, 'Representative in Congress (Vote for 1)')  # names cover this
+    assert not contests._title_matches(house, 'Representative in Congress (Vote for 1)')
 
 
 def test_title_lines_joins_marker_with_line_above():
@@ -109,7 +106,7 @@ def test_locator_uses_llm_chosen_titles(monkeypatch):
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     loc = contests.ContestLocator()
     # LLM maps "U.S. House" to the Congress title the deterministic prefix cannot match.
-    loc.match = lambda contest, context, observed: types.SimpleNamespace(
+    loc.match = lambda contest, context: types.SimpleNamespace(
         matching_titles=['Representative in Congress 1st District (Vote for 1)'])
     target = contests.Target(contest='U.S. House', context='House race, Bergman vs Barr')
     pred = loc(file_path='x.pdf', targets=[target], unit_count=6)
@@ -125,3 +122,27 @@ def test_locator_falls_back_to_deterministic_when_llm_fails(monkeypatch):
     loc.match = boom
     pred = loc(file_path='x.pdf', targets=[contests.Target(contest='President')], unit_count=6)
     assert pred.locations[0].ranges == [(2, 3)]         # deterministic _title_matches carried it
+
+
+def test_title_matches_rejects_other_contests():
+    # exact overlap naturally keeps "President" off SENATOR / REPRESENTATIVE titles
+    pres = contests.Target(contest='President', hints=[])
+    assert not contests._title_matches(pres, 'U.S. SENATOR, FULL TERM - Vote for One')
+    assert not contests._title_matches(pres, 'U.S. REPRESENTATIVE DISTRICT 2 - Vote for One')
+    assert contests._title_matches(pres, 'PRESIDENT AND VICE PRESIDENT - Vote for One')
+
+
+def test_locator_title_search_tools():
+    loc = contests.ContestLocator()
+    loc._evidence = [
+        contests.TitleEvidence(title='PRESIDENT AND VICE PRESIDENT - Vote for One',
+                               units=[1, 8], header_tokens=['Harris', 'Trump']),
+        contests.TitleEvidence(title='U.S. SENATOR, FULL TERM - Vote for One', units=[1],
+                               header_tokens=['Schiff']),
+        contests.TitleEvidence(title='U.S. SENATOR, PARTIAL/UNEXPIRED TERM - Vote for One',
+                               units=[1], header_tokens=['Schiff']),
+    ]
+    assert loc.search_titles('senator') == ['U.S. SENATOR, FULL TERM - Vote for One',
+                                            'U.S. SENATOR, PARTIAL/UNEXPIRED TERM - Vote for One']
+    assert loc.titles_with_candidate('harris') == ['PRESIDENT AND VICE PRESIDENT - Vote for One']
+    assert len(loc.list_titles()) == 3
