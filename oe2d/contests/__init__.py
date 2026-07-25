@@ -620,7 +620,8 @@ def main() -> None:
     parser.add_argument('--scan-only', action='store_true',
                         help='Deterministic name scan + runs only; no LLM, no API')
     parser.add_argument('--titles', action='store_true',
-                        help='Deterministic title detection + segments only; no LLM, no API')
+                        help='Inspect only: list every contest title detected in the document, '
+                             'in its own words (no targets, no LLM, no API)')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Log scan progress to stderr (per-page reads, OCR, interpret)')
     parser.add_argument('--debug', action='store_true',
@@ -636,6 +637,10 @@ def main() -> None:
     if args.gold:
         path, targets, gold = datasets.fixture_request(args.gold)
         print(f'# {os.path.basename(path)}  (fixture gold range {gold})', file=sys.stderr)
+    elif args.titles:
+        if not args.path:
+            parser.error('give a path to inspect with --titles')
+        path, targets = args.path, []          # target-agnostic: --titles just lists the doc's titles
     else:
         if not args.path or not args.target:
             parser.error('give a path and at least one --target, or use --gold')
@@ -651,14 +656,9 @@ def main() -> None:
         return
 
     if args.titles:
-        index, evidence, units = contest_evidence(path, page_budget=args.budget)
-        for target in targets:
-            matched = [e.title for e in evidence if _title_matches(target, e.title)]
-            print(json.dumps({
-                'target': target.contest,
-                'observed_titles': [e.title for e in evidence],
-                'deterministic_matches': matched,
-                'segments': segments_for_titles(index, matched, units)}, indent=2))
+        _index, evidence, _units = contest_evidence(path, page_budget=args.budget)
+        titles = [{'title': e.title, 'pages': e.units} for e in evidence]
+        print(json.dumps(titles, indent=2))
         return
 
     print(json.dumps(locate(path, targets, args.max_gap, args.budget), indent=2))
