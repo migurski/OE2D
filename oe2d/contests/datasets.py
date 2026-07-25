@@ -45,12 +45,13 @@ def load_originals(path: str = _ORIGINALS_PATH) -> list[dict]:
 
 
 def row_target(row: dict) -> Target:
-    '''The Target (contest + free-form context + hint tokens) for a gold row (either set).'''
+    '''The Target (contest label + free-form context) for a gold row (either set). The gold
+    candidate names are folded into the context prose the LLM reads to interpret the title.'''
     candidates: list[str] = list(row.get('candidates', []))
     names: list[str] = [c for c in candidates if len(c) > 3]      # drop DEM/REP-style codes
     context: str = (f'{row["target"]} race; candidates include {", ".join(names)}'
                     if names else f'{row["target"]} race')
-    return Target(contest=row['target'], context=context, hints=candidates)
+    return Target(contest=row['target'], context=context)
 
 
 def fixture_path(row: dict) -> str:

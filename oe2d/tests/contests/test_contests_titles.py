@@ -8,15 +8,15 @@ from oe2d import contests
 
 def test_title_matches_is_conservative_exact_word_overlap():
     # Exact only: matches when every significant target word is present verbatim...
-    pres = contests.Target(contest='President', hints=[])
+    pres = contests.Target(contest='President')
     assert contests._title_matches(pres, 'President/Vice-President of the United States (Vote for 1)')
-    board = contests.Target(contest='State Board of Education', hints=[])
+    board = contests.Target(contest='State Board of Education')
     assert contests._title_matches(board, 'Member of the State Board of Education (Vote for 2)')
     # ...and deliberately does NOT do fuzzy wording -- that is the LLM/tools' job:
     assert not contests._title_matches(pres, 'PRESIDENTIAL ELECTORS Vote For 1')       # presidential != president
-    senate = contests.Target(contest='U.S. Senate', hints=[])
+    senate = contests.Target(contest='U.S. Senate')
     assert not contests._title_matches(senate, 'United States Senator (Vote for 1)')   # senate != senator
-    house = contests.Target(contest='U.S. House', hints=[])
+    house = contests.Target(contest='U.S. House')
     assert not contests._title_matches(house, 'Representative in Congress (Vote for 1)')
 
 
@@ -86,33 +86,36 @@ def test_contest_title_index_merges_marker_and_header(monkeypatch):
     assert index[4] == [hdr]                          # marker-free heading on units 2-4
 
 
-def test_title_segments_by_contest_runs_to_next_title(monkeypatch):
+def test_segments_by_contest_runs_to_next_title(monkeypatch):
     pages = {2: 'President/Vice-President of the United States (Vote for 1)',
              5: 'United States Senator (Vote for 1)'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     index = contests.contest_title_index('x.pdf', unit_count=8)
-    pres = contests.Target(contest='President', hints=[])
+    pres = contests.Target(contest='President')
+    matched = {t for ts in index.values() for t in ts if contests._title_matches(pres, t)}
     # President title p2, next title p5 -> span [2, 4].
-    assert contests.title_segments(index, pres, 8) == [(2, 4)]
+    assert contests.segments_for_titles(index, matched, 8) == [(2, 4)]
 
 
-def test_title_segments_by_precinct_one_span_per_recurrence(monkeypatch):
+def test_segments_by_precinct_one_span_per_recurrence(monkeypatch):
     block = 'Electors of President and Vice-President Vote for not more than 1'
     other = 'United States Senator Vote for not more than 1'
     pages = {1: block, 2: other, 8: block, 9: other}   # two precinct blocks
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     index = contests.contest_title_index('x.pdf', unit_count=14)
-    pres = contests.Target(contest='President', hints=[])
+    pres = contests.Target(contest='President')
+    matched = {t for ts in index.values() for t in ts if contests._title_matches(pres, t)}
     # matches p1 and p8; each runs to the next title - 1.
-    assert contests.title_segments(index, pres, 14) == [(1, 1), (8, 8)]
+    assert contests.segments_for_titles(index, matched, 14) == [(1, 1), (8, 8)]
 
 
-def test_title_segments_last_title_runs_to_unit_count(monkeypatch):
+def test_segments_last_title_runs_to_unit_count(monkeypatch):
     pages = {5: 'President/Vice-President of the United States (Vote for 1)'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     index = contests.contest_title_index('x.pdf', unit_count=7)
-    pres = contests.Target(contest='President', hints=[])
-    assert contests.title_segments(index, pres, 7) == [(5, 7)]
+    pres = contests.Target(contest='President')
+    matched = {t for ts in index.values() for t in ts if contests._title_matches(pres, t)}
+    assert contests.segments_for_titles(index, matched, 7) == [(5, 7)]
 
 
 def test_title_lines_drops_page_banner_above_marker():
@@ -164,7 +167,7 @@ def test_locator_falls_back_to_deterministic_when_llm_fails(monkeypatch):
 
 def test_title_matches_rejects_other_contests():
     # exact overlap naturally keeps "President" off SENATOR / REPRESENTATIVE titles
-    pres = contests.Target(contest='President', hints=[])
+    pres = contests.Target(contest='President')
     assert not contests._title_matches(pres, 'U.S. SENATOR, FULL TERM - Vote for One')
     assert not contests._title_matches(pres, 'U.S. REPRESENTATIVE DISTRICT 2 - Vote for One')
     assert contests._title_matches(pres, 'PRESIDENT AND VICE PRESIDENT - Vote for One')
