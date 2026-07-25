@@ -46,6 +46,38 @@ def test_contest_title_index_records_titles_per_unit(monkeypatch):
     assert set(index) == {2, 3}                       # unit 4 has no title
 
 
+def test_header_title_index_detects_marker_free_running_header():
+    # Alameda-style: no "vote for" marker; the contest name is a repeated page-top heading.
+    # A universal banner (every page) and short/table-header lines must NOT be emitted.
+    banner = 'Alameda County Statement of Votes Cast'
+    pres = '1 President and Vice President'
+    senate = '1 U.S. Senator, Full Term'
+    texts = ([f'{pres}\n{banner}\nChoice Party Total\n200100 3535 159'] * 3 +
+             [f'{senate}\n{banner}\nChoice Party Total\n200100 3535 155'] * 3)
+    index = contests.header_title_index(texts)
+    assert index[1] == [pres] and index[4] == [senate]       # block titles captured
+    assert all(banner not in titles for titles in index.values())   # universal banner rejected
+
+
+def test_header_title_index_ignores_lines_on_every_page():
+    # A heading that appears on ALL pages is a banner/table-header, not a contest -> rejected.
+    texts = ['Registered Voters Cast Turnout\nsome contest words here'] * 5
+    index = contests.header_title_index(texts)
+    assert index == {}                                # nothing recurs on a block-but-not-all
+
+
+def test_contest_title_index_merges_marker_and_header(monkeypatch):
+    # marker page wins on its unit; header-only pages get the recurring heading.
+    hdr = 'President and Vice President'
+    pages = {1: 'PRESIDENT AND VICE PRESIDENT (Vote for 1)\nHarris Trump',
+             2: f'{hdr}\nCumulative Totals\nrows', 3: f'{hdr}\nCumulative Totals\nrows',
+             4: f'{hdr}\nCumulative Totals\nrows'}
+    monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
+    index = contests.contest_title_index('x.pdf', unit_count=4)
+    assert 'Vote for 1' in index[1][0]                # marker title on unit 1
+    assert index[4] == [hdr]                          # marker-free heading on units 2-4
+
+
 def test_title_segments_by_contest_runs_to_next_title(monkeypatch):
     pages = {2: 'President/Vice-President of the United States (Vote for 1)',
              5: 'United States Senator (Vote for 1)'}

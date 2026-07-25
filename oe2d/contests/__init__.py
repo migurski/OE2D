@@ -161,22 +161,106 @@ def _significant_words(label: str) -> set[str]:
             if w not in _TITLE_STOP and not _is_party(w)}
 
 
+# Leading words of table-header / boilerplate rows that repeat on results pages but are
+# NOT contest titles -- so the marker-free header detector must not emit them.
+_HEADER_STOP: frozenset[str] = frozenset({
+    'choice', 'candidate', 'precinct', 'registered', 'voters', 'voter', 'cast', 'times',
+    'total', 'totals', 'turnout', 'party', 'ballots', 'ballot', 'cumulative', 'election',
+    'official', 'statement', 'reporting', 'run', 'undervotes', 'overvotes', 'write',
+})
+
+
+# A loose "this line names an elected OFFICE (a noun) or ballot question" recall net -- NOT
+# target matching (the LLM does that). It only gates marker-free heading candidates so two
+# kinds of impostor are rejected: mirrored/garbled candidate rows (no readable office word),
+# and bare geography SUBTOTAL labels ("1st Congressional District", "5th Senatorial District")
+# that carry a district adjective but NO office noun. So the net holds office NOUNS only --
+# 'congressional'/'senatorial'/'district' are deliberately excluded (they are the geography a
+# subtotal label is made of). Need not be complete; a missed local contest is not our target.
+_OFFICE_ANCHORS: frozenset[str] = frozenset({
+    'president', 'vice', 'senator', 'senate', 'representative', 'congress',
+    'assembly', 'assemblymember', 'legislature', 'governor', 'lieutenant', 'supervisor', 'mayor',
+    'council', 'councilmember', 'clerk', 'treasurer', 'auditor', 'controller', 'comptroller',
+    'attorney', 'sheriff', 'assessor', 'coroner', 'board', 'director', 'trustee', 'commissioner',
+    'superintendent', 'judge', 'justice', 'measure', 'proposition', 'recall', 'bond', 'member',
+    'secretary', 'education', 'mayor',
+})
+
+
+def _heading_candidates(text: str) -> list[str]:
+    '''Lines on a page that could be a marker-free contest heading (a running header or a
+    section title that carries no "vote for" marker). A heading is a multi-word phrase that
+    NAMES AN OFFICE / ballot question and carries no vote data -- not a banner, not a table-
+    header row, not a numeric row, and not a mirrored/garbled candidate line. Permissive on
+    WHICH office (the LLM interprets that); strict on "looks like a contest heading".'''
+    out: list[str] = []
+    for raw in text.splitlines():
+        line: str = re.sub(r'\s+', ' ', raw.strip())
+        if _is_banner(line):
+            continue
+        words: list[str] = re.findall(r"[A-Za-z][A-Za-z.'/,-]*", line)
+        if len(words) < 3:                                  # contest titles are multi-word
+            continue
+        if len(re.findall(r'\d', line)) > 2 or '%' in line:  # a data/turnout row, not a title
+            continue
+        first: str = re.sub(r'^[\d.\s]+', '', line).split(' ')[0].lower().strip(".,'/-")
+        if first in _HEADER_STOP:                           # "Choice Party...", "Precinct ..."
+            continue
+        lowered: set[str] = {w.lower().strip(".,'/-") for w in words}
+        if lowered.isdisjoint(_OFFICE_ANCHORS):             # no office NOUN -> not a heading
+            continue
+        out.append(line[:160])
+    return out
+
+
+def header_title_index(texts: list[str]) -> dict[int, list[str]]:
+    '''Marker-free titles: heading lines that recur on a BLOCK of pages (a running header or
+    an unmarked section title), keyed by unit. A true contest heading repeats on several pages
+    but NOT on most of them (that would be a universal table-header/banner); it identifies the
+    contest whose block those pages belong to. Recovers running-header vendors (Alameda) and
+    compound-doc sections that drop the "vote for" suffix (Yolo/San Joaquin district+precinct).'''
+    n: int = len(texts)
+    per_page: list[set[str]] = [set(_heading_candidates(t)) for t in texts]
+    counts: dict[str, int] = {}
+    for headings in per_page:
+        for h in headings:
+            counts[h] = counts.get(h, 0) + 1
+    cap: int = max(3, int(n * 0.5))                         # reject universal lines (banners/headers)
+    keep: set[str] = {h for h, c in counts.items() if 3 <= c <= cap}
+    index: dict[int, list[str]] = {}
+    for unit, headings in enumerate(per_page, 1):
+        chosen: list[str] = [h for h in headings if h in keep]
+        if chosen:
+            index[unit] = chosen
+    return index
+
+
 def contest_title_index(path: str, unit_count: int | None = None,
-                        page_budget: int | None = None) -> dict[int, str]:
+                        page_budget: int | None = None) -> dict[int, list[str]]:
     '''Map each unit bearing contest-title line(s) to ALL its titles (cheap text / OCR).
 
     Reads every unit (no early stop) because a contest can recur anywhere in a by-precinct
-    document. Captures every "vote for" title on a page, since summary/precinct layouts
-    stack several contests per page. Returns {} when the text carries no titles.
+    document. Captures every "vote for" marker title on a page (summary/precinct layouts stack
+    several contests per page), then merges marker-free repeated headings (running-header and
+    unmarked-section vendors). A page's marker titles win; header titles fill pages that have
+    none. Returns {} only when the text carries no titles of either kind.
     '''
     if unit_count is None:
         unit_count = count_units(path)
     limit: int = min(unit_count, page_budget) if page_budget else unit_count
-    index: dict[int, list[str]] = {}
-    for unit, text in enumerate(pagetext.layout_texts(path, limit), 1):
+    texts: list[str] = list(pagetext.layout_texts(path, limit))
+    marker: dict[int, list[str]] = {}
+    for unit, text in enumerate(texts, 1):
         titles: list[str] = _title_lines(text)
         if titles:
-            index[unit] = titles
+            marker[unit] = titles
+    headers: dict[int, list[str]] = header_title_index(texts)
+    index: dict[int, list[str]] = {}
+    for unit in range(1, limit + 1):
+        if unit in marker:
+            index[unit] = marker[unit]                      # marker titles win
+        elif unit in headers:
+            index[unit] = headers[unit]                     # else marker-free heading
     return index
 
 
@@ -360,18 +444,27 @@ def contest_evidence(path: str, unit_count: int | None = None,
     if unit_count is None:
         unit_count = count_units(path)
     limit: int = min(unit_count, page_budget) if page_budget else unit_count
+    texts: list[str] = list(pagetext.layout_texts(path, limit))
+    headers: dict[int, list[str]] = header_title_index(texts)
     index: dict[int, list[str]] = {}
     by_title: dict[str, dict] = {}
-    for unit, text in enumerate(pagetext.layout_texts(path, limit), 1):
+    for unit, text in enumerate(texts, 1):
         regions: list[tuple[str, str]] = _title_regions(text)
-        if not regions:
-            continue
-        index[unit] = [title for title, _ in regions]
-        for title, region in regions:
-            slot = by_title.setdefault(title, {'units': [], 'sample': ''})
-            slot['units'].append(unit)
-            if not slot['sample']:
-                slot['sample'] = region[:800]
+        if regions:                                        # marker titles win, with their regions
+            index[unit] = [title for title, _ in regions]
+            for title, region in regions:
+                slot = by_title.setdefault(title, {'units': [], 'sample': ''})
+                slot['units'].append(unit)
+                if not slot['sample']:
+                    slot['sample'] = region[:800]
+        elif unit in headers:                              # else marker-free headings on this page
+            index[unit] = headers[unit]
+            for title in headers[unit]:
+                slot = by_title.setdefault(title, {'units': [], 'sample': ''})
+                slot['units'].append(unit)
+                if not slot['sample']:
+                    at: int = text.find(title[:40])
+                    slot['sample'] = (text[at:] if at >= 0 else text)[:800]
     evidence: list[TitleEvidence] = [
         TitleEvidence(title=title, units=sorted(slot['units']), sample=slot['sample'])
         for title, slot in by_title.items()]
