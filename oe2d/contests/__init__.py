@@ -102,6 +102,33 @@ def _title(text: str) -> str:
     return ''
 
 
+# Party abbreviations/labels appear on every results page, so they are weak
+# evidence -- they must not, on their own, qualify a unit for a contest.
+_PARTY_TOKENS: frozenset[str] = frozenset({
+    'dem', 'rep', 'lib', 'grn', 'ust', 'nlp', 'ind', 'wf', 'con',
+    'democratic', 'republican', 'libertarian', 'green', 'constitution',
+})
+
+
+def _is_party(token: str) -> bool:
+    return token.strip().lower() in _PARTY_TOKENS
+
+
+def _unit_qualifies(target: Target, matched: list[str]) -> bool:
+    '''Whether a unit's matches are strong enough to count for a target.
+
+    Require TWO distinctive (non-party) matches, so a lone common surname (a "Stein"
+    from another race) or a party label alone cannot pull a contest's range along.
+    A target with fewer than two distinctive hints is underspecified (e.g. the party-
+    only placeholder rows); for those we stay loose and accept a single match rather
+    than make them impossible to find.
+    '''
+    distinctive_hints: list[str] = [h for h in target.hints if not _is_party(h)]
+    if len(distinctive_hints) < 2:
+        return len(matched) >= 1
+    return len([t for t in matched if not _is_party(t)]) >= 2
+
+
 def count_units(path: str) -> int:
     '''Number of pages (PDF) or sheets (spreadsheet); 1 if unknown.'''
     try:
@@ -128,7 +155,7 @@ def scan_for_targets(path: str, targets: list[Target], unit_count: int | None = 
         matched: dict[str, list[str]] = {}
         for target in targets:
             got: list[str] = token_hits(target.hints + [target.contest], text)
-            if got:
+            if got and _unit_qualifies(target, got):
                 matched[target.contest] = got
                 last_hit[target.contest] = unit
         if matched:
@@ -155,9 +182,16 @@ def assemble_ranges(units: list[int], max_gap: int = DEFAULT_MAX_GAP) -> list[tu
     return ranges
 
 
-def build_evidence(hits: list[UnitHit], targets: list[Target],
-                   max_gap: int = DEFAULT_MAX_GAP) -> list[RunEvidence]:
-    '''Assemble per-target contiguous runs with observed titles and matched tokens.'''
+def build_evidence(hits: list[UnitHit], targets: list[Target], max_gap: int = DEFAULT_MAX_GAP,
+                   trailing_pad: int | None = None, unit_count: int | None = None) -> list[RunEvidence]:
+    '''Assemble per-target contiguous runs with observed titles and matched tokens.
+
+    Each run's END is padded by trailing_pad (default max_gap) so a trailing write-in
+    or continuation page that carries votes but no candidate names -- and so never
+    matched -- is still included. The pad is clamped to unit_count when known. Only
+    the real hit units contribute the titles/tokens evidence.
+    '''
+    pad: int = max_gap if trailing_pad is None else trailing_pad
     evidence: list[RunEvidence] = []
     for target in targets:
         matched_hits: list[UnitHit] = [h for h in hits if target.contest in h.matched]
@@ -165,8 +199,11 @@ def build_evidence(hits: list[UnitHit], targets: list[Target],
             run_hits: list[UnitHit] = [h for h in matched_hits if start <= h.unit <= end]
             titles: list[str] = list(dict.fromkeys(h.title for h in run_hits if h.title))
             tokens: list[str] = sorted({tok for h in run_hits for tok in h.matched[target.contest]})
+            padded_end: int = end + pad
+            if unit_count is not None:
+                padded_end = min(padded_end, unit_count)
             evidence.append(RunEvidence(scan_guess=target.contest, unit_start=start,
-                                        unit_end=end, observed_titles=titles, matched_tokens=tokens))
+                                        unit_end=padded_end, observed_titles=titles, matched_tokens=tokens))
     return evidence
 
 
@@ -194,8 +231,10 @@ class ContestLocator(dspy.Module):
 
     def forward(self, file_path: str, targets: list[Target], unit_count: int | None = None,
                 max_gap: int = DEFAULT_MAX_GAP, page_budget: int | None = None) -> dspy.Prediction:
+        if unit_count is None:
+            unit_count = count_units(file_path)
         hits: list[UnitHit] = scan_for_targets(file_path, targets, unit_count, max_gap, page_budget)
-        evidence: list[RunEvidence] = build_evidence(hits, targets, max_gap)
+        evidence: list[RunEvidence] = build_evidence(hits, targets, max_gap, unit_count=unit_count)
         return self.locate(targets=targets, evidence=evidence)
 
 
@@ -269,8 +308,10 @@ def main() -> None:
         path, targets = args.path, [parse_target(spec) for spec in args.target]
 
     if args.scan_only:
-        hits = scan_for_targets(path, targets, max_gap=args.max_gap, page_budget=args.budget)
-        evidence = build_evidence(hits, targets, args.max_gap)
+        units = count_units(path)
+        hits = scan_for_targets(path, targets, unit_count=units, max_gap=args.max_gap,
+                                page_budget=args.budget)
+        evidence = build_evidence(hits, targets, args.max_gap, unit_count=units)
         print(json.dumps({'units_hit': [h.unit for h in hits],
                           'runs': [e.model_dump() for e in evidence]}, indent=2))
         return
