@@ -7,3 +7,4 @@ gepa-*/
 build/
 *.egg-info/
 .aws/
+contests-review/
