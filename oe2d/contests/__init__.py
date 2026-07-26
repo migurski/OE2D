@@ -247,11 +247,18 @@ class MatchContestTitles(dspy.Signature):
     "U.S. House" may appear as "Representative in Congress", "House of Representatives", or
     "Congressional District N"; "State House" as "Representative in State Legislature" or
     "State Assembly"; "President" as "Electors of President and Vice-President", "Presidential
-    Electors", or "PRESIDENT AND VICE PRESIDENT". Search several wordings. Use the context (the
-    race, its candidates) to confirm a match and to disambiguate near-duplicates -- different
-    districts, and full-term vs partial/unexpired-term seats -- choosing the one the target
-    refers to. Return the matching titles verbatim as the tools reported them; return none if
-    the document has no such contest.
+    Electors", or "PRESIDENT AND VICE PRESIDENT". Search several wordings.
+
+    Return EVERY observed title that IS the target contest -- not just one. A single contest is
+    often printed under MORE THAN ONE wording in the same document: a cumulative/summary section
+    and a per-precinct or per-district section word it differently (e.g. "President and Vice
+    President - Vote for One" AND "President and Vice President"), and a write-in tally adds
+    another. Each wording carries its own pages of votes, so you must return ALL of them. Keep
+    these same-contest duplicates together; only DISTINGUISH near-duplicates that are genuinely
+    DIFFERENT races -- a different district number, or a full-term vs partial/unexpired-term seat
+    -- and among those include only the ones the target refers to. Use the context (the race, its
+    candidates) to confirm a match. Return the matching titles verbatim as the tools reported
+    them; return none if the document has no such contest.
     '''
     contest: str = dspy.InputField(desc='The target contest label to find')
     context: str = dspy.InputField(desc='Free-form knowledge about the race and its candidates')
