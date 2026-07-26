@@ -32,7 +32,7 @@ INPUT_FIELDS: tuple[str, ...] = ('image',)
 
 
 def load_records(labels_path: str = _LABELS_PATH) -> list[dict]:
-    '''Read labels.jsonl into a list of dicts, one per page image.'''
+    '''Read training-page-images.jsonl into a list of dicts, one per page image.'''
     records: list[dict] = []
     with open(labels_path, encoding='utf-8') as handle:
         for line in handle:
