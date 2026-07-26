@@ -32,7 +32,6 @@ import json
 import logging
 import os
 import sys
-import typing
 
 import dotenv
 import dspy
@@ -41,6 +40,7 @@ from PIL import Image
 
 from .. import config
 from . import deskew
+from .signatures import CandidateOrientation, PageAnalysis, PrecinctAxis, PrecinctScope
 
 
 # Extensions we treat as already-rendered page images; anything else is rendered.
@@ -51,21 +51,6 @@ _IMAGE_EXTS: tuple[str, ...] = ('.png', '.jpg', '.jpeg', '.webp', '.tif', '.tiff
 # training images are rendered density-tiered (300 dense / 220 sparse), and 300
 # here keeps the demanding case matched.
 INFERENCE_DPI: int = 300
-
-
-# Allowed per-page label vocabularies, as explicit Literal types; the DSPy output
-# fields and the pydantic result model both take their types from these so the
-# taxonomy has a single definition.
-CandidateOrientation = typing.Literal['columns', 'rows']
-PrecinctScope = typing.Literal['multi_precinct', 'per_precinct', 'county']
-# The precinct axis is only meaningful for multi_precinct pages; 'none' covers
-# per_precinct (one precinct, named in a header) and county (no precinct at all),
-# so the field is always a concrete literal rather than null.
-PrecinctAxis = typing.Literal['rows', 'columns', 'none']
-
-CANDIDATE_ORIENTATIONS: tuple[str, ...] = typing.get_args(CandidateOrientation)
-PRECINCT_SCOPES: tuple[str, ...] = typing.get_args(PrecinctScope)
-PRECINCT_AXES: tuple[str, ...] = typing.get_args(PrecinctAxis)
 
 
 class PageProperties(pydantic.BaseModel):
@@ -104,36 +89,6 @@ OUTPUT_FIELDS: tuple[str, ...] = CONTENT_FIELDS + ('skew_degrees',)
 # the stock prompt is used. optimize.py writes here.
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_page_analyzer.json')
-
-
-class PageAnalysis(dspy.Signature):
-    '''Report factual, in-page observations about ONE election-results page image.
-
-    You are shown a single page image, not a whole document. Describe only what is
-    visible on THIS page; do not infer contests or precincts that would be on other
-    pages.
-    '''
-    image: dspy.Image = dspy.InputField(desc='A single rendered election-results page')
-    candidate_orientation: CandidateOrientation = dspy.OutputField(
-        desc="'columns' when each candidate/party is a column (and precincts run "
-             "down the rows); 'rows' when each candidate/party is a row")
-    contest_name_present: bool = dspy.OutputField(
-        desc='Is a contest/office title visible on this page? A continuation page '
-             'that just carries more candidate columns or more precinct rows often '
-             'has none')
-    candidate_names_present: bool = dspy.OutputField(
-        desc='Are candidate or party names visible on this page? False on a bare '
-             'data-only continuation page')
-    headers_present: bool = dspy.OutputField(
-        desc='Are column/row headers labeling the numbers present on this page?')
-    precinct_scope: PrecinctScope = dspy.OutputField(
-        desc="'multi_precinct' when the page lays out many precincts along an axis; "
-             "'per_precinct' when the page is a single precinct named in a heading "
-             "with its results below; 'county' when the page shows county-wide "
-             "aggregates with no precinct dimension")
-    precinct_orientation: PrecinctAxis = dspy.OutputField(
-        desc="For a multi_precinct page, whether precincts are 'rows' or 'columns'; "
-             "otherwise 'none'")
 
 
 def _instrument() -> None:
@@ -208,24 +163,31 @@ class PageAnalyzer(dspy.Module):
         )
 
 
+def inference_lm() -> dspy.LM:
+    '''The LM PageAnalyzer reads pages with: the shared Kimi K2 (multimodal) model at
+    inference settings. A settled classifier, not GEPA-style exploration -- temperature 0
+    keeps the six-field answer stable, and a large max_tokens leaves headroom so a page
+    reasoned about at length doesn't truncate mid-answer (the Kimi 'code' model can repeat
+    itself up to the cap at high temperature). Defined here, beside the program, so the
+    module + signature + LM read together. A TRAINED artifact carries its OWN lm and
+    OVERRIDES this on load (see build_analyzer) -- the artifact is authoritative.'''
+    return dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192)
+
+
 def build_analyzer() -> PageAnalyzer:
-    '''Construct the composite page analyzer, loading the trained prompt if present.'''
+    '''Construct the composite page analyzer. A trained artifact, when present, fully
+    governs (its saved prompt AND lm win); otherwise bind the stock inference LM.'''
     analyzer: PageAnalyzer = PageAnalyzer()
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         analyzer.load(OPTIMIZED_MODEL_PATH)
+    else:
+        analyzer.set_lm(inference_lm())
     return analyzer
 
 
 def analyze_image(image_path: str) -> dict:
     '''Run the analyzer on an already-rendered page image; return a plain dict.'''
     _instrument()
-    # The task LM is the shared Kimi K2 (multimodal) model defined once in
-    # oe2d.config; this program reads only the page image with it. Inference
-    # wants a settled classifier, not GEPA-style exploration: temperature 0 keeps
-    # the six-field answer stable, and a larger max_tokens leaves headroom so a
-    # page the model reasons about at length doesn't truncate mid-answer (the Kimi
-    # 'code' model can otherwise repeat itself up to the cap at high temperature).
-    dspy.configure(lm=dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192))
     analyzer: PageAnalyzer = build_analyzer()
     prediction = analyzer(image=dspy.Image(image_path))
     properties = PageProperties(

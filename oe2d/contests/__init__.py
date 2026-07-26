@@ -31,6 +31,7 @@ import dspy
 import pydantic
 
 from .. import config, pagetext, source_table
+from .signatures import ClassifyContestTitles, MatchContestTitles
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -290,53 +291,6 @@ class TitleEvidence(pydantic.BaseModel):
         default='', desc='Text under the title on its first page (its candidate rows)')
 
 
-class MatchContestTitles(dspy.Signature):
-    '''Find which of a document's observed contest titles are the requested target contest.
-
-    Detection of the titles is already done deterministically; your job is the interpretation
-    the strings cannot do. A document can hold hundreds of contest titles, so do NOT expect
-    them in the prompt -- EXPLORE with the tools: search the titles by keyword, and read the
-    candidate rows under a title (inspect_title) to confirm the race by who ran in it. Titles
-    vary widely by jurisdiction and vendor:
-    "U.S. House" may appear as "Representative in Congress", "House of Representatives", or
-    "Congressional District N"; "State House" as "Representative in State Legislature" or
-    "State Assembly"; "President" as "Electors of President and Vice-President", "Presidential
-    Electors", or "PRESIDENT AND VICE PRESIDENT". Search several wordings.
-
-    Return EVERY observed title that IS the target contest -- not just one. A single contest is
-    often printed under MORE THAN ONE wording in the same document: a cumulative/summary section
-    and a per-precinct or per-district section word it differently (e.g. "President and Vice
-    President - Vote for One" AND "President and Vice President"), and a write-in tally adds
-    another. Each wording carries its own pages of votes, so you must return ALL of them. Keep
-    these same-contest duplicates together; only DISTINGUISH near-duplicates that are genuinely
-    DIFFERENT races -- a different district number, or a full-term vs partial/unexpired-term seat
-    -- and among those include only the ones the target refers to. Use the context (the race, its
-    candidates) to confirm a match. Return the matching titles verbatim as the tools reported
-    them; return none if the document has no such contest.
-    '''
-    contest: str = dspy.InputField(desc='The target contest label to find')
-    context: str = dspy.InputField(desc='Free-form knowledge about the race and its candidates')
-    matching_titles: list[str] = dspy.OutputField(
-        desc='The observed titles (verbatim) that are the target contest')
-
-
-class ClassifyContestTitles(dspy.Signature):
-    '''From candidate heading lines pulled from an election results document, return ONLY the ones
-    that name a CONTEST -- an office or ballot question voters actually vote on (e.g. "President and
-    Vice President", "U.S. Representative, 12th Congressional District", "School Directors - Berkeley",
-    "Measure NN - City of Oakland"). DROP everything else: candidate-name fragments ("F. KENNEDY AI -
-    ROBERT", "ROBINSON FABIAN DANINO"), party/column labels, running totals ("Assembly District -
-    Total 96,106"), footnotes ("*** Indicates vote data was suppressed"), precinct/registration lines,
-    and geographic SUBTOTAL or grouping labels ("3rd Assembly District", "1st Congressional District",
-    "City of Oroville - District A") -- these group a contest's precincts but are not themselves the
-    contest. When a grouping label and the real contest look similar, keep the one phrased as an office
-    ("State Assembly, 18th District") and drop the bare geography ("3rd Assembly District"). Return the
-    kept lines VERBATIM.'''
-    candidates: list[str] = dspy.InputField(desc='Candidate heading lines, verbatim')
-    contest_titles: list[str] = dspy.OutputField(
-        desc='The subset that name a contest voters vote on, verbatim')
-
-
 def contest_evidence(path: str, unit_count: int | None = None, page_budget: int | None = None,
                      classify=None) -> tuple[list[TitleEvidence], int]:
     '''Read the document once (target-agnostic) and learn its CONTEST-STRING VOCABULARY.
@@ -383,6 +337,17 @@ def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
             end: int = (starts[pos + 1] - 1) if pos + 1 < len(starts) else unit_count
             spans.append((unit, end))
     return spans
+
+
+def inference_lm() -> dspy.LM:
+    '''The LM both of ContestLocator's predictors (classify, match) run at inference: the
+    shared Kimi K2 model at temperature 0 for settled classification, with headroom so a
+    verbatim-echo classify pass or a multi-step ReAct trace doesn't truncate. Defined here,
+    beside the program, so the module + its signatures + its LM read together. A TRAINED
+    artifact carries its OWN lm and OVERRIDES this on load (see build_locator) -- the artifact
+    is authoritative. (Per-predictor lms could split classify/match onto different models; a
+    single lm here binds both.)'''
+    return dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192)
 
 
 class ContestLocator(dspy.Module):
@@ -492,10 +457,13 @@ def _instrument() -> None:
 
 
 def build_locator() -> ContestLocator:
-    '''Construct the locator, loading the optimized prompt if present.'''
+    '''Construct the locator. A trained artifact, when present, fully governs (its saved
+    prompts AND lm win); otherwise bind the stock inference LM.'''
     locator: ContestLocator = ContestLocator()
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         locator.load(OPTIMIZED_MODEL_PATH)
+    else:
+        locator.set_lm(inference_lm())
     return locator
 
 
@@ -503,7 +471,6 @@ def locate(file_path: str, targets: list[Target],
            page_budget: int | None = None) -> list[dict]:
     '''Locate targets in a file with the full program; return plain dicts.'''
     _instrument()
-    dspy.configure(lm=dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192))
     locator: ContestLocator = build_locator()
     prediction = locator(file_path=file_path, targets=targets, page_budget=page_budget)
     return [location.model_dump() if isinstance(location, ContestLocation)
@@ -557,7 +524,6 @@ def main() -> None:
 
     if args.titles:
         _instrument()
-        dspy.configure(lm=dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192))
         locator: ContestLocator = build_locator()          # its LLM classifier culls the recall net
         evidence, _units = contest_evidence(
             path, page_budget=args.budget, classify=locator._classify_headers)
