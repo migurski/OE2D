@@ -367,17 +367,12 @@ class ContestLocator(dspy.Module):
 
     def _classify_headers(self, candidates: list[str]) -> list[str]:
         '''Keep only the candidate strings that name a contest (LLM), classifying in small chunks
-        so the verbatim-echo output can't overrun the model's token limit on ballot-heavy files. A
-        chunk whose call fails (LM down) is kept whole -- over-detect rather than lose a race.'''
+        so the verbatim-echo output can't overrun the model's token limit on ballot-heavy files.
+        The LLM is required: a failed classify call propagates (an unavailable LM is fatal).'''
         chosen: list[str] = []
         for start in range(0, len(candidates), _CLASSIFY_CHUNK):
             chunk: list[str] = candidates[start:start + _CLASSIFY_CHUNK]
-            try:
-                raw: list[str] = self.classify(candidates=chunk).contest_titles
-            except Exception:
-                logger.info('title classifier unavailable; keeping %d candidates', len(chunk))
-                chosen.extend(chunk)
-                continue
+            raw: list[str] = self.classify(candidates=chunk).contest_titles
             kept: set[str] = {t.strip().lower() for t in raw}        # verbatim, case-tolerant
             chosen.extend(c for c in chunk if c.strip().lower() in kept)
         logger.info('classified %d candidates -> %d contest titles', len(candidates), len(chosen))
@@ -404,14 +399,13 @@ class ContestLocator(dspy.Module):
         return list(dict.fromkeys(e.title for e in self._evidence))[:250]
 
     def _interpret(self, target: Target) -> list[str]:
-        try:
-            prediction = self.match(contest=target.contest, context=target.context)
-            matched: list[str] = [t for t in prediction.matching_titles
-                                  if any(t.strip() == e.title.strip() for e in self._evidence)]
-            if matched:
-                return matched
-        except Exception:
-            pass
+        # The LLM is required: a failed match call propagates (an unavailable LM is fatal).
+        prediction = self.match(contest=target.contest, context=target.context)
+        matched: list[str] = [t for t in prediction.matching_titles
+                              if any(t.strip() == e.title.strip() for e in self._evidence)]
+        if matched:
+            return matched
+        # LLM ran but matched nothing: fall back to the deterministic word match.
         return [e.title for e in self._evidence if _title_matches(target, e.title)]
 
     def forward(self, file_path: str, targets: list[Target],

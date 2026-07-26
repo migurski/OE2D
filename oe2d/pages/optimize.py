@@ -72,29 +72,17 @@ def build_program() -> dspy.Module:
 
 
 def field_accuracy(program: dspy.Module, valset: list) -> dict[str, tuple[int, int]]:
-    '''Per-field (correct, scored) over the validation pages.
-
-    A rollout that raises is counted as a miss on every field, mirroring how GEPA
-    scores a failed rollout, rather than aborting the whole eval.
-    '''
+    '''Per-field (correct, scored) over the validation pages. A rollout that raises
+    propagates -- an unavailable LM is fatal, not silently scored as a miss (which would
+    turn a total LM outage into a plausible-looking zero scorecard).'''
     correct: dict[str, int] = collections.defaultdict(int)
     scored: dict[str, int] = collections.defaultdict(int)
-    failures: int = 0
     for example in valset:
-        try:
-            prediction = program(image=example.image)
-        except Exception as error:
-            failures += 1
-            print(f'  rollout failed ({type(error).__name__}); counting as a miss',
-                  file=sys.stderr)
-            prediction = None
+        prediction = program(image=example.image)
         for name in metrics.FIELD_WEIGHTS:
             scored[name] += 1
-            pred = getattr(prediction, name, None) if prediction is not None else None
-            if pred == getattr(example, name, None):
+            if getattr(prediction, name, None) == getattr(example, name, None):
                 correct[name] += 1
-    if failures:
-        print(f'  ({failures}/{len(valset)} val rollouts errored and scored 0)', file=sys.stderr)
     return {name: (correct[name], scored[name]) for name in metrics.FIELD_WEIGHTS}
 
 

@@ -3,6 +3,8 @@
 pagetext.layout_texts is mocked with canned page text, so these are hermetic -- no
 files, no pdfplumber, no OCR.
 '''
+import pytest
+
 from oe2d import contests
 
 
@@ -112,7 +114,7 @@ def test_heading_candidates_is_structural_only_no_lexicon():
     assert contests._heading_candidates('MIMI') == []                             # too short
 
 
-def test_classify_headers_trusts_llm_and_falls_back(monkeypatch):
+def test_classify_headers_trusts_llm_and_is_fatal_when_unavailable():
     import types
     loc = contests.ContestLocator()
     cands = ['1 President and Vice President', 'F. KENNEDY AI - ROBERT', '3rd Assembly District']
@@ -120,12 +122,13 @@ def test_classify_headers_trusts_llm_and_falls_back(monkeypatch):
     loc.classify = lambda candidates: types.SimpleNamespace(
         contest_titles=['1 president and vice president'])
     assert loc._classify_headers(cands) == ['1 President and Vice President']
-    # LM unavailable -> keep the whole recall net rather than lose a race.
+    assert loc._classify_headers([]) == []
+    # An unavailable LM is fatal -- the failure propagates, it is not swallowed.
     def boom(**kwargs):
         raise RuntimeError('no LM')
     loc.classify = boom
-    assert loc._classify_headers(cands) == cands
-    assert loc._classify_headers([]) == []
+    with pytest.raises(RuntimeError):
+        loc._classify_headers(cands)
 
 
 def test_segments_by_contest_runs_to_next_title(monkeypatch):
@@ -188,6 +191,8 @@ def test_locator_uses_llm_chosen_titles(monkeypatch):
              4: 'United States Senator (Vote for 1)\nSlotkin'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     loc = contests.ContestLocator()
+    # classify keeps the surfaced strings (the LLM cull is exercised in its own test).
+    loc.classify = lambda candidates: types.SimpleNamespace(contest_titles=list(candidates))
     # LLM maps "U.S. House" to the Congress title the deterministic prefix cannot match.
     loc.match = lambda contest, context: types.SimpleNamespace(
         matching_titles=['Representative in Congress 1st District (Vote for 1)'])
@@ -196,15 +201,18 @@ def test_locator_uses_llm_chosen_titles(monkeypatch):
     assert pred.locations[0].pages == [2, 3]             # Congress title -> next title - 1, as a page set
 
 
-def test_locator_falls_back_to_deterministic_when_llm_fails(monkeypatch):
+def test_locator_is_fatal_when_llm_unavailable(monkeypatch):
+    import types
     pages = {2: 'President/Vice-President of the United States (Vote for 1)', 4: 'Senator (Vote for 1)'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     loc = contests.ContestLocator()
+    loc.classify = lambda candidates: types.SimpleNamespace(contest_titles=list(candidates))
     def boom(**kwargs):
         raise RuntimeError('no LM configured')
     loc.match = boom
-    pred = loc(file_path='x.pdf', targets=[contests.Target(contest='President')], unit_count=6)
-    assert pred.locations[0].pages == [2, 3]             # deterministic _title_matches carried it
+    # An unavailable LM is fatal: the failure propagates instead of degrading to a heuristic.
+    with pytest.raises(RuntimeError):
+        loc(file_path='x.pdf', targets=[contests.Target(contest='President')], unit_count=6)
 
 
 def test_title_matches_rejects_other_contests():
