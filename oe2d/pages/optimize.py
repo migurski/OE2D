@@ -32,11 +32,10 @@ from dspy.teleprompt.gepa import instruction_proposal
 from .. import pages
 from . import CONTENT_FIELDS, datasets, metrics
 
-# The task LM reads the page image; the reflection LM rewrites the prompt from the
-# metric's feedback. A strong reflection model matters most here. Train the same model
-# the analyzer runs at inference (defined beside the program).
-STUDENT_MODEL: str = pages.LM_KIMI_K2P7
-REFLECTION_MODEL: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
+# The task LM reads the page image (pages.LM_KIMI_K2P7 -- the same model the analyzer runs
+# at inference); the reflection LM rewrites the prompt from the metric's feedback, where a
+# strong model matters most.
+LM_CLAUDE_OPUS45: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 
 # Repo root (oe2d/pages -> oe2d -> repo); each run gets a visible gepa-<digest>
 # checkpoint dir here, the digest fingerprinting the run config so resume only
@@ -57,7 +56,7 @@ def run_digest(examples: list, val_fraction: float) -> str:
         fields += [f'{name}={getattr(example, name, None)!r}' for name in CONTENT_FIELDS]
         rows.append('|'.join(fields))
     parts: list[str] = [
-        f'val={val_fraction}', f'student={STUDENT_MODEL}', f'reflect={REFLECTION_MODEL}',
+        f'val={val_fraction}', f'student={pages.LM_KIMI_K2P7}', f'reflect={LM_CLAUDE_OPUS45}',
     ] + sorted(rows)
     return hashlib.sha256('\n'.join(parts).encode()).hexdigest()[:8]
 
@@ -139,9 +138,9 @@ def main() -> None:
     print(f'Loaded {len(trainset)} train (incl. synthetic) + {len(valset)} val (real only).',
           flush=True)
 
-    student_lm: dspy.LM = dspy.LM(model=STUDENT_MODEL, temperature=1.0, max_tokens=4096,
+    student_lm: dspy.LM = dspy.LM(model=pages.LM_KIMI_K2P7, temperature=1.0, max_tokens=4096,
                                   num_retries=args.num_retries)
-    reflection_lm: dspy.LM = dspy.LM(model=REFLECTION_MODEL, temperature=1.0, max_tokens=8192,
+    reflection_lm: dspy.LM = dspy.LM(model=LM_CLAUDE_OPUS45, temperature=1.0, max_tokens=8192,
                                      num_retries=args.num_retries)
     dspy.configure(lm=student_lm)
     program: dspy.Module = build_program()
