@@ -5,7 +5,7 @@ files, no pdfplumber, no OCR.
 '''
 import pytest
 
-from oe2d import contests
+from ... import contests
 
 
 def test_title_matches_is_conservative_exact_word_overlap():

@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from oe2d import source_table
+from ... import source_table
 
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 FIXTURES_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'source_table', 'fixtures')

@@ -3,7 +3,7 @@
 source_table and OCR are mocked, so these pin the ROUTING (csv -> rows -> words ->
 OCR fallback) without touching real files, LibreOffice, or tesseract.
 '''
-from oe2d import pagetext
+from ... import pagetext
 
 
 def test_csv_reads_raw_lines(tmp_path):

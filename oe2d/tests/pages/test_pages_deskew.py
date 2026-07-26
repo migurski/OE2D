@@ -8,7 +8,7 @@ import os
 import pytest
 from PIL import Image
 
-from oe2d.pages import deskew
+from ...pages import deskew
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 _IMAGES = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages', 'images')

@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from oe2d import rendering
+from ... import rendering
 
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 FIXTURES: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'rendering', 'fixtures')

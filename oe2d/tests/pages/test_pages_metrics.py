@@ -1,7 +1,7 @@
 '''Tests for the page-analysis scoring metric (hermetic; synthetic examples).'''
 import dspy
 
-from oe2d.pages import metrics
+from ...pages import metrics
 
 _FIELDS = dict(
     candidate_orientation='columns', contest_name_present=True,

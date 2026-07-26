@@ -1,5 +1,5 @@
 '''metrics: page-overlap scoring of predicted runs against gold rows.'''
-from oe2d.contests import metrics
+from ...contests import metrics
 
 
 def test_gold_pages_uses_explicit_list_over_range():

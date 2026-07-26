@@ -7,7 +7,7 @@ import os
 
 import dspy
 
-from oe2d.pages import datasets
+from ...pages import datasets
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 _IMAGES = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages', 'images')

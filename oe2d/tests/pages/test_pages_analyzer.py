@@ -9,8 +9,8 @@ import os
 
 import dspy
 
-from oe2d import pages
-from oe2d.pages import deskew
+from ... import pages
+from ...pages import deskew
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 _IMAGE = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages', 'images',
