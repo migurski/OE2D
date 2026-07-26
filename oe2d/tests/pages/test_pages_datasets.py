@@ -21,7 +21,7 @@ def _example(fixture: str, synthetic: bool = False) -> dspy.Example:
 
 
 def _reals(letters: str) -> list:
-    return [_example(f'../fixtures/categorize/{c}.pdf') for c in letters]
+    return [_example(f'sample-{c}.pdf') for c in letters]
 
 
 def _has(seq: list, obj) -> bool:
@@ -35,7 +35,7 @@ def _a_val_fixture(reals: list) -> str:
 
 
 def test_split_no_fixture_leak():
-    reals = _reals('abcd') + [_example('../fixtures/categorize/a.pdf')]  # two pages of a
+    reals = _reals('abcd') + [_example('sample-a.pdf')]  # two pages of a
     trainset, valset = datasets.split(reals, val_fraction=0.5)
     assert {e._fixture for e in trainset}.isdisjoint({e._fixture for e in valset})
 
@@ -50,8 +50,8 @@ def test_split_is_deterministic():
 def test_synthetic_of_train_fixture_trains():
     reals = _reals('abcd')
     val_fixtures = {e._fixture for e in datasets.split(reals, val_fraction=0.5)[1]}
-    train_fixture = next(f'../fixtures/categorize/{c}.pdf' for c in 'abcd'
-                         if f'../fixtures/categorize/{c}.pdf' not in val_fixtures)
+    train_fixture = next(f'sample-{c}.pdf' for c in 'abcd'
+                         if f'sample-{c}.pdf' not in val_fixtures)
     syn = _example(train_fixture, synthetic=True)
     trainset, valset = datasets.split(reals + [syn], val_fraction=0.5)
     assert _has(trainset, syn) and not _has(valset, syn)
@@ -76,7 +76,7 @@ def test_subsample_spreads_across_fixtures_deterministically():
     examples = []
     for c in 'abcd':
         for _ in range(3):
-            examples.append(_example(f'../fixtures/categorize/{c}.pdf'))
+            examples.append(_example(f'sample-{c}.pdf'))
     picked = datasets.subsample(examples, 4)
     assert len(picked) == 4
     assert len({ex._fixture for ex in picked}) == 4

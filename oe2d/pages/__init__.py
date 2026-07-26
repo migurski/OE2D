@@ -7,9 +7,7 @@ Prints a JSON dict of per-page properties a downstream extractor can route on:
 candidate orientation (columns vs rows), whether contest names / candidate names
 / headers are visible on THIS page, the precinct scope and axis, and the page's
 skew in degrees. This is a single-image DSPy program (the composite PageAnalyzer),
-distinct from the per-file source categorizer in `oe2d.categorize` (which reasons
-over a whole file with tools) and from any inter-page table stitching, which
-happens at a different level.
+distinct from any inter-page table stitching, which happens at a different level.
 
 skew_degrees is the one non-VLM field: a VLM can't estimate fine rotation from an
 image, so PageAnalyzer measures it deterministically with oe2d.pages.deskew on the
@@ -222,7 +220,7 @@ def analyze_image(image_path: str) -> dict:
     '''Run the analyzer on an already-rendered page image; return a plain dict.'''
     _instrument()
     # The task LM is the shared Kimi K2 (multimodal) model defined once in
-    # oe2d.categorize; this program reads only the page image with it. Inference
+    # oe2d.config; this program reads only the page image with it. Inference
     # wants a settled classifier, not GEPA-style exploration: temperature 0 keeps
     # the six-field answer stable, and a larger max_tokens leaves headroom so a
     # page the model reasons about at length doesn't truncate mid-answer (the Kimi

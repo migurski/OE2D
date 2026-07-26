@@ -108,8 +108,7 @@ def main() -> None:
     parser.add_argument('--max-metric-calls', type=int, default=180, help='GEPA metric-call budget')
     parser.add_argument('--reflection-minibatch-size', type=int, default=7)
     parser.add_argument('--num-threads', type=int, default=4,
-                        help='Parallel vision rollouts; each is a single LM call, so this can be '
-                             'higher than the categorizer (which fanned out tool calls)')
+                        help='Parallel vision rollouts; each is a single LM call')
     parser.add_argument('--num-retries', type=int, default=10,
                         help='litellm retries per LM call (exponential backoff) for throttling')
     parser.add_argument('--log-dir', default=None,
