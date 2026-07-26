@@ -78,12 +78,38 @@ def test_contest_title_index_merges_marker_and_header(monkeypatch):
     # marker page wins on its unit; header-only pages get the recurring heading.
     hdr = 'President and Vice President'
     pages = {1: 'PRESIDENT AND VICE PRESIDENT (Vote for 1)\nHarris Trump',
-             2: f'{hdr}\nCumulative Totals\nrows', 3: f'{hdr}\nCumulative Totals\nrows',
-             4: f'{hdr}\nCumulative Totals\nrows'}
+             2: f'{hdr}\n10 20 30', 3: f'{hdr}\n10 20 30', 4: f'{hdr}\n10 20 30'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
     index = contests.contest_title_index('x.pdf', unit_count=4)
     assert 'Vote for 1' in index[1][0]                # marker title on unit 1
     assert index[4] == [hdr]                          # marker-free heading on units 2-4
+
+
+def test_heading_candidates_is_structural_only_no_lexicon():
+    # No word-list: any multi-word non-data line is a candidate -- a real contest, a candidate-name
+    # fragment, and a subtotal label all pass. Culling them is the LLM classifier's job.
+    assert contests._heading_candidates('1 U.S. Representative, 12th Congressional') \
+        == ['1 U.S. Representative, 12th Congressional']          # real race (2 numbers ok)
+    assert contests._heading_candidates('F. KENNEDY AI - ROBERT') == ['F. KENNEDY AI - ROBERT']  # junk kept
+    assert contests._heading_candidates('3rd Assembly District') == ['3rd Assembly District']    # subtotal kept
+    assert contests._heading_candidates('200100 Election Day 3535 256 7') == []   # data row rejected
+    assert contests._heading_candidates('MIMI') == []                             # too short
+
+
+def test_classify_headers_trusts_llm_and_falls_back(monkeypatch):
+    import types
+    loc = contests.ContestLocator()
+    cands = ['1 President and Vice President', 'F. KENNEDY AI - ROBERT', '3rd Assembly District']
+    # LLM keeps only the real contest, verbatim (case-tolerant) -> junk + subtotal culled.
+    loc.classify = lambda candidates: types.SimpleNamespace(
+        contest_titles=['1 president and vice president'])
+    assert loc._classify_headers(cands) == ['1 President and Vice President']
+    # LM unavailable -> keep the whole recall net rather than lose a race.
+    def boom(**kwargs):
+        raise RuntimeError('no LM')
+    loc.classify = boom
+    assert loc._classify_headers(cands) == cands
+    assert loc._classify_headers([]) == []
 
 
 def test_segments_by_contest_runs_to_next_title(monkeypatch):

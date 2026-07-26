@@ -94,64 +94,36 @@ def _significant_words(label: str) -> set[str]:
             if w not in _TITLE_STOP and not _is_party(w)}
 
 
-# Leading words of table-header / boilerplate rows that repeat on results pages but are
-# NOT contest titles -- so the marker-free header detector must not emit them.
-_HEADER_STOP: frozenset[str] = frozenset({
-    'choice', 'candidate', 'precinct', 'registered', 'voters', 'voter', 'cast', 'times',
-    'total', 'totals', 'turnout', 'party', 'ballots', 'ballot', 'cumulative', 'election',
-    'official', 'statement', 'reporting', 'run', 'undervotes', 'overvotes', 'write',
-})
-
-
-# A loose "this line names an elected OFFICE (a noun) or ballot question" recall net -- NOT
-# target matching (the LLM does that). It only gates marker-free heading candidates so two
-# kinds of impostor are rejected: mirrored/garbled candidate rows (no readable office word),
-# and bare geography SUBTOTAL labels ("1st Congressional District", "5th Senatorial District")
-# that carry a district adjective but NO office noun. So the net holds office NOUNS only --
-# 'congressional'/'senatorial'/'district' are deliberately excluded (they are the geography a
-# subtotal label is made of). Need not be complete; a missed local contest is not our target.
-_OFFICE_ANCHORS: frozenset[str] = frozenset({
-    'president', 'vice', 'senator', 'senate', 'representative', 'congress',
-    'assembly', 'assemblymember', 'legislature', 'governor', 'lieutenant', 'supervisor', 'mayor',
-    'council', 'councilmember', 'clerk', 'treasurer', 'auditor', 'controller', 'comptroller',
-    'attorney', 'sheriff', 'assessor', 'coroner', 'board', 'director', 'trustee', 'commissioner',
-    'superintendent', 'judge', 'justice', 'measure', 'proposition', 'recall', 'bond', 'member',
-    'secretary', 'education', 'mayor',
-})
-
-
 def _heading_candidates(text: str) -> list[str]:
-    '''Lines on a page that could be a marker-free contest heading (a running header or a
-    section title that carries no "vote for" marker). A heading is a multi-word phrase that
-    NAMES AN OFFICE / ballot question and carries no vote data -- not a banner, not a table-
-    header row, not a numeric row, and not a mirrored/garbled candidate line. Permissive on
-    WHICH office (the LLM interprets that); strict on "looks like a contest heading".'''
+    '''Lines on a page that COULD be a marker-free contest heading -- a purely STRUCTURAL recall
+    net, no lexicon. A candidate is a multi-word line carrying no vote data: not a banner, not a
+    numeric/turnout row (a title may hold a contest number + a district ordinal, so count NUMBERS
+    not digits and allow up to two). This deliberately over-collects -- candidate-name fragments,
+    subtotal labels, and column headers pass too. Deciding which candidates actually NAME a contest
+    is a judgment left to the LLM (classify_titles); a word-list did that badly (missed real races
+    it had not memorised, kept subtotal labels that shared an office word).'''
     out: list[str] = []
     for raw in text.splitlines():
         line: str = re.sub(r'\s+', ' ', raw.strip())
         if _is_banner(line):
             continue
         words: list[str] = re.findall(r"[A-Za-z][A-Za-z.'/,-]*", line)
-        if len(words) < 3:                                  # contest titles are multi-word
+        if len(words) < 3:                                  # a heading is multi-word
             continue
-        if len(re.findall(r'\d', line)) > 2 or '%' in line:  # a data/turnout row, not a title
-            continue
-        first: str = re.sub(r'^[\d.\s]+', '', line).split(' ')[0].lower().strip(".,'/-")
-        if first in _HEADER_STOP:                           # "Choice Party...", "Precinct ..."
-            continue
-        lowered: set[str] = {w.lower().strip(".,'/-") for w in words}
-        if lowered.isdisjoint(_OFFICE_ANCHORS):             # no office NOUN -> not a heading
+        # Reject data/turnout rows by counting NUMBERS, not digits: a title may carry a contest
+        # number plus a district ordinal ("1 U.S. Representative, 12th Congressional") = 2 numbers.
+        if len(re.findall(r'\d[\d,]*', line)) > 2 or '%' in line:
             continue
         out.append(line[:160])
     return out
 
 
 def header_title_index(texts: list[str]) -> dict[int, list[str]]:
-    '''Marker-free titles: heading lines that recur on a BLOCK of pages (a running header or
-    an unmarked section title), keyed by unit. A true contest heading repeats on several pages
-    but NOT on most of them (that would be a universal table-header/banner); it identifies the
-    contest whose block those pages belong to. Recovers running-header vendors (Alameda) and
-    compound-doc sections that drop the "vote for" suffix (Yolo/San Joaquin district+precinct).'''
+    '''Marker-free heading CANDIDATES that recur on a BLOCK of pages (a running header or an
+    unmarked section title), keyed by unit -- a structural recall net. A real contest heading
+    repeats on several pages but NOT on most of them (that would be a universal table-header or
+    banner). Recovers running-header vendors (Alameda) and compound-doc sections that drop the
+    "vote for" suffix (Yolo/San Joaquin). Over-collects by design; classify_titles culls it.'''
     n: int = len(texts)
     per_page: list[set[str]] = [set(_heading_candidates(t)) for t in texts]
     counts: dict[str, int] = {}
@@ -287,20 +259,42 @@ class MatchContestTitles(dspy.Signature):
         desc='The observed titles (verbatim) that are the target contest')
 
 
-def contest_evidence(path: str, unit_count: int | None = None,
-                     page_budget: int | None = None) -> tuple[dict[int, list[str]],
-                                                             list[TitleEvidence], int]:
+class ClassifyContestTitles(dspy.Signature):
+    '''From candidate heading lines pulled from an election results document, return ONLY the ones
+    that name a CONTEST -- an office or ballot question voters actually vote on (e.g. "President and
+    Vice President", "U.S. Representative, 12th Congressional District", "School Directors - Berkeley",
+    "Measure NN - City of Oakland"). DROP everything else: candidate-name fragments ("F. KENNEDY AI -
+    ROBERT", "ROBINSON FABIAN DANINO"), party/column labels, running totals ("Assembly District -
+    Total 96,106"), footnotes ("*** Indicates vote data was suppressed"), precinct/registration lines,
+    and geographic SUBTOTAL or grouping labels ("3rd Assembly District", "1st Congressional District",
+    "City of Oroville - District A") -- these group a contest's precincts but are not themselves the
+    contest. When a grouping label and the real contest look similar, keep the one phrased as an office
+    ("State Assembly, 18th District") and drop the bare geography ("3rd Assembly District"). Return the
+    kept lines VERBATIM.'''
+    candidates: list[str] = dspy.InputField(desc='Candidate heading lines, verbatim')
+    contest_titles: list[str] = dspy.OutputField(
+        desc='The subset that name a contest voters vote on, verbatim')
+
+
+def contest_evidence(path: str, unit_count: int | None = None, page_budget: int | None = None,
+                     header_filter=None) -> tuple[dict[int, list[str]], list[TitleEvidence], int]:
     '''Read the document once (target-agnostic): title index + distinct-title evidence.
 
-    Deterministic detection only -- every distinct contest title, the units it appears on,
-    and the text under its first occurrence (its candidate rows, for reading back via a
-    tool). Interpretation -- which titles ARE the target -- is the LLM's job.
+    Marker titles ("vote for" lines) are trusted verbatim. Marker-free header CANDIDATES are a
+    structural recall net (header_title_index) that over-collects; when header_filter is given it
+    is called once with the distinct candidate lines and returns the subset that actually name a
+    contest (the LLM classifier), so junk never enters the index. Without a filter the raw recall
+    net is kept (offline / deterministic use). Which titles ARE a given target is a later step.
     '''
     if unit_count is None:
         unit_count = count_units(path)
     limit: int = min(unit_count, page_budget) if page_budget else unit_count
     texts: list[str] = list(pagetext.layout_texts(path, limit))
     headers: dict[int, list[str]] = header_title_index(texts)
+    if header_filter is not None:
+        distinct: list[str] = sorted({t for ts in headers.values() for t in ts})
+        kept: set[str] = set(header_filter(distinct)) if distinct else set()
+        headers = {u: keep for u, ts in headers.items() if (keep := [t for t in ts if t in kept])}
     index: dict[int, list[str]] = {}
     by_title: dict[str, dict] = {}
     for unit, text in enumerate(texts, 1):
@@ -340,21 +334,40 @@ def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
 
 
 class ContestLocator(dspy.Module):
-    '''Deterministic title detection, tool-driven interpretation, deterministic segmentation.
+    '''Structural title detection, LLM title classification + interpretation, segmentation.
 
-    detect (contest_evidence) -> interpret (a ReAct agent that SEARCHES the observed titles
-    via tools and returns which are the target, using free-form context) -> segment
-    (segments_for_titles: each matched title to the next). The model queries the title index
-    rather than being handed hundreds of titles, so context stays bounded no matter how large
-    the ballot. The deterministic prefix match (_title_matches) is the offline fallback.
+    detect (contest_evidence: marker titles + a structural recall net of marker-free headings)
+    -> classify (an LLM pass that keeps only candidate lines that name a contest, culling
+    candidate fragments / subtotal labels / totals) -> interpret (a ReAct agent that searches
+    the clean titles and returns which are the target, using free-form context) -> segment
+    (segments_for_titles: each matched title to the next). Both LLM steps are optimizable; the
+    deterministic word match (_title_matches) is the interpret fallback when no LM is configured.
     '''
     def __init__(self) -> None:
         super().__init__()
         self._evidence: list[TitleEvidence] = []
+        self.classify: dspy.Module = dspy.Predict(ClassifyContestTitles)
         self.match: dspy.Module = dspy.ReAct(
             MatchContestTitles,
             tools=[self.search_titles, self.inspect_title, self.list_titles],
             max_iters=8)
+
+    def _classify_headers(self, candidates: list[str]) -> list[str]:
+        '''Keep only the candidate heading lines that name a contest (LLM). When the LM is
+        unavailable, keep the whole recall net (over-detect rather than lose a race); when it
+        runs, trust its cull.'''
+        if not candidates:
+            return []
+        try:
+            raw: list[str] = self.classify(candidates=candidates).contest_titles
+        except Exception:
+            logger.info('title classifier unavailable; keeping all %d candidates', len(candidates))
+            return candidates
+        kept: set[str] = {t.strip().lower() for t in raw}            # verbatim, case-tolerant
+        chosen: list[str] = [c for c in candidates if c.strip().lower() in kept]
+        logger.info('classified %d heading candidates -> %d contest titles',
+                    len(candidates), len(chosen))
+        return chosen
 
     def search_titles(self, keyword: str) -> list[str]:
         '''Return observed contest titles containing the keyword (case-insensitive substring).
@@ -389,7 +402,8 @@ class ContestLocator(dspy.Module):
 
     def forward(self, file_path: str, targets: list[Target],
                 unit_count: int | None = None, page_budget: int | None = None) -> dspy.Prediction:
-        index, evidence, units = contest_evidence(file_path, unit_count, page_budget)
+        index, evidence, units = contest_evidence(file_path, unit_count, page_budget,
+                                                  header_filter=self._classify_headers)
         self._evidence = evidence          # the tools read this document's titles
         logger.info('detected %d distinct titles on %d pages', len(evidence), len(index))
         locations: list[ContestLocation] = []
@@ -455,8 +469,9 @@ def main() -> None:
     parser.add_argument('--gold', help='Run a labeled fixture by name substring (uses its gold targets)')
     parser.add_argument('--budget', type=int, default=None, help='Cap units read')
     parser.add_argument('--titles', action='store_true',
-                        help='Inspect only: list every contest title detected in the document, '
-                             'in its own words (no targets, no LLM, no API)')
+                        help='Inspect only: list every contest title detected in the document, in '
+                             'its own words, with the pages each covers (no targets; uses the LLM '
+                             'classifier to cull non-contest headings)')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Log read progress to stderr (per-page reads, OCR, interpret)')
     parser.add_argument('--debug', action='store_true',
@@ -482,7 +497,11 @@ def main() -> None:
         path, targets = args.path, [parse_target(spec, args.context) for spec in args.target]
 
     if args.titles:
-        _index, evidence, _units = contest_evidence(path, page_budget=args.budget)
+        _instrument()
+        dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
+        locator: ContestLocator = build_locator()          # its LLM classifier culls the recall net
+        _index, evidence, _units = contest_evidence(
+            path, page_budget=args.budget, header_filter=locator._classify_headers)
         titles = [{'title': e.title, 'pages': e.units} for e in evidence]
         print(json.dumps(titles, indent=2))
         return
