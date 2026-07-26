@@ -19,12 +19,10 @@ reads as 0 — negligible for downstream OCR.
 Note: Otsu thresholding was tried and is WORSE here — it mis-splits the gray
 scan background and rails the search to the boundary; the fixed cut is better.
 
-CLI: oe2d-detect-skew path/to/page.png   (or a source file with --page)
+Used internally by oe2d.pages (PageAnalyzer measures skew per page); not a CLI.
 '''
 from __future__ import annotations
 
-import argparse
-import json
 import os
 
 import numpy as np
@@ -90,24 +88,3 @@ def detect_skew(image_path: str, max_angle: float = _MAX_ANGLE) -> float:
     Thin wrapper over detect_skew_pil that opens the file first.
     '''
     return detect_skew_pil(Image.open(image_path), max_angle)
-
-
-def main() -> None:
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description='Detect a page image\'s skew in degrees (projection profile, no LM).',
-    )
-    parser.add_argument('path', help='A page image, or a source file to render')
-    parser.add_argument('--page', type=int, default=1,
-                        help='1-based page/sheet to render when given a source file')
-    parser.add_argument('--member', help='Zip member to render (for zip sources)')
-    parser.add_argument('--max-angle', type=float, default=_MAX_ANGLE,
-                        help='Search window half-width in degrees')
-    args: argparse.Namespace = parser.parse_args()
-
-    from . import render_source
-    image_path: str = render_source(args.path, args.page, args.member)
-    print(json.dumps({'skew_degrees': detect_skew(image_path, args.max_angle)}, indent=2))
-
-
-if __name__ == '__main__':
-    main()

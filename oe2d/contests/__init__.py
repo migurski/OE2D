@@ -12,10 +12,10 @@ program then maps each target label to the document's own title wording (the jud
 "Representative in Congress" == "U.S. House", "Electors of President" == "President", full-
 term vs partial/unexpired), and the pages carrying the matched titles are the answer.
 
-Usage: oe2d-locate-contests file.pdf --target President --target "U.S. Senate (full term)" \
+Usage: oe2d-contests file.pdf --target President --target "U.S. Senate (full term)" \
            --context "presidential race, Harris vs Trump; the full-term Senate seat"
-       oe2d-locate-contests --titles file.pdf        # list the document's contest titles
-       oe2d-locate-contests --gold barry             # run a labeled fixture
+       oe2d-contests --titles file.pdf        # list the document's contest titles
+       oe2d-contests --gold barry             # run a labeled fixture
 '''
 from __future__ import annotations
 

@@ -217,22 +217,16 @@ def main() -> None:
     parser.add_argument('source', help='Source file path')
     parser.add_argument('page', type=int,
                         help='1-based page (PDF) or sheet (spreadsheet) to render')
+    parser.add_argument('out', help='Output PNG path')
     parser.add_argument('--member', help='Zip member to render (for zip sources)')
     parser.add_argument('--resolution', type=int, default=RESOLUTION,
                         help='Rasterization DPI')
-    parser.add_argument('--out', help='Output PNG path (default: alongside the source)')
     args: argparse.Namespace = parser.parse_args()
 
     png_path: str = render_page(args.source, args.page, args.member, args.resolution)
-    if args.out:
-        shutil.copyfile(png_path, args.out)
-        out_path: str = args.out
-    else:
-        stem: str = _safe(args.member or os.path.basename(args.source))
-        out_path = f'{stem}-p{args.page}.png'
-        shutil.copyfile(png_path, out_path)
-    print(f'{out_path} ({os.path.getsize(out_path)} bytes)', file=sys.stderr)
-    print(out_path)
+    shutil.copyfile(png_path, args.out)
+    print(f'{args.out} ({os.path.getsize(args.out)} bytes)', file=sys.stderr)
+    print(args.out)
 
 
 if __name__ == '__main__':

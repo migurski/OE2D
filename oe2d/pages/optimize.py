@@ -1,9 +1,9 @@
 '''GEPA-optimize the page analyzer against the per-page gold set.
 
-Usage: oe2d-optimize-pages [--out FILE] [--max-metric-calls N] ...
+Usage: oe2d-pages-optimize OUT [--max-metric-calls N] ...
 
 Builds the same composite PageAnalyzer the CLI runs and uses GEPA to evolve the
-prompt of its inner content predictor against oe2d-data/pages/labels.jsonl. The
+prompt of its inner content predictor against oe2d-data/pages/training-page-images.jsonl. The
 task LM is the shared Fireworks Kimi K2 (multimodal) vision model; the reflection
 LM is Bedrock Opus. The optimized program is saved as JSON and validation accuracy
 is printed per content field (skew is deterministic and outside the objective).
@@ -103,8 +103,9 @@ def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='GEPA-optimize the page analyzer.',
     )
-    parser.add_argument('--out', default=pages.OPTIMIZED_MODEL_PATH,
-                        help='Where to save the optimized program JSON')
+    parser.add_argument('out',
+                        help='Where to save the optimized program JSON (the committed model '
+                             f'lives at {pages.OPTIMIZED_MODEL_PATH})')
     parser.add_argument('--max-metric-calls', type=int, default=180, help='GEPA metric-call budget')
     parser.add_argument('--reflection-minibatch-size', type=int, default=7)
     parser.add_argument('--num-threads', type=int, default=4,
@@ -170,7 +171,9 @@ def main() -> None:
     )
     optimized: dspy.Module = optimizer.compile(program, trainset=trainset, valset=valset)
 
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+    out_dir: str = os.path.dirname(args.out)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     optimized.save(args.out)
     print(f'\nOptimized program saved to {args.out}')
 

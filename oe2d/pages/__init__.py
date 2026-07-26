@@ -1,7 +1,7 @@
 '''Analyze a single page image and report in-page facts for extraction.
 
-Usage: oe2d-analyze-page path/to/page.png
-       oe2d-analyze-page path/to/source.pdf --page 3
+Usage: oe2d-pages path/to/page.png 1
+       oe2d-pages path/to/source.pdf 3
 
 Prints a JSON dict of per-page properties a downstream extractor can route on:
 candidate orientation (columns vs rows), whether contest names / candidate names
@@ -11,7 +11,7 @@ distinct from any inter-page table stitching, which happens at a different level
 
 skew_degrees is the one non-VLM field: a VLM can't estimate fine rotation from an
 image, so PageAnalyzer measures it deterministically with oe2d.pages.deskew on the
-same image (also exposed on its own as oe2d-detect-skew).
+same image.
 
 A source that is not already an image is rendered to one first (a page of a PDF,
 a sheet of a spreadsheet) via oe2d.rendering, so the same program
@@ -250,8 +250,8 @@ def main() -> None:
         description='Analyze a single election-results page image.',
     )
     parser.add_argument('path', help='A page image, or a source file to render')
-    parser.add_argument('--page', type=int, default=1,
-                        help='1-based page/sheet to render when given a source file')
+    parser.add_argument('page', type=int,
+                        help='1-based page/sheet to render from a source file; pass 1 for a raw page image')
     parser.add_argument('--member', help='Zip member to render (for zip sources)')
     parser.add_argument('-v', '--verbose', action='store_true', help='log LM steps')
     args: argparse.Namespace = parser.parse_args()
