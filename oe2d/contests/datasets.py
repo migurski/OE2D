@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import os
 
-from . import Target
+from .. import contests
 
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _DATA_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'contests')
@@ -44,14 +44,14 @@ def load_originals(path: str = _ORIGINALS_PATH) -> list[dict]:
     return _load(path)
 
 
-def row_target(row: dict) -> Target:
+def row_target(row: dict) -> contests.Target:
     '''The Target (contest label + free-form context) for a gold row (either set). The gold
     candidate names are folded into the context prose the LLM reads to interpret the title.'''
     candidates: list[str] = list(row.get('candidates', []))
     names: list[str] = [c for c in candidates if len(c) > 3]      # drop DEM/REP-style codes
     context: str = (f'{row["target"]} race; candidates include {", ".join(names)}'
                     if names else f'{row["target"]} race')
-    return Target(contest=row['target'], context=context)
+    return contests.Target(contest=row['target'], context=context)
 
 
 def fixture_path(row: dict) -> str:
@@ -59,7 +59,7 @@ def fixture_path(row: dict) -> str:
     return os.path.normpath(os.path.join(_DATA_DIR, row['fixture_path']))
 
 
-def fixture_request(name_substring: str) -> tuple[str, list[Target], list[int] | None]:
+def fixture_request(name_substring: str) -> tuple[str, list[contests.Target], list[int] | None]:
     '''Resolve a committed fixture by name to (local path, [Target], fixture_range).
 
     Offline: runs against the trimmed sample. The range is in fixture-local coordinates.
@@ -68,5 +68,5 @@ def fixture_request(name_substring: str) -> tuple[str, list[Target], list[int] |
     rows: list[dict] = [r for r in load_fixtures() if name_substring in r['fixture_path']]
     if not rows:
         raise SystemExit(f'no gold fixture matching {name_substring!r}')
-    targets: list[Target] = [row_target(r) for r in rows]
+    targets: list[contests.Target] = [row_target(r) for r in rows]
     return fixture_path(rows[0]), targets, rows[0].get('fixture_range')

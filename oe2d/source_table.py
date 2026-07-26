@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import collections
 import csv
+import functools
 import os
 import sys
 import typing
 import xml.etree.ElementTree as ET
-from collections import defaultdict
-from functools import lru_cache
 
 import openpyxl
 import pdfplumber
@@ -41,19 +41,19 @@ class PageTable(pydantic.BaseModel):
     strategy: str = pydantic.Field(description='Extraction strategy that found this table: "lines", "lines_strict", or "text"')
 
 
-@lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def _open_xlsx_workbook(path: str) -> 'openpyxl.Workbook':
     '''Open and cache an XLSX workbook (non-read-only, to support merges).'''
     return openpyxl.load_workbook(path, data_only=True, read_only=False)
 
 
-@lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def _open_pdf(path: str) -> 'pdfplumber.PDF':
     '''Open and cache a pdfplumber PDF.'''
     return pdfplumber.open(path)
 
 
-@lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def _open_xlrd_workbook(path: str) -> 'xlrd.Book':
     '''Open and cache an xlrd workbook.'''
     return xlrd.open_workbook(path)
@@ -269,7 +269,7 @@ def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
     x0_reverse: bool = not clockwise
 
     # Group rotated chars by which vertical-line column they fall in
-    col_chars: dict[int, list[dict]] = defaultdict(list)
+    col_chars: dict[int, list[dict]] = collections.defaultdict(list)
     for c in rotated_chars:
         col_idx: int = bisect.bisect_right(v_xs, c['x0']) - 1
         col_chars[col_idx].append(c)
@@ -281,7 +281,7 @@ def _read_pdf_vertical_headers(pdf_page: object) -> list[str] | None:
         if col_idx < 0 or col_idx >= num_cols:
             continue
         # Sub-group by x0 position (each x0 is one line of the header)
-        sub_groups: dict[int, list[dict]] = defaultdict(list)
+        sub_groups: dict[int, list[dict]] = collections.defaultdict(list)
         for c in col_group:
             sub_groups[round(c['x0'])].append(c)
         # Read each sub-group in character order, then join lines
@@ -338,7 +338,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
         h_lines: list[dict] = [
             l for l in page_lines if abs(l['top'] - l['bottom']) < 1
         ]
-        y_groups: dict[float, list[dict]] = defaultdict(list)
+        y_groups: dict[float, list[dict]] = collections.defaultdict(list)
         for l in h_lines:
             y_groups[round(l['top'], 1)].append(l)
         multi_seg_ys: list[float] = [
@@ -370,7 +370,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
 
     # Find the most common column width — that's the data table width.
     # Concatenate all tables with that width to capture stacked contests.
-    width_counts: dict[int, int] = defaultdict(int)
+    width_counts: dict[int, int] = collections.defaultdict(int)
     for t in tables:
         if t:
             width_counts[len(t[0])] += len(t)
@@ -424,7 +424,7 @@ def read_pdf_page(path: str, page: int) -> list[list[str]] | None:
     return rows
 
 
-@lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def page_count(path: str) -> int:
     '''Return the number of pages (PDF) or sheets (XLSX/XLS) in a file.'''
     ext: str = os.path.splitext(path)[1].lower()
@@ -447,7 +447,7 @@ def page_count(path: str) -> int:
     return 0
 
 
-@lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def page_table(path: str, page: int) -> list[list[str]] | None:
     '''Read tabular data from a page of a source file.
 

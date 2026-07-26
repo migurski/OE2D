@@ -18,7 +18,7 @@ import time
 import urllib.parse
 import urllib.request
 
-from . import Target, count_units, contest_title_index, segments_for_titles, _title_matches
+from .. import contests
 from . import datasets, metrics
 
 _DEFAULT_CACHE: str = os.environ.get('OE2D_ORIGINALS_CACHE', '/tmp/oe2d-originals')
@@ -39,13 +39,13 @@ def resolve(source_url: str, cache_dir: str) -> str:
     return path
 
 
-def title_runs(path: str, target: Target, budget: int | None) -> list[tuple[int, int]]:
+def title_runs(path: str, target: contests.Target, budget: int | None) -> list[tuple[int, int]]:
     '''Deterministic title spans: exact-word-match a target to the document's own titles,
     then each matched title to the next title - 1. Empty where wording differs (the LLM's job).'''
-    units: int = count_units(path)
-    index = contest_title_index(path, unit_count=units, page_budget=budget)
-    matched = {t for titles in index.values() for t in titles if _title_matches(target, t)}
-    return segments_for_titles(index, matched, units)
+    units: int = contests.count_units(path)
+    index = contests.contest_title_index(path, unit_count=units, page_budget=budget)
+    matched = {t for titles in index.values() for t in titles if contests._title_matches(target, t)}
+    return contests.segments_for_titles(index, matched, units)
 
 
 def main() -> None:
@@ -70,7 +70,7 @@ def main() -> None:
     by_org: dict[str, list[dict]] = {}
     for row in rows:
         name: str = cache_name(row['source_url'])[:24]
-        target: Target = datasets.row_target(row)
+        target: contests.Target = datasets.row_target(row)
         started: float = time.monotonic()
         path: str = resolve(row['source_url'], args.cache)
         runs = title_runs(path, target, args.budget)

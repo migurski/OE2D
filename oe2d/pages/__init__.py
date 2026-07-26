@@ -39,7 +39,7 @@ import pydantic
 from PIL import Image
 
 from . import deskew
-from .signatures import CandidateOrientation, PageAnalysis, PrecinctAxis, PrecinctScope
+from . import signatures
 
 
 # Extensions we treat as already-rendered page images; anything else is rendered.
@@ -61,12 +61,12 @@ class PageProperties(pydantic.BaseModel):
     folded in by the PageAnalyzer module. It is a program output but NOT a trained
     or scored field (see CONTENT_FIELDS / metrics.FIELD_WEIGHTS).
     '''
-    candidate_orientation: CandidateOrientation
+    candidate_orientation: signatures.CandidateOrientation
     contest_name_present: bool
     candidate_names_present: bool
     headers_present: bool
-    precinct_scope: PrecinctScope
-    precinct_orientation: PrecinctAxis
+    precinct_scope: signatures.PrecinctScope
+    precinct_orientation: signatures.PrecinctAxis
     # Detector-sourced (deskew), positive = counter-clockwise; NOT a VLM output.
     skew_degrees: float
 
@@ -146,7 +146,7 @@ class PageAnalyzer(dspy.Module):
     '''
     def __init__(self) -> None:
         super().__init__()
-        self.analyze: dspy.Module = dspy.Predict(PageAnalysis)
+        self.analyze: dspy.Module = dspy.Predict(signatures.PageAnalysis)
 
     def forward(self, image: dspy.Image) -> dspy.Prediction:
         content = self.analyze(image=image)

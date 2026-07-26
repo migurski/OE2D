@@ -31,7 +31,7 @@ import dspy
 import pydantic
 
 from .. import pagetext, source_table
-from .signatures import ClassifyContestTitles, MatchContestTitles
+from . import signatures
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -360,9 +360,9 @@ class ContestLocator(dspy.Module):
     def __init__(self) -> None:
         super().__init__()
         self._evidence: list[TitleEvidence] = []
-        self.classify: dspy.Module = dspy.Predict(ClassifyContestTitles)
+        self.classify: dspy.Module = dspy.Predict(signatures.ClassifyContestTitles)
         self.match: dspy.Module = dspy.ReAct(
-            MatchContestTitles,
+            signatures.MatchContestTitles,
             tools=[self.search_titles, self.inspect_title, self.list_titles],
             max_iters=8)
 

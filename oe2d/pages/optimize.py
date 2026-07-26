@@ -26,11 +26,11 @@ import os
 import sys
 
 import dspy
-from dspy.teleprompt import GEPA
+from dspy import teleprompt
 from dspy.teleprompt.gepa import instruction_proposal
 
 from .. import pages
-from . import CONTENT_FIELDS, datasets, metrics
+from . import datasets, metrics
 
 # The task LM reads the page image (pages.LM_KIMI_K2P7 -- the same model the analyzer runs
 # at inference); the reflection LM rewrites the prompt from the metric's feedback, where a
@@ -53,7 +53,7 @@ def run_digest(examples: list, val_fraction: float) -> str:
     rows: list[str] = []
     for example in examples:
         fields: list[str] = [getattr(example, '_fixture', '')]
-        fields += [f'{name}={getattr(example, name, None)!r}' for name in CONTENT_FIELDS]
+        fields += [f'{name}={getattr(example, name, None)!r}' for name in pages.CONTENT_FIELDS]
         rows.append('|'.join(fields))
     parts: list[str] = [
         f'val={val_fraction}', f'student={pages.LM_KIMI_K2P7}', f'reflect={LM_CLAUDE_OPUS45}',
@@ -147,7 +147,7 @@ def main() -> None:
     # window. MultiModalInstructionProposer keeps the image an object and sends it
     # to the (multimodal) Opus reflection LM as a real image block, so the prompt
     # stays small and the reflection can actually see the page.
-    optimizer: GEPA = GEPA(
+    optimizer: teleprompt.GEPA = teleprompt.GEPA(
         metric=metrics.score_page,
         max_metric_calls=args.max_metric_calls,
         reflection_minibatch_size=args.reflection_minibatch_size,
