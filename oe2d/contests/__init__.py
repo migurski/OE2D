@@ -30,7 +30,7 @@ import dotenv
 import dspy
 import pydantic
 
-from .. import config, pagetext, source_table
+from .. import pagetext, source_table
 from .signatures import ClassifyContestTitles, MatchContestTitles
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -339,15 +339,10 @@ def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
     return spans
 
 
-def inference_lm() -> dspy.LM:
-    '''The LM both of ContestLocator's predictors (classify, match) run at inference: the
-    shared Kimi K2 model at temperature 0 for settled classification, with headroom so a
-    verbatim-echo classify pass or a multi-step ReAct trace doesn't truncate. Defined here,
-    beside the program, so the module + its signatures + its LM read together. A TRAINED
-    artifact carries its OWN lm and OVERRIDES this on load (see build_locator) -- the artifact
-    is authoritative. (Per-predictor lms could split classify/match onto different models; a
-    single lm here binds both.)'''
-    return dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192)
+# The task LM: Fireworks' Kimi K2, driving both of ContestLocator's predictors (classify,
+# match). Kept here beside the program, not in a shared config module, so the LM lives next
+# to what uses it. litellm reads FIREWORKS_AI_API_KEY.
+LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 
 class ContestLocator(dspy.Module):
@@ -463,7 +458,9 @@ def build_locator() -> ContestLocator:
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         locator.load(OPTIMIZED_MODEL_PATH)
     else:
-        locator.set_lm(inference_lm())
+        # temperature 0 for settled classification, with headroom so a verbatim-echo
+        # classify pass or a multi-step ReAct trace doesn't truncate.
+        locator.set_lm(dspy.LM(LM_KIMI_K2P7, temperature=0.0, max_tokens=8192))
     return locator
 
 

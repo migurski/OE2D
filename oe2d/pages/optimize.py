@@ -29,13 +29,13 @@ import dspy
 from dspy.teleprompt import GEPA
 from dspy.teleprompt.gepa import instruction_proposal
 
-from .. import config
 from .. import pages
 from . import CONTENT_FIELDS, datasets, metrics
 
 # The task LM reads the page image; the reflection LM rewrites the prompt from the
-# metric's feedback. A strong reflection model matters most here.
-STUDENT_MODEL: str = config.TASK_LM
+# metric's feedback. A strong reflection model matters most here. Train the same model
+# the analyzer runs at inference (defined beside the program).
+STUDENT_MODEL: str = pages.LM_KIMI_K2P7
 REFLECTION_MODEL: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 
 # Repo root (oe2d/pages -> oe2d -> repo); each run gets a visible gepa-<digest>

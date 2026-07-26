@@ -38,7 +38,6 @@ import dspy
 import pydantic
 from PIL import Image
 
-from .. import config
 from . import deskew
 from .signatures import CandidateOrientation, PageAnalysis, PrecinctAxis, PrecinctScope
 
@@ -163,15 +162,10 @@ class PageAnalyzer(dspy.Module):
         )
 
 
-def inference_lm() -> dspy.LM:
-    '''The LM PageAnalyzer reads pages with: the shared Kimi K2 (multimodal) model at
-    inference settings. A settled classifier, not GEPA-style exploration -- temperature 0
-    keeps the six-field answer stable, and a large max_tokens leaves headroom so a page
-    reasoned about at length doesn't truncate mid-answer (the Kimi 'code' model can repeat
-    itself up to the cap at high temperature). Defined here, beside the program, so the
-    module + signature + LM read together. A TRAINED artifact carries its OWN lm and
-    OVERRIDES this on load (see build_analyzer) -- the artifact is authoritative.'''
-    return dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192)
+# The task LM: Fireworks' Kimi K2 (multimodal). The model this program reads pages with
+# AND the one oe2d.pages.optimize trains -- kept here beside the program, not in a shared
+# config module, so the LM lives next to what uses it. litellm reads FIREWORKS_AI_API_KEY.
+LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 
 def build_analyzer() -> PageAnalyzer:
@@ -181,7 +175,10 @@ def build_analyzer() -> PageAnalyzer:
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         analyzer.load(OPTIMIZED_MODEL_PATH)
     else:
-        analyzer.set_lm(inference_lm())
+        # Inference settings: temperature 0 for a settled classifier (not GEPA-style
+        # exploration), and a large max_tokens so a page reasoned about at length doesn't
+        # truncate mid-answer (the Kimi 'code' model can repeat itself up to the cap).
+        analyzer.set_lm(dspy.LM(LM_KIMI_K2P7, temperature=0.0, max_tokens=8192))
     return analyzer
 
 
