@@ -11,18 +11,17 @@ import enum
 import dspy
 
 
-# Per-page label vocabularies as enums; the DSPy output fields (below) and the
+# Per-page label vocabularies as StrEnums; the DSPy output fields (below) and the
 # pydantic PageProperties result model both take their types from these, so the
-# taxonomy has a single named definition. The str mixin keeps members equal to
-# their wire value ('columns'), so gold JSON coerces in and metric comparisons and
-# JSON output stay string-clean, while DSPy still constrains the model to the
-# member values.
-class CandidateOrientation(str, enum.Enum):
+# taxonomy has a single named definition. StrEnum members ARE their wire value
+# ('columns'), so gold JSON coerces in and metric comparisons and JSON output stay
+# string-clean, while DSPy still constrains the model to the member values.
+class CandidateOrientation(enum.StrEnum):
     COLUMNS = 'columns'
     ROWS = 'rows'
 
 
-class PrecinctScope(str, enum.Enum):
+class PrecinctScope(enum.StrEnum):
     MULTI_PRECINCT = 'multi_precinct'
     PER_PRECINCT = 'per_precinct'
     COUNTY = 'county'
@@ -31,7 +30,7 @@ class PrecinctScope(str, enum.Enum):
 # The precinct axis is only meaningful for multi_precinct pages; NONE covers
 # per_precinct (one precinct, named in a header) and county (no precinct at all),
 # so the field is always a concrete member rather than null.
-class PrecinctAxis(str, enum.Enum):
+class PrecinctAxis(enum.StrEnum):
     ROWS = 'rows'
     COLUMNS = 'columns'
     NONE = 'none'
