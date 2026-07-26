@@ -38,12 +38,28 @@ def _canned(pages):
     return lambda path, limit: [pages.get(u, '') for u in range(1, limit + 1)]
 
 
-def test_pages_of_spans_flattens_to_sorted_set():
-    # scattered singletons (stacked precinct report) -> explicit page list
-    assert contests.pages_of_spans([(1, 1), (7, 7), (13, 13)]) == [1, 7, 13]
-    # a contiguous block -> a consecutive run; overlaps/dupes collapse
-    assert contests.pages_of_spans([(22, 25), (24, 26)]) == [22, 23, 24, 25, 26]
-    assert contests.pages_of_spans([]) == []
+def test_locate_pages_occurrence_vs_span():
+    title_pages = [2, 7, 12, 20]
+    # a recurring title (>= _RECUR_MIN occurrences) -> the occurrences ARE the pages, no span
+    assert contests._locate_pages([2, 7, 12], title_pages, 25) == {2, 7, 12}
+    # a title seen once -> it heads a block, span to the next title page
+    assert contests._locate_pages([2], title_pages, 25) == {2, 3, 4, 5, 6}
+    # last title, one occurrence -> runs to unit_count
+    assert contests._locate_pages([20], title_pages, 25) == set(range(20, 26))
+
+
+def test_table_titles_reads_heading_above_a_vote_table():
+    # a proposition -- no "vote for" marker, short title -- is the line above its yes/no table
+    text = 'Run Date 12/03/2024 Page 3\nPROPOSITION 3\nYES 254 55.22\nNO 206 44.78'
+    assert contests._table_titles(text) == ['PROPOSITION 3']
+
+
+def test_page_titles_unions_marker_table_and_heading():
+    text = ('PRESIDENT AND VICE PRESIDENT (Vote for 1)\nHarris 10 20\n'
+            'PROPOSITION 3\nYES 254 55\nNO 206 44')
+    got = contests._page_titles(text)
+    assert any('PRESIDENT' in t for t in got)          # via the "vote for" marker
+    assert 'PROPOSITION 3' in got                       # via the table-anchor (no marker)
 
 
 def test_contest_title_index_records_titles_per_unit(monkeypatch):
@@ -160,7 +176,7 @@ def test_contest_evidence_distinct_titles_with_sample(monkeypatch):
     pages = {2: 'President/Vice-President of the United States (Vote for 1)\nHarris Trump Walz',
              3: 'United States Senator (Vote for 1)\nSlotkin Rogers'}
     monkeypatch.setattr(contests.pagetext, 'layout_texts', _canned(pages))
-    index, evidence, units = contests.contest_evidence('x.pdf', unit_count=3)  # target-agnostic
+    evidence, units = contests.contest_evidence('x.pdf', unit_count=3)  # target-agnostic vocabulary
     pres = next(e for e in evidence if 'President/Vice-President' in e.title)
     assert pres.units == [2]
     assert 'Harris' in pres.sample and 'Trump' in pres.sample     # candidate rows under the title

@@ -204,6 +204,70 @@ def _title_lines(text: str) -> list[str]:
     return [title for title, _ in _title_regions(text)]
 
 
+def _is_data_row(line: str) -> bool:
+    '''A vote-data row: >=2 bare numbers, no percent / date-time / registration preamble. Used to
+    find where a results table starts so we can read the title directly above it.'''
+    low: str = line.lower()
+    if '%' in line or 'registered' in low or '/' in line or ':' in line:
+        return False
+    return len(re.findall(r'\b\d[\d,]*\b', line)) >= 2
+
+
+def _table_titles(text: str) -> list[str]:
+    '''The heading line directly above each vote table on a page -- a phrase-free, marker-free
+    title signal (the title always sits above its results). Catches contests a "vote for" marker
+    misses, notably ballot propositions/measures ("PROPOSITION 3", "MEASURE V"). Fails only where
+    2D layout is scrambled in the text layer (rotated/mirrored pages); the marker and recurrence
+    signals cover those, and the union is deduped and judged by the LLM classifier.'''
+    lines: list[str] = [re.sub(r'\s+', ' ', x.strip()) for x in text.splitlines() if x.strip()]
+    out: list[str] = []
+    prev: str | None = None
+    in_table: bool = False
+    for line in lines:
+        if _is_data_row(line):
+            if not in_table and prev:              # a table just began -> prev line is its title
+                out.append(prev[:160])
+                in_table = True
+        else:
+            in_table = False
+            if not _is_banner(line):
+                prev = line
+    return out
+
+
+def _page_titles(text: str) -> set[str]:
+    '''All candidate contest-title strings on a page -- the union of the cheap, phrase-free
+    signals (title-above-a-table, "vote for" marker, multi-word heading). Over-collects on
+    purpose (candidate fragments, subtotal labels slip in); the LLM classifier culls the union
+    down to real contests, once per distinct string across the document.'''
+    got: set[str] = set(_table_titles(text)) | set(_title_lines(text)) | set(_heading_candidates(text))
+    return {re.sub(r'\s+', ' ', g.strip()) for g in got if g.strip()}
+
+
+# A contest's title recurs on >= this many pages when the vendor repeats it (per precinct, or as
+# a running header); below it the title appeared once and heads a block of continuation pages.
+_RECUR_MIN: int = 3
+
+# Classify the distinct candidate strings in chunks this size, so the LLM's verbatim-echo output
+# stays under the token limit on ballot-heavy files (a county can carry >120 contest strings).
+_CLASSIFY_CHUNK: int = 25
+
+
+def _locate_pages(units: list[int], title_pages: list[int], unit_count: int) -> set[int]:
+    '''Pages carrying a contest's votes, from the pages its title string OCCURS on. If the title
+    recurs (>= _RECUR_MIN), each occurrence is a self-contained result (one precinct / one running-
+    header page) -> the occurrences ARE the answer, no span inference (this is what kills the
+    segmentation bleed). If it occurs once, it heads a block -> span it to the next title page.'''
+    if len(units) >= _RECUR_MIN:
+        return set(units)
+    pages: set[int] = set()
+    for p in units:
+        after: list[int] = [q for q in title_pages if q > p]
+        end: int = (after[0] - 1) if after else unit_count
+        pages |= set(range(p, end + 1))
+    return pages
+
+
 def _title_matches(target: Target, title: str) -> bool:
     '''Conservative EXACT-word check, for the offline fallback and the eval floor only.
 
@@ -216,16 +280,6 @@ def _title_matches(target: Target, title: str) -> bool:
     want: set[str] = _significant_words(target.contest)
     have: set[str] = set(re.findall(r'[a-z]+', title.lower()))
     return bool(want) and want <= have
-
-
-def pages_of_spans(spans: list[tuple[int, int]]) -> list[int]:
-    '''Flatten (start, end) segments into the sorted set of pages they cover -- the single
-    output representation. Scattered contests (stacked/compound) become an explicit list;
-    a contiguous block becomes a consecutive run. Segments are inclusive of both ends.'''
-    pages: set[int] = set()
-    for start, end in spans:
-        pages.update(range(start, end + 1))
-    return sorted(pages)
 
 
 class TitleEvidence(pydantic.BaseModel):
@@ -284,52 +338,43 @@ class ClassifyContestTitles(dspy.Signature):
 
 
 def contest_evidence(path: str, unit_count: int | None = None, page_budget: int | None = None,
-                     header_filter=None) -> tuple[dict[int, list[str]], list[TitleEvidence], int]:
-    '''Read the document once (target-agnostic): title index + distinct-title evidence.
+                     classify=None) -> tuple[list[TitleEvidence], int]:
+    '''Read the document once (target-agnostic) and learn its CONTEST-STRING VOCABULARY.
 
-    Marker titles ("vote for" lines) are trusted verbatim. Marker-free header CANDIDATES are a
-    structural recall net (header_title_index) that over-collects; when header_filter is given it
-    is called once with the distinct candidate lines and returns the subset that actually name a
-    contest (the LLM classifier), so junk never enters the index. Without a filter the raw recall
-    net is kept (offline / deterministic use). Which titles ARE a given target is a later step.
+    Surface candidate title strings on every page (_page_titles: title-above-a-table, "vote for"
+    marker, multi-word heading -- a union that over-collects), collect the DISTINCT strings, and
+    when a classifier is given, judge that small set once ("which are contests?"). Because a
+    document speaks a tiny vocabulary that repeats -- one precinct's contests recur for every
+    precinct -- the expensive judgment runs per distinct string, not per page. Returns one
+    TitleEvidence per kept contest string: the pages its string OCCURS on (locating is then a
+    string match, not a span guess) and the text under its first occurrence. Without a classifier
+    the raw candidate union is kept (offline / deterministic use).
     '''
     if unit_count is None:
         unit_count = count_units(path)
     limit: int = min(unit_count, page_budget) if page_budget else unit_count
     texts: list[str] = list(pagetext.layout_texts(path, limit))
-    headers: dict[int, list[str]] = header_title_index(texts)
-    if header_filter is not None:
-        distinct: list[str] = sorted({t for ts in headers.values() for t in ts})
-        kept: set[str] = set(header_filter(distinct)) if distinct else set()
-        headers = {u: keep for u, ts in headers.items() if (keep := [t for t in ts if t in kept])}
-    index: dict[int, list[str]] = {}
+    per_page: list[set[str]] = [_page_titles(t) for t in texts]
+    distinct: list[str] = sorted({c for cands in per_page for c in cands})
+    known: set[str] = set(classify(distinct)) if (classify and distinct) else set(distinct)
     by_title: dict[str, dict] = {}
-    for unit, text in enumerate(texts, 1):
-        regions: list[tuple[str, str]] = _title_regions(text)
-        if regions:                                        # marker titles win, with their regions
-            index[unit] = [title for title, _ in regions]
-            for title, region in regions:
-                slot = by_title.setdefault(title, {'units': [], 'sample': ''})
-                slot['units'].append(unit)
-                if not slot['sample']:
-                    slot['sample'] = region[:800]
-        elif unit in headers:                              # else marker-free headings on this page
-            index[unit] = headers[unit]
-            for title in headers[unit]:
-                slot = by_title.setdefault(title, {'units': [], 'sample': ''})
-                slot['units'].append(unit)
-                if not slot['sample']:
-                    at: int = text.find(title[:40])
-                    slot['sample'] = (text[at:] if at >= 0 else text)[:800]
+    for unit, (cands, text) in enumerate(zip(per_page, texts), 1):
+        for title in known & cands:
+            slot = by_title.setdefault(title, {'units': [], 'sample': ''})
+            slot['units'].append(unit)
+            if not slot['sample']:
+                at: int = text.find(title[:40])
+                slot['sample'] = (text[at:] if at >= 0 else text)[:800]
     evidence: list[TitleEvidence] = [
         TitleEvidence(title=title, units=sorted(slot['units']), sample=slot['sample'])
         for title, slot in by_title.items()]
-    return index, evidence, unit_count
+    return evidence, unit_count
 
 
 def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
                         unit_count: int) -> list[tuple[int, int]]:
-    '''Title-to-next-title spans for a chosen set of observed title strings.'''
+    '''Title-to-next-title spans for chosen title strings. Retained for the deterministic eval
+    floor (evaluate.py); the shipped locator uses occurrence-based _locate_pages instead.'''
     wanted: set[str] = {title.strip() for title in matched_titles}
     starts: list[int] = sorted(index)
     spans: list[tuple[int, int]] = []
@@ -341,14 +386,15 @@ def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
 
 
 class ContestLocator(dspy.Module):
-    '''Structural title detection, LLM title classification + interpretation, segmentation.
+    '''Learn a document's contest-string vocabulary, then locate targets by string occurrence.
 
-    detect (contest_evidence: marker titles + a structural recall net of marker-free headings)
-    -> classify (an LLM pass that keeps only candidate lines that name a contest, culling
-    candidate fragments / subtotal labels / totals) -> interpret (a ReAct agent that searches
-    the clean titles and returns which are the target, using free-form context) -> segment
-    (segments_for_titles: each matched title to the next). Both LLM steps are optimizable; the
-    deterministic word match (_title_matches) is the interpret fallback when no LM is configured.
+    detect (contest_evidence: surface candidate strings on every page) -> classify (an LLM pass,
+    chunked, that keeps only the distinct strings naming a contest -- culling candidate fragments,
+    subtotal labels, totals) -> interpret (a ReAct agent that searches the learned strings and
+    returns which are the target, using free-form context) -> locate (_locate_pages: the pages a
+    matched string OCCURS on, since a recurring title needs no span inference; a once-only title
+    spans to the next title). Both LLM steps are optimizable and run per DISTINCT string / per
+    target, not per page. The deterministic word match (_title_matches) is the interpret fallback.
     '''
     def __init__(self) -> None:
         super().__init__()
@@ -360,20 +406,21 @@ class ContestLocator(dspy.Module):
             max_iters=8)
 
     def _classify_headers(self, candidates: list[str]) -> list[str]:
-        '''Keep only the candidate heading lines that name a contest (LLM). When the LM is
-        unavailable, keep the whole recall net (over-detect rather than lose a race); when it
-        runs, trust its cull.'''
-        if not candidates:
-            return []
-        try:
-            raw: list[str] = self.classify(candidates=candidates).contest_titles
-        except Exception:
-            logger.info('title classifier unavailable; keeping all %d candidates', len(candidates))
-            return candidates
-        kept: set[str] = {t.strip().lower() for t in raw}            # verbatim, case-tolerant
-        chosen: list[str] = [c for c in candidates if c.strip().lower() in kept]
-        logger.info('classified %d heading candidates -> %d contest titles',
-                    len(candidates), len(chosen))
+        '''Keep only the candidate strings that name a contest (LLM), classifying in small chunks
+        so the verbatim-echo output can't overrun the model's token limit on ballot-heavy files. A
+        chunk whose call fails (LM down) is kept whole -- over-detect rather than lose a race.'''
+        chosen: list[str] = []
+        for start in range(0, len(candidates), _CLASSIFY_CHUNK):
+            chunk: list[str] = candidates[start:start + _CLASSIFY_CHUNK]
+            try:
+                raw: list[str] = self.classify(candidates=chunk).contest_titles
+            except Exception:
+                logger.info('title classifier unavailable; keeping %d candidates', len(chunk))
+                chosen.extend(chunk)
+                continue
+            kept: set[str] = {t.strip().lower() for t in raw}        # verbatim, case-tolerant
+            chosen.extend(c for c in chunk if c.strip().lower() in kept)
+        logger.info('classified %d candidates -> %d contest titles', len(candidates), len(chosen))
         return chosen
 
     def search_titles(self, keyword: str) -> list[str]:
@@ -409,17 +456,22 @@ class ContestLocator(dspy.Module):
 
     def forward(self, file_path: str, targets: list[Target],
                 unit_count: int | None = None, page_budget: int | None = None) -> dspy.Prediction:
-        index, evidence, units = contest_evidence(file_path, unit_count, page_budget,
-                                                  header_filter=self._classify_headers)
-        self._evidence = evidence          # the tools read this document's titles
-        logger.info('detected %d distinct titles on %d pages', len(evidence), len(index))
+        evidence, units = contest_evidence(file_path, unit_count, page_budget,
+                                           classify=self._classify_headers)
+        self._evidence = evidence          # the tools read this document's learned vocabulary
+        occ: dict[str, list[int]] = {e.title: e.units for e in evidence}
+        title_pages: list[int] = sorted({p for e in evidence for p in e.units})
+        logger.info('learned %d contest strings on %d title-pages', len(evidence), len(title_pages))
         locations: list[ContestLocation] = []
         for target in targets:
             logger.info('interpreting for %r', target.contest)
             matched: list[str] = self._interpret(target)
             logger.info('interpreted %r -> %d matching title(s)', target.contest, len(matched))
-            spans: list[tuple[int, int]] = segments_for_titles(index, matched, units)
-            locations.append(ContestLocation(target=target.contest, pages=pages_of_spans(spans),
+            pages: set[int] = set()
+            for title in matched:
+                if title in occ:
+                    pages |= _locate_pages(occ[title], title_pages, units)
+            locations.append(ContestLocation(target=target.contest, pages=sorted(pages),
                                              observed_title=matched[0] if matched else None))
         return dspy.Prediction(locations=locations)
 
@@ -507,8 +559,8 @@ def main() -> None:
         _instrument()
         dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
         locator: ContestLocator = build_locator()          # its LLM classifier culls the recall net
-        _index, evidence, _units = contest_evidence(
-            path, page_budget=args.budget, header_filter=locator._classify_headers)
+        evidence, _units = contest_evidence(
+            path, page_budget=args.budget, classify=locator._classify_headers)
         titles = [{'title': e.title, 'pages': e.units} for e in evidence]
         print(json.dumps(titles, indent=2))
         return
