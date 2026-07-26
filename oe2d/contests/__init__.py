@@ -354,7 +354,8 @@ class ContestLocator(dspy.Module):
     returns which are the target, using free-form context) -> locate (_locate_pages: the pages a
     matched string OCCURS on, since a recurring title needs no span inference; a once-only title
     spans to the next title). Both LLM steps are optimizable and run per DISTINCT string / per
-    target, not per page. The deterministic word match (_title_matches) is the interpret fallback.
+    target, not per page. The LLM is trusted end to end: an unavailable LM is fatal, and an empty
+    match means the contest is absent (no heuristic fallback in the live path).
     '''
     def __init__(self) -> None:
         super().__init__()
@@ -400,13 +401,11 @@ class ContestLocator(dspy.Module):
 
     def _interpret(self, target: Target) -> list[str]:
         # The LLM is required: a failed match call propagates (an unavailable LM is fatal).
+        # An empty result means the contest is not in the document -- trust the LLM, no
+        # heuristic fallback.
         prediction = self.match(contest=target.contest, context=target.context)
-        matched: list[str] = [t for t in prediction.matching_titles
-                              if any(t.strip() == e.title.strip() for e in self._evidence)]
-        if matched:
-            return matched
-        # LLM ran but matched nothing: fall back to the deterministic word match.
-        return [e.title for e in self._evidence if _title_matches(target, e.title)]
+        return [t for t in prediction.matching_titles
+                if any(t.strip() == e.title.strip() for e in self._evidence)]
 
     def forward(self, file_path: str, targets: list[Target],
                 unit_count: int | None = None, page_budget: int | None = None) -> dspy.Prediction:
