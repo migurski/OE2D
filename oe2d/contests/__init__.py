@@ -30,7 +30,7 @@ import dotenv
 import dspy
 import pydantic
 
-from .. import categorize, pagetext, source_table
+from .. import config, pagetext, source_table
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -503,7 +503,7 @@ def locate(file_path: str, targets: list[Target],
            page_budget: int | None = None) -> list[dict]:
     '''Locate targets in a file with the full program; return plain dicts.'''
     _instrument()
-    dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
+    dspy.configure(lm=dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192))
     locator: ContestLocator = build_locator()
     prediction = locator(file_path=file_path, targets=targets, page_budget=page_budget)
     return [location.model_dump() if isinstance(location, ContestLocation)
@@ -557,7 +557,7 @@ def main() -> None:
 
     if args.titles:
         _instrument()
-        dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
+        dspy.configure(lm=dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192))
         locator: ContestLocator = build_locator()          # its LLM classifier culls the recall net
         evidence, _units = contest_evidence(
             path, page_budget=args.budget, classify=locator._classify_headers)

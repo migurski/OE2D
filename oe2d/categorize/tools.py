@@ -9,7 +9,7 @@ import zipfile
 
 from .. import source_table
 
-from . import rendering
+from .. import rendering
 from .. import categorize
 
 # Keep tabular returns bounded so a wide sheet does not flood the REPL output.

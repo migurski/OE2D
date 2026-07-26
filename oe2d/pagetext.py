@@ -86,7 +86,7 @@ def layout_texts(path: str, limit: int) -> list[str]:
 
 def ocr_page(path: str, unit: int, resolution: int = 300) -> str:
     '''Render a page/sheet to an image and OCR it locally with tesseract (free).'''
-    from .categorize import rendering
+    from . import rendering
     image_path: str = rendering.render_page(path, unit, resolution=resolution)
     return tesseract_text(image_path)
 

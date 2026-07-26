@@ -7,7 +7,7 @@ requested sheet renders to its own page rather than paginating the whole book.
 optipng shrinks the result. Zip members are streamed out to a temp file.
 
 This rasterization backs the oe2d.pages analyzer (which renders a source page
-before reading it) and is exposed as a CLI (oe2d-render-page) so a page image can
+before reading it) and is exposed as a CLI (oe2d-rendering) so a page image can
 be pulled out of any source by hand.
 '''
 from __future__ import annotations
@@ -26,9 +26,39 @@ import zipfile
 import openpyxl
 import pdfplumber
 
-from .. import categorize
-
 RESOLUTION = 220
+
+# Container formats recognized from a file extension alone (no content sniffing).
+_EXT_CONTAINERS: dict[str, str] = {'.xlsx': 'xlsx', '.csv': 'csv', '.txt': 'txt', '.zip': 'zip'}
+
+
+def detect_container(path: str) -> str:
+    '''Sniff the container format from extension and file content.'''
+    ext: str = os.path.splitext(path)[1].lower()
+    if ext == '.pdf':
+        return _detect_pdf_kind(path)
+    if ext == '.xls':
+        return _detect_xls_kind(path)
+    return _EXT_CONTAINERS.get(ext, 'unknown')
+
+
+def _detect_pdf_kind(path: str) -> str:
+    '''Distinguish a vector PDF (extractable text) from a scanned bitmap.'''
+    pdf: pdfplumber.PDF = pdfplumber.open(path)
+    try:
+        char_total: int = sum(len(page.chars) for page in pdf.pages[:5])
+    finally:
+        pdf.close()
+    return 'vector_pdf' if char_total > 20 else 'scanned_pdf'
+
+
+def _detect_xls_kind(path: str) -> str:
+    '''Distinguish a binary BIFF .xls from an XML SpreadsheetML .xls.'''
+    with open(path, 'rb') as file:
+        head: bytes = file.read(20)
+    if head.lstrip(b'\xef\xbb\xbf').startswith(b'<?xml'):
+        return 'xls_xml'
+    return 'xls_binary'
 
 # soffice lives on PATH on Linux; on a Homebrew macOS host it is inside the app
 # bundle and not on PATH, so probe the known locations too.
@@ -162,7 +192,7 @@ def render_page(path: str, page: int, member: str | None = None,
                 resolution: int = RESOLUTION) -> str:
     '''Render one page (PDF) or sheet (spreadsheet) to a PNG; return its path.'''
     local: str = material_path(path, member)
-    container: str = categorize.detect_container(local)
+    container: str = detect_container(local)
     out_png: str = os.path.join(
         _cache_dir(), f'{_safe(member or os.path.basename(path))}-p{page}.png')
 

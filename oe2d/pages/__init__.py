@@ -16,7 +16,7 @@ image, so PageAnalyzer measures it deterministically with oe2d.pages.deskew on t
 same image (also exposed on its own as oe2d-detect-skew).
 
 A source that is not already an image is rendered to one first (a page of a PDF,
-a sheet of a spreadsheet) via oe2d.categorize.rendering, so the same program
+a sheet of a spreadsheet) via oe2d.rendering, so the same program
 serves both raw page images and pages pulled from source files.
 
 The program is a composite dspy.Module (PageAnalyzer): its forward() runs the VLM
@@ -41,7 +41,7 @@ import dspy
 import pydantic
 from PIL import Image
 
-from .. import categorize
+from .. import config
 from . import deskew
 
 
@@ -141,7 +141,7 @@ class PageAnalysis(dspy.Signature):
 def _instrument() -> None:
     '''Turn on cmpnd tracing when a key is configured; otherwise do nothing.
 
-    Mirrors oe2d.categorize._instrument but tags traces 'oe2d-pages'. Loads a
+    Tags traces 'oe2d-pages'. Loads a
     repo-local .env explicitly rather than relying on litellm's import-time side
     effect, so the key source stays visible here.
     '''
@@ -166,7 +166,7 @@ def render_source(path: str, page: int = 1, member: str | None = None,
     '''Return a page image path: the file itself if already an image, else render.'''
     if os.path.splitext(path)[1].lower() in _IMAGE_EXTS:
         return path
-    from ..categorize import rendering
+    from .. import rendering
     return rendering.render_page(path, page, member, resolution=resolution)
 
 
@@ -227,7 +227,7 @@ def analyze_image(image_path: str) -> dict:
     # the six-field answer stable, and a larger max_tokens leaves headroom so a
     # page the model reasons about at length doesn't truncate mid-answer (the Kimi
     # 'code' model can otherwise repeat itself up to the cap at high temperature).
-    dspy.configure(lm=dspy.LM(categorize.TASK_LM, temperature=0.0, max_tokens=8192))
+    dspy.configure(lm=dspy.LM(config.TASK_LM, temperature=0.0, max_tokens=8192))
     analyzer: PageAnalyzer = build_analyzer()
     prediction = analyzer(image=dspy.Image(image_path))
     properties = PageProperties(
