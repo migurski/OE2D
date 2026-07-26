@@ -72,15 +72,10 @@ class PageProperties(pydantic.BaseModel):
 
 
 # The VLM content fields — what the trained predictor emits and what datasets and
-# metrics work over. Skew is excluded here on purpose (it is not learned).
-CONTENT_FIELDS: tuple[str, ...] = (
-    'candidate_orientation', 'contest_name_present', 'candidate_names_present',
-    'headers_present', 'precinct_scope', 'precinct_orientation',
-)
-
-# Every field the composite program returns: the content fields plus the
-# detector-sourced skew. Kept in the PageProperties order.
-OUTPUT_FIELDS: tuple[str, ...] = CONTENT_FIELDS + ('skew_degrees',)
+# metrics work over. Derived from PageProperties (the single source of truth for the
+# field set) minus skew_degrees, which is detector-sourced, not learned.
+CONTENT_FIELDS: tuple[str, ...] = tuple(
+    name for name in PageProperties.model_fields if name != 'skew_degrees')
 
 
 # The trained program, committed as package data. Loaded onto the predictor when
@@ -196,7 +191,7 @@ def analyze_image(image_path: str) -> dict:
         precinct_orientation=prediction.precinct_orientation,
         skew_degrees=float(prediction.skew_degrees),
     )
-    return properties.model_dump()
+    return properties.model_dump(mode='json')
 
 
 def analyze_page(path: str, page: int = 1, member: str | None = None) -> dict:

@@ -6,24 +6,35 @@ editing here changes only the starting point, not a committed optimized program.
 '''
 from __future__ import annotations
 
-import typing
+import enum
 
 import dspy
 
 
-# Allowed per-page label vocabularies, as explicit Literal types; the DSPy output
-# fields (below) and the pydantic PageProperties result model both take their types
-# from these, so the taxonomy has a single definition.
-CandidateOrientation = typing.Literal['columns', 'rows']
-PrecinctScope = typing.Literal['multi_precinct', 'per_precinct', 'county']
-# The precinct axis is only meaningful for multi_precinct pages; 'none' covers
-# per_precinct (one precinct, named in a header) and county (no precinct at all),
-# so the field is always a concrete literal rather than null.
-PrecinctAxis = typing.Literal['rows', 'columns', 'none']
+# Per-page label vocabularies as enums; the DSPy output fields (below) and the
+# pydantic PageProperties result model both take their types from these, so the
+# taxonomy has a single named definition. The str mixin keeps members equal to
+# their wire value ('columns'), so gold JSON coerces in and metric comparisons and
+# JSON output stay string-clean, while DSPy still constrains the model to the
+# member values.
+class CandidateOrientation(str, enum.Enum):
+    COLUMNS = 'columns'
+    ROWS = 'rows'
 
-CANDIDATE_ORIENTATIONS: tuple[str, ...] = typing.get_args(CandidateOrientation)
-PRECINCT_SCOPES: tuple[str, ...] = typing.get_args(PrecinctScope)
-PRECINCT_AXES: tuple[str, ...] = typing.get_args(PrecinctAxis)
+
+class PrecinctScope(str, enum.Enum):
+    MULTI_PRECINCT = 'multi_precinct'
+    PER_PRECINCT = 'per_precinct'
+    COUNTY = 'county'
+
+
+# The precinct axis is only meaningful for multi_precinct pages; NONE covers
+# per_precinct (one precinct, named in a header) and county (no precinct at all),
+# so the field is always a concrete member rather than null.
+class PrecinctAxis(str, enum.Enum):
+    ROWS = 'rows'
+    COLUMNS = 'columns'
+    NONE = 'none'
 
 
 class PageAnalysis(dspy.Signature):
