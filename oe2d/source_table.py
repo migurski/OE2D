@@ -15,7 +15,7 @@ import functools
 import os
 import sys
 import typing
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree
 
 import openpyxl
 import pdfplumber
@@ -129,15 +129,15 @@ def _read_xlrd_page(path: str, page: int) -> list[list[str]] | None:
 def _read_xml_spreadsheet_page(path: str, page: int) -> list[list[str]] | None:
     '''Read a sheet from an XML Spreadsheet (SpreadsheetML) file.'''
     ns: dict[str, str] = {'s': 'urn:schemas-microsoft-com:office:spreadsheet'}
-    tree: ET.ElementTree = ET.parse(path)
-    root: ET.Element = tree.getroot()
-    sheets: list[ET.Element] = root.findall('.//s:Worksheet', ns)
+    tree: ElementTree.ElementTree = ElementTree.parse(path)
+    root: ElementTree.Element = tree.getroot()
+    sheets: list[ElementTree.Element] = root.findall('.//s:Worksheet', ns)
 
     if page < 1 or page > len(sheets):
         print(f'Page {page} out of range (1-{len(sheets)})', file=sys.stderr)
         return None
 
-    ws: ET.Element = sheets[page - 1]
+    ws: ElementTree.Element = sheets[page - 1]
     rows: list[list[str]] = []
     for row_el in ws.findall('.//s:Row', ns):
         cells: list[str] = []
@@ -152,7 +152,7 @@ def _read_xml_spreadsheet_page(path: str, page: int) -> list[list[str]] | None:
                 while col_index < target:
                     cells.append('')
                     col_index += 1
-            data_el: ET.Element | None = cell_el.find('s:Data', ns)
+            data_el: ElementTree.Element | None = cell_el.find('s:Data', ns)
             cells.append(data_el.text if data_el is not None and data_el.text else '')
             col_index += 1
         rows.append(cells)
@@ -437,7 +437,7 @@ def page_count(path: str) -> int:
             head: bytes = f.read(20)
         if head.lstrip(b'\xef\xbb\xbf').startswith(b'<?xml'):
             ns: dict[str, str] = {'s': 'urn:schemas-microsoft-com:office:spreadsheet'}
-            tree: ET.ElementTree = ET.parse(path)
+            tree: ElementTree.ElementTree = ElementTree.parse(path)
             return len(tree.getroot().findall('.//s:Worksheet', ns))
         return _open_xlrd_workbook(path).nsheets
 
