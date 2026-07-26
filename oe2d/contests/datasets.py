@@ -1,20 +1,20 @@
 '''Load the contest-locating gold sets.
 
-Two purpose-specific sets live in oe2d-data/labels/, deliberately kept apart so the
+Two purpose-specific sets live in oe2d-data/contests/, deliberately kept apart so the
 short committed samples are never confused with the full originals again:
 
-- fixtures.jsonl  -- contest pages in the committed short sample PDFs, in FIXTURE-LOCAL
-  coordinates (page 1..N of the trimmed file). Hermetic: runs offline, no network. Use
-  for fast smoke tests of the locator. A 2-4 page excerpt cannot show by-precinct or
-  split-across-many-pages structure, so this set only checks "does it land on the right
-  local pages?", not structural correctness.
-- originals.jsonl -- contest span in the FULL url-referenced documents, in ORIGINAL
-  coordinates. The real evaluation target (download via source_url). Carries the
+- training-sample-excerpts.jsonl -- contest pages in the committed short sample PDFs, in
+  FIXTURE-LOCAL coordinates (page 1..N of the trimmed file). Hermetic: runs offline, no
+  network. Use for fast smoke tests of the locator. A 2-4 page excerpt cannot show
+  by-precinct or split-across-many-pages structure, so this set only checks "does it land
+  on the right local pages?", not structural correctness.
+- training-full-documents.jsonl -- contest span in the FULL url-referenced documents, in
+  ORIGINAL coordinates. The real evaluation target (download via source_url). Carries the
   document `organization`, an explicit `pages` list for by-precinct / non-contiguous
   contests, a `confidence`, and `notes`.
 
-`source_pages` (in fixtures.jsonl) is the bridge: fixture-local page k corresponds to
-original page source_pages[k-1].
+`source_pages` (in training-sample-excerpts.jsonl) is the bridge: fixture-local page k
+corresponds to original page source_pages[k-1].
 '''
 from __future__ import annotations
 
@@ -24,9 +24,9 @@ import os
 from . import Target
 
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_LABELS_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'labels')
-_FIXTURES_PATH: str = os.path.join(_LABELS_DIR, 'fixtures.jsonl')
-_ORIGINALS_PATH: str = os.path.join(_LABELS_DIR, 'originals.jsonl')
+_DATA_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'contests')
+_FIXTURES_PATH: str = os.path.join(_DATA_DIR, 'training-sample-excerpts.jsonl')
+_ORIGINALS_PATH: str = os.path.join(_DATA_DIR, 'training-full-documents.jsonl')
 
 
 def _load(path: str) -> list[dict]:
@@ -55,8 +55,8 @@ def row_target(row: dict) -> Target:
 
 
 def fixture_path(row: dict) -> str:
-    '''Absolute path to a fixtures.jsonl row's local trimmed sample.'''
-    return os.path.normpath(os.path.join(_LABELS_DIR, row['fixture_path']))
+    '''Absolute path to a fixture row's local trimmed sample.'''
+    return os.path.normpath(os.path.join(_DATA_DIR, row['fixture_path']))
 
 
 def fixture_request(name_substring: str) -> tuple[str, list[Target], list[int] | None]:

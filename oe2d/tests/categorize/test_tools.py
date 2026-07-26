@@ -15,7 +15,7 @@ def _fx(name: str) -> str:
 
 
 def test_render_pdf_page_to_png():
-    png = rendering.render_page(_fx('2024-adams-county-pa-precinct-summary-general-2024.pdf'), 1)
+    png = rendering.render_page(_fx('2024-beaver-county-pa-precinct-level-results.pdf'), 1)
     assert png.endswith('.png')
     assert os.path.getsize(png) > 1000
 

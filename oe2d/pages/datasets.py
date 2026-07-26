@@ -1,6 +1,6 @@
 '''Load the per-page gold set into DSPy examples for GEPA optimization.
 
-Reads oe2d-data/pages/labels.jsonl (one row per committed page image) and wraps
+Reads oe2d-data/pages/training-page-images.jsonl (one row per committed page image) and wraps
 each as a dspy.Example whose single input is the page image and whose outputs are
 the in-page properties.
 
@@ -21,12 +21,12 @@ import dspy
 
 from . import CONTENT_FIELDS
 
-# labels.jsonl lives beside the images under the top-level oe2d-data tree (not in
-# the wheel); resolve it and the image paths against the repo root, two levels up
-# from this package (oe2d/pages -> oe2d -> repo).
+# training-page-images.jsonl lives beside the images under the top-level oe2d-data
+# tree (not in the wheel); resolve it and the image paths against the repo root, two
+# levels up from this package (oe2d/pages -> oe2d -> repo).
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _PAGES_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages')
-_LABELS_PATH: str = os.path.join(_PAGES_DIR, 'labels.jsonl')
+_LABELS_PATH: str = os.path.join(_PAGES_DIR, 'training-page-images.jsonl')
 
 INPUT_FIELDS: tuple[str, ...] = ('image',)
 
