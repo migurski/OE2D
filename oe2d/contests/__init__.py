@@ -58,18 +58,6 @@ class ContestLocation(pydantic.BaseModel):
     observed_title: str | None = None
 
 
-# Party abbreviations/labels appear on every results page, so they are weak evidence;
-# _significant_words drops them when comparing a target label to a contest title.
-_PARTY_TOKENS: frozenset[str] = frozenset({
-    'dem', 'rep', 'lib', 'grn', 'ust', 'nlp', 'ind', 'wf', 'con',
-    'democratic', 'republican', 'libertarian', 'green', 'constitution',
-})
-
-
-def _is_party(token: str) -> bool:
-    return token.strip().lower() in _PARTY_TOKENS
-
-
 def count_units(path: str) -> int:
     '''Number of pages (PDF) or sheets (spreadsheet); 1 if unknown.'''
     try:
@@ -78,21 +66,10 @@ def count_units(path: str) -> int:
         return 1
 
 
-# A contest heading carries a "vote for [not more than] N" marker in every vendor seen
-# (Dominion, ClearBallot, Electionware, PA primary). Deriving the gold by hand showed the
-# TITLE is the durable locate signal -- candidate names are routinely rotated, char-spaced,
-# or column-split and fail to match -- so the title index is the backbone of the span.
+# A contest heading carries a "vote for [not more than] N" marker in most vendors seen
+# (Dominion, ClearBallot, Electionware, PA primary). _title_regions anchors on it to surface
+# contest-title strings for the LLM classifier (one of the three strategies in _page_titles).
 _CONTEST_MARKER: re.Pattern = re.compile(r'vote for', re.I)
-_TITLE_STOP: frozenset[str] = frozenset({
-    'of', 'the', 'for', 'in', 'and', 'a', 'to', 'at', 'us', 'u', 's', 'united', 'states',
-    'vote', 'not', 'more', 'than', 'district', 'member',
-})
-
-
-def _significant_words(label: str) -> set[str]:
-    '''Distinctive lowercase words of a contest label (drop stopwords and parties).'''
-    return {w for w in re.findall(r'[a-z]+', label.lower())
-            if w not in _TITLE_STOP and not _is_party(w)}
 
 
 def _heading_candidates(text: str) -> list[str]:
@@ -117,57 +94,6 @@ def _heading_candidates(text: str) -> list[str]:
             continue
         out.append(line[:160])
     return out
-
-
-def header_title_index(texts: list[str]) -> dict[int, list[str]]:
-    '''Marker-free heading CANDIDATES that recur on a BLOCK of pages (a running header or an
-    unmarked section title), keyed by unit -- a structural recall net. A real contest heading
-    repeats on several pages but NOT on most of them (that would be a universal table-header or
-    banner). Recovers running-header vendors (Alameda) and compound-doc sections that drop the
-    "vote for" suffix (Yolo/San Joaquin). Over-collects by design; classify_titles culls it.'''
-    n: int = len(texts)
-    per_page: list[set[str]] = [set(_heading_candidates(t)) for t in texts]
-    counts: dict[str, int] = {}
-    for headings in per_page:
-        for h in headings:
-            counts[h] = counts.get(h, 0) + 1
-    cap: int = max(3, int(n * 0.5))                         # reject universal lines (banners/headers)
-    keep: set[str] = {h for h, c in counts.items() if 3 <= c <= cap}
-    index: dict[int, list[str]] = {}
-    for unit, headings in enumerate(per_page, 1):
-        chosen: list[str] = [h for h in headings if h in keep]
-        if chosen:
-            index[unit] = chosen
-    return index
-
-
-def contest_title_index(path: str, unit_count: int | None = None,
-                        page_budget: int | None = None) -> dict[int, list[str]]:
-    '''Map each unit bearing contest-title line(s) to ALL its titles (cheap text / OCR).
-
-    Reads every unit (no early stop) because a contest can recur anywhere in a by-precinct
-    document. Captures every "vote for" marker title on a page (summary/precinct layouts stack
-    several contests per page), then merges marker-free repeated headings (running-header and
-    unmarked-section vendors). A page's marker titles win; header titles fill pages that have
-    none. Returns {} only when the text carries no titles of either kind.
-    '''
-    if unit_count is None:
-        unit_count = count_units(path)
-    limit: int = min(unit_count, page_budget) if page_budget else unit_count
-    texts: list[str] = list(pagetext.layout_texts(path, limit))
-    marker: dict[int, list[str]] = {}
-    for unit, text in enumerate(texts, 1):
-        titles: list[str] = _title_lines(text)
-        if titles:
-            marker[unit] = titles
-    headers: dict[int, list[str]] = header_title_index(texts)
-    index: dict[int, list[str]] = {}
-    for unit in range(1, limit + 1):
-        if unit in marker:
-            index[unit] = marker[unit]                      # marker titles win
-        elif unit in headers:
-            index[unit] = headers[unit]                     # else marker-free heading
-    return index
 
 
 def _is_banner(line: str) -> bool:
@@ -269,20 +195,6 @@ def _locate_pages(units: list[int], title_pages: list[int], unit_count: int) -> 
     return pages
 
 
-def _title_matches(target: Target, title: str) -> bool:
-    '''Conservative EXACT-word check, for the offline fallback and the eval floor only.
-
-    Every significant target word must appear verbatim in the title. It deliberately does
-    NO fuzzy matching -- wording variants (senate~senator, presidential~president, "U.S.
-    House"~"Representative in Congress") are the LLM's job, handled by the ReAct search tools
-    (which substring-match on a keyword the model chooses). Keeping this dumb avoids the
-    endless tail of a hand-rolled similarity function.
-    '''
-    want: set[str] = _significant_words(target.contest)
-    have: set[str] = set(re.findall(r'[a-z]+', title.lower()))
-    return bool(want) and want <= have
-
-
 class TitleEvidence(pydantic.BaseModel):
     '''One distinct contest title observed in a document, with the text under it.'''
     title: str = pydantic.Field(desc='The observed contest-title text, verbatim')
@@ -323,20 +235,6 @@ def contest_evidence(path: str, unit_count: int | None = None, page_budget: int 
         TitleEvidence(title=title, units=sorted(slot['units']), sample=slot['sample'])
         for title, slot in by_title.items()]
     return evidence, unit_count
-
-
-def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
-                        unit_count: int) -> list[tuple[int, int]]:
-    '''Title-to-next-title spans for chosen title strings. Retained for the deterministic eval
-    floor (evaluate.py); the shipped locator uses occurrence-based _locate_pages instead.'''
-    wanted: set[str] = {title.strip() for title in matched_titles}
-    starts: list[int] = sorted(index)
-    spans: list[tuple[int, int]] = []
-    for pos, unit in enumerate(starts):
-        if any(title.strip() in wanted for title in index[unit]):
-            end: int = (starts[pos + 1] - 1) if pos + 1 < len(starts) else unit_count
-            spans.append((unit, end))
-    return spans
 
 
 # The task LM: Fireworks' Kimi K2, driving both of ContestLocator's predictors (classify,
