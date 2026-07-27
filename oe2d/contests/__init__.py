@@ -472,6 +472,18 @@ def parse_target(spec: str, context: str = '') -> Target:
     return Target(contest=spec.strip(), context=context)
 
 
+def resolve_context(spec: str) -> str:
+    '''Resolve a --context value. An @-prefixed value reads the named file (curl-style,
+    for long prose kept in a file); any other value is used verbatim.'''
+    if not spec.startswith('@'):
+        return spec
+    try:
+        with open(spec[1:], encoding='utf-8') as handle:
+            return handle.read()
+    except OSError as error:
+        raise SystemExit(f'cannot read --context file {spec[1:]!r}: {error}')
+
+
 def write_trimmed(path: str, pages: list[int], out: str) -> None:
     '''Write a copy of the source containing ONLY the given 1-based pages/sheets, in order.
 
@@ -520,7 +532,8 @@ def main() -> None:
                              '--target "U.S. Senate (full term)"')
     parser.add_argument('--context', default='',
                         help='Free-form prose about the races and candidates, shared by all '
-                             '--target contests (the LLM uses it to interpret the titles)')
+                             '--target contests (the LLM uses it to interpret the titles). '
+                             'Use @path to read the prose from a file')
     parser.add_argument('--gold', help='Run a labeled fixture by name substring (uses its gold targets)')
     parser.add_argument('--budget', type=int, default=None, help='Cap units read')
     parser.add_argument('--trim', metavar='OUT',
@@ -552,7 +565,8 @@ def main() -> None:
     else:
         if not args.path or not args.target:
             parser.error('give a path and at least one --target, or use --gold')
-        path, targets = args.path, [parse_target(spec, args.context) for spec in args.target]
+        context: str = resolve_context(args.context)
+        path, targets = args.path, [parse_target(spec, context) for spec in args.target]
 
     if args.titles:
         _instrument()
