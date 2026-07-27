@@ -30,7 +30,7 @@ import dotenv
 import dspy
 import pydantic
 
-from .. import pagetext, source_table
+from .. import pagetext, rendering, source_table
 from . import signatures
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -472,6 +472,45 @@ def parse_target(spec: str, context: str = '') -> Target:
     return Target(contest=spec.strip(), context=context)
 
 
+def write_trimmed(path: str, pages: list[int], out: str) -> None:
+    '''Write a copy of the source containing ONLY the given 1-based pages/sheets, in order.
+
+    Supports the paged containers the locator reads: PDF (page extraction) and xlsx (sheet
+    extraction). Other containers have no meaningful page slice; raises for them.'''
+    kept: list[int] = sorted(set(pages))
+    if not kept:
+        raise SystemExit('nothing to trim: no pages matched')
+    container: str = rendering.detect_container(path)
+    if container in ('vector_pdf', 'scanned_pdf'):
+        _trim_pdf(path, kept, out)
+    elif container == 'xlsx':
+        _trim_xlsx(path, kept, out)
+    else:
+        raise SystemExit(f'--trim supports PDF and xlsx sources, not {container!r}')
+
+
+def _trim_pdf(path: str, pages: list[int], out: str) -> None:
+    import pypdf
+    reader: pypdf.PdfReader = pypdf.PdfReader(path)
+    writer: pypdf.PdfWriter = pypdf.PdfWriter()
+    total: int = len(reader.pages)
+    for page in pages:
+        if 1 <= page <= total:
+            writer.add_page(reader.pages[page - 1])
+    with open(out, 'wb') as handle:
+        writer.write(handle)
+
+
+def _trim_xlsx(path: str, pages: list[int], out: str) -> None:
+    import openpyxl
+    workbook: openpyxl.Workbook = openpyxl.load_workbook(path)
+    keep: set[int] = set(pages)
+    for index, worksheet in enumerate(list(workbook.worksheets), 1):
+        if index not in keep:
+            workbook.remove(worksheet)
+    workbook.save(out)
+
+
 def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description="Locate target contests in a source file, returning each target's page set.")
@@ -484,6 +523,9 @@ def main() -> None:
                              '--target contests (the LLM uses it to interpret the titles)')
     parser.add_argument('--gold', help='Run a labeled fixture by name substring (uses its gold targets)')
     parser.add_argument('--budget', type=int, default=None, help='Cap units read')
+    parser.add_argument('--trim', metavar='OUT',
+                        help='Also write a copy of the source (PDF or xlsx) trimmed to just the '
+                             'pages/sheets matched across all --target contests')
     parser.add_argument('--titles', action='store_true',
                         help='Inspect only: list every contest title detected in the document, in '
                              'its own words, with the pages each covers (no targets; uses the LLM '
@@ -521,7 +563,16 @@ def main() -> None:
         print(json.dumps(titles, indent=2))
         return
 
-    print(json.dumps(locate(path, targets, args.budget), indent=2))
+    locations: list[dict] = locate(path, targets, args.budget)
+    print(json.dumps(locations, indent=2))
+
+    if args.trim:
+        pages: list[int] = sorted({p for loc in locations for p in loc['pages']})
+        if not pages:
+            print('# no pages matched; nothing written', file=sys.stderr)
+        else:
+            write_trimmed(path, pages, args.trim)
+            print(f'# wrote {len(pages)} page(s) {pages} to {args.trim}', file=sys.stderr)
 
 
 if __name__ == '__main__':
