@@ -131,6 +131,34 @@ def test_classify_headers_trusts_llm_and_is_fatal_when_unavailable():
         loc._classify_headers(cands)
 
 
+def test_classify_headers_collapses_digit_only_variants():
+    import types
+    loc = contests.ContestLocator()
+    seen: list[str] = []
+
+    def fake_classify(candidates):
+        seen.extend(candidates)               # record what the LLM actually receives
+        return types.SimpleNamespace(
+            contest_titles=[c for c in candidates if 'Representative' in c])
+
+    loc.classify = fake_classify
+    cands = [
+        '1 U.S. Representative, 12th District',    # collapses with the 14th -> "...11th..."
+        '1 U.S. Representative, 14th District',
+        'Precinct 001 registration total',        # collapses with 002 -> "Precinct 111..."
+        'Precinct 002 registration total',
+    ]
+    chosen = loc._classify_headers(cands)
+    # only two digit-collapsed forms reach the LLM, not four
+    assert len(seen) == 2
+    # and the model saw realistic collapsed values (digits replaced, not blanked)
+    assert '1 U.S. Representative, 11th District' in seen
+    assert 'Precinct 111 registration total' in seen
+    # the kept form expands back to BOTH original district variants (kept verbatim)
+    assert chosen == ['1 U.S. Representative, 12th District',
+                      '1 U.S. Representative, 14th District']
+
+
 def test_segments_by_contest_runs_to_next_title(monkeypatch):
     pages = {2: 'President/Vice-President of the United States (Vote for 1)',
              5: 'United States Senator (Vote for 1)'}

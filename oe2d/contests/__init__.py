@@ -345,6 +345,17 @@ def segments_for_titles(index: dict[int, list[str]], matched_titles: list[str],
 LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 
+def _collapse_digits(text: str) -> str:
+    '''A digit-collapsed form of a candidate string: every digit becomes '1', so strings that
+    differ only in their numbers ("District 12" / "District 14" -> "District 11") map to one
+    form. Whether a string NAMES a contest doesn't depend on the specific numbers, so each form
+    is classified once and the verdict applied to all its originals. Digits are REPLACED, not
+    stripped, so the form the model classifies stays realistic ("District 11", not "District ").
+    Grouping only -- the vocabulary keeps every original string verbatim, so districts stay
+    distinct downstream.'''
+    return re.sub(r'\d', '1', text)
+
+
 class ContestLocator(dspy.Module):
     '''Learn a document's contest-string vocabulary, then locate targets by string occurrence.
 
@@ -367,21 +378,30 @@ class ContestLocator(dspy.Module):
             max_iters=8)
 
     def _classify_headers(self, candidates: list[str]) -> list[str]:
-        '''Keep only the candidate strings that name a contest (LLM), classifying in small chunks
-        so the verbatim-echo output can't overrun the model's token limit on ballot-heavy files.
-        The LLM is required: a failed classify call propagates (an unavailable LM is fatal).'''
-        chosen: list[str] = []
-        chunk_total: int = (len(candidates) + _CLASSIFY_CHUNK - 1) // _CLASSIFY_CHUNK
-        logger.info('classifying %d candidate string(s) in %d chunk(s) of up to %d (one LLM call each)...',
-                    len(candidates), chunk_total, _CLASSIFY_CHUNK)
-        for number, start in enumerate(range(0, len(candidates), _CLASSIFY_CHUNK), 1):
-            chunk: list[str] = candidates[start:start + _CLASSIFY_CHUNK]
-            logger.info('  chunk %d/%d: classifying %d string(s)...', number, chunk_total, len(chunk))
+        '''Keep only the candidate strings that name a contest (LLM). The verdict is
+        digit-invariant, so strings that differ only in numbers (per-precinct total rows,
+        "district N") are collapsed to ONE representative and classified once, then the verdict
+        is applied to every original sharing that form -- far fewer LLM calls on ballot-heavy /
+        by-precinct files. Chunked so the verbatim echo can't overrun the token limit. The LLM
+        is required: a failed classify call propagates (an unavailable LM is fatal).'''
+        groups: dict[str, list[str]] = {}
+        for candidate in candidates:
+            groups.setdefault(_collapse_digits(candidate), []).append(candidate)
+        forms: list[str] = list(groups)          # digit-collapsed forms, one per group, sent to the LLM
+        chunk_total: int = (len(forms) + _CLASSIFY_CHUNK - 1) // _CLASSIFY_CHUNK
+        logger.info('classifying %d candidate string(s) as %d digit-collapsed form(s) in %d '
+                    'chunk(s) of up to %d (one LLM call each)...',
+                    len(candidates), len(forms), chunk_total, _CLASSIFY_CHUNK)
+        kept_forms: set[str] = set()
+        for number, start in enumerate(range(0, len(forms), _CLASSIFY_CHUNK), 1):
+            chunk: list[str] = forms[start:start + _CLASSIFY_CHUNK]
+            logger.info('  chunk %d/%d: classifying %d form(s)...', number, chunk_total, len(chunk))
             raw: list[str] = self.classify(candidates=chunk).contest_titles
             kept: set[str] = {t.strip().lower() for t in raw}        # verbatim, case-tolerant
-            matched: list[str] = [c for c in chunk if c.strip().lower() in kept]
-            chosen.extend(matched)
-            logger.info('  chunk %d/%d: kept %d contest title(s)', number, chunk_total, len(matched))
+            matched: list[str] = [form for form in chunk if form.strip().lower() in kept]
+            kept_forms.update(matched)
+            logger.info('  chunk %d/%d: kept %d form(s)', number, chunk_total, len(matched))
+        chosen: list[str] = [c for c in candidates if _collapse_digits(c) in kept_forms]
         logger.info('classified %d candidates -> %d contest titles', len(candidates), len(chosen))
         return chosen
 
