@@ -346,14 +346,16 @@ LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 
 def _collapse_digits(text: str) -> str:
-    '''A digit-collapsed form of a candidate string: every digit becomes '1', so strings that
-    differ only in their numbers ("District 12" / "District 14" -> "District 11") map to one
-    form. Whether a string NAMES a contest doesn't depend on the specific numbers, so each form
-    is classified once and the verdict applied to all its originals. Digits are REPLACED, not
-    stripped, so the form the model classifies stays realistic ("District 11", not "District ").
-    Grouping only -- the vocabulary keeps every original string verbatim, so districts stay
-    distinct downstream.'''
-    return re.sub(r'\d', '1', text)
+    '''A digit-collapsed form of a candidate string: each digit run becomes up to three '1's, so
+    strings that differ only in their numbers ("District 12" / "District 14" -> "District 11")
+    map to one form. Capping a run at three digits also folds together numbers of different
+    lengths ("884" and "1471" both -> "111"), so per-precinct rows collapse despite varying
+    counts. Whether a string NAMES a contest doesn't depend on the specific numbers, so each
+    form is classified once and the verdict applied to all its originals. Digits are REPLACED,
+    not stripped, so the form the model classifies stays realistic ("District 11", not
+    "District "). Grouping only -- the vocabulary keeps every original verbatim, so districts
+    stay distinct downstream.'''
+    return re.sub(r'\d+', lambda run: '1' * min(len(run.group()), 3), text)
 
 
 class ContestLocator(dspy.Module):
@@ -413,13 +415,16 @@ class ContestLocator(dspy.Module):
         return seen[:30]
 
     def inspect_title(self, title: str) -> str:
-        '''Return the text under an observed title (its candidate rows) so you can confirm
-        the race by the candidates who ran in it. Pass a title verbatim from search_titles.'''
+        '''Return the text under an observed title (its candidate rows) so you can confirm the
+        race by the candidates who ran in it. Pass a title EXACTLY as search_titles / list_titles
+        reported it, INCLUDING any leading contest number. A value that is not an exact observed
+        title raises -- do not trim, renumber, or reword it (a partial is not accepted).'''
         want: str = title.strip().lower()
         for e in self._evidence:
-            if e.title.strip().lower() == want or want in e.title.strip().lower():
-                return e.sample or '(no rows captured)'
-        return '(no such title)'
+            if e.title.strip().lower() == want:                 # exact only: accepting a partial
+                return e.sample or '(no rows captured)'         # lets the model confirm a truncated title
+        raise ValueError(f'{title!r} is not an observed title; pass one exactly as search_titles '
+                         'or list_titles reported it, including any leading number')
 
     def list_titles(self) -> list[str]:
         '''Return all distinct observed contest titles (an overview; may be long).'''

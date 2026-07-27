@@ -264,5 +264,11 @@ def test_locator_title_search_tools():
     assert loc.search_titles('senator') == ['U.S. SENATOR, FULL TERM - Vote for One',
                                             'U.S. SENATOR, PARTIAL/UNEXPIRED TERM - Vote for One']
     assert 'Harris' in loc.inspect_title('PRESIDENT AND VICE PRESIDENT - Vote for One')
-    assert loc.inspect_title('no such contest') == '(no such title)'
+    # A non-title and a PARTIAL of a real title both raise (ReAct feeds the error back as an
+    # observation), so the agent can't confirm a truncated title -- e.g. one with a leading
+    # contest number dropped -- and carry it forward.
+    with pytest.raises(ValueError):
+        loc.inspect_title('no such contest')
+    with pytest.raises(ValueError):
+        loc.inspect_title('PRESIDENT AND VICE PRESIDENT')       # partial of a real title
     assert len(loc.list_titles()) == 3
