@@ -371,11 +371,17 @@ class ContestLocator(dspy.Module):
         so the verbatim-echo output can't overrun the model's token limit on ballot-heavy files.
         The LLM is required: a failed classify call propagates (an unavailable LM is fatal).'''
         chosen: list[str] = []
-        for start in range(0, len(candidates), _CLASSIFY_CHUNK):
+        chunk_total: int = (len(candidates) + _CLASSIFY_CHUNK - 1) // _CLASSIFY_CHUNK
+        logger.info('classifying %d candidate string(s) in %d chunk(s) of up to %d (one LLM call each)...',
+                    len(candidates), chunk_total, _CLASSIFY_CHUNK)
+        for number, start in enumerate(range(0, len(candidates), _CLASSIFY_CHUNK), 1):
             chunk: list[str] = candidates[start:start + _CLASSIFY_CHUNK]
+            logger.info('  chunk %d/%d: classifying %d string(s)...', number, chunk_total, len(chunk))
             raw: list[str] = self.classify(candidates=chunk).contest_titles
             kept: set[str] = {t.strip().lower() for t in raw}        # verbatim, case-tolerant
-            chosen.extend(c for c in chunk if c.strip().lower() in kept)
+            matched: list[str] = [c for c in chunk if c.strip().lower() in kept]
+            chosen.extend(matched)
+            logger.info('  chunk %d/%d: kept %d contest title(s)', number, chunk_total, len(matched))
         logger.info('classified %d candidates -> %d contest titles', len(candidates), len(chosen))
         return chosen
 
