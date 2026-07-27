@@ -484,6 +484,28 @@ def resolve_context(spec: str) -> str:
         raise SystemExit(f'cannot read --context file {spec[1:]!r}: {error}')
 
 
+def _safe_filename(label: str) -> str:
+    '''A filesystem-safe name from a contest label ("U.S. Senate (full term)").'''
+    return re.sub(r'[^A-Za-z0-9._-]+', '-', label).strip('-') or 'contest'
+
+
+def write_trimmed_per_target(path: str, locations: list[dict], out_dir: str) -> list[str]:
+    '''Write one trimmed copy of the source per located target into out_dir, each named for
+    its target and sliced to that target's matched pages. Targets that matched no pages are
+    skipped. Creates out_dir if needed; returns the paths written, in target order.'''
+    os.makedirs(out_dir, exist_ok=True)
+    ext: str = os.path.splitext(path)[1]
+    written: list[str] = []
+    for location in locations:
+        pages: list[int] = location['pages']
+        if not pages:
+            continue
+        out: str = os.path.join(out_dir, f'{_safe_filename(location["target"])}{ext}')
+        write_trimmed(path, pages, out)
+        written.append(out)
+    return written
+
+
 def write_trimmed(path: str, pages: list[int], out: str) -> None:
     '''Write a copy of the source containing ONLY the given 1-based pages/sheets, in order.
 
@@ -536,9 +558,10 @@ def main() -> None:
                              'Use @path to read the prose from a file')
     parser.add_argument('--gold', help='Run a labeled fixture by name substring (uses its gold targets)')
     parser.add_argument('--budget', type=int, default=None, help='Cap units read')
-    parser.add_argument('--trim', metavar='OUT',
-                        help='Also write a copy of the source (PDF or xlsx) trimmed to just the '
-                             'pages/sheets matched across all --target contests')
+    parser.add_argument('--trim', metavar='DIR',
+                        help='Also write, into directory DIR, one copy of the source (PDF or '
+                             "xlsx) per --target -- each trimmed to that target's matched "
+                             'pages/sheets and named for the target')
     parser.add_argument('--titles', action='store_true',
                         help='Inspect only: list every contest title detected in the document, in '
                              'its own words, with the pages each covers (no targets; uses the LLM '
@@ -581,12 +604,12 @@ def main() -> None:
     print(json.dumps(locations, indent=2))
 
     if args.trim:
-        pages: list[int] = sorted({p for loc in locations for p in loc['pages']})
-        if not pages:
-            print('# no pages matched; nothing written', file=sys.stderr)
-        else:
-            write_trimmed(path, pages, args.trim)
-            print(f'# wrote {len(pages)} page(s) {pages} to {args.trim}', file=sys.stderr)
+        written: list[str] = write_trimmed_per_target(path, locations, args.trim)
+        for out in written:
+            print(f'# wrote {out}', file=sys.stderr)
+        empty: list[str] = [loc['target'] for loc in locations if not loc['pages']]
+        if empty:
+            print(f'# no pages matched, skipped: {", ".join(empty)}', file=sys.stderr)
 
 
 if __name__ == '__main__':

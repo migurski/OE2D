@@ -28,6 +28,19 @@ def test_trim_with_no_pages_is_an_error(tmp_path):
         contests.write_trimmed(_PDF, [], str(tmp_path / 'x.pdf'))
 
 
+def test_write_trimmed_per_target_one_file_each(tmp_path):
+    locations = [
+        {'target': 'President', 'pages': [1, 2], 'observed_title': None},
+        {'target': 'U.S. Senate (full term)', 'pages': [3], 'observed_title': None},
+        {'target': 'Nothing Here', 'pages': [], 'observed_title': None},   # skipped
+    ]
+    written = contests.write_trimmed_per_target(_PDF, locations, str(tmp_path / 'out'))
+    assert sorted(os.path.basename(w) for w in written) == \
+        ['President.pdf', 'U.S.-Senate-full-term.pdf']                      # named per target
+    assert len(pypdf.PdfReader(str(tmp_path / 'out' / 'President.pdf')).pages) == 2
+    assert len(pypdf.PdfReader(str(tmp_path / 'out' / 'U.S.-Senate-full-term.pdf')).pages) == 1
+
+
 def test_resolve_context_verbatim_vs_at_file(tmp_path):
     # A plain string is used as-is, even one that happens to name a real file.
     assert contests.resolve_context('presidential race, Harris vs Trump') \
