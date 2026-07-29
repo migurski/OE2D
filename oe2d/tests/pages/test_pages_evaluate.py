@@ -36,3 +36,10 @@ def test_score_fields_reports_the_one_miss():
     assert misses == [('doc-a.pdf', 'precinct_scope', 'county', 'multi_precinct')]
     assert correct['precinct_scope'] == 0 and total['precinct_scope'] == 1
     assert correct['candidate_orientation'] == 1        # the rest still score
+
+
+def test_score_fields_parallel_matches_sequential():
+    program = _StubProgram(**dict(_GOLD, precinct_scope='county'))   # one miss per page
+    examples = [_example() for _ in range(3)]
+    assert evaluate.score_fields(program, examples, num_threads=2) \
+        == evaluate.score_fields(program, examples, num_threads=1)

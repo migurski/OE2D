@@ -31,17 +31,39 @@ from . import datasets, metrics
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def score_fields(program: dspy.Module, examples: list) -> tuple[dict, dict, list]:
+def _predict_all(program: dspy.Module, examples: list, num_threads: int) -> list:
+    '''One prediction per example, in order. Parallel rollouts when num_threads > 1 (via
+    dspy.Parallel, the executor GEPA uses); a failed rollout is FATAL -- max_errors=1 cancels
+    and raises rather than returning None, so an outage can't be silently scored as misses.'''
+    if num_threads <= 1:
+        started: float = time.monotonic()
+        last_log: float = started
+        predictions: list = []
+        for index, example in enumerate(examples, 1):
+            predictions.append(program(image=example.image))
+            now: float = time.monotonic()
+            if now - last_log >= 10:        # progress at most every ~10s, adapts to speed
+                logger.info('  ...%d/%d (%.0fs elapsed)', index, len(examples), now - started)
+                last_log = now
+        return predictions
+    pairs = [(program, dspy.Example(image=e.image).with_inputs('image')) for e in examples]
+    runner = dspy.Parallel(num_threads=num_threads, max_errors=1,
+                           provide_traceback=True, disable_progress_bar=True)
+    return runner(pairs)
+
+
+def score_fields(program: dspy.Module, examples: list, num_threads: int = 1) -> tuple[dict, dict, list]:
     '''Run program over examples; return per-field {correct}, {total}, and a list of
     (fixture, field, predicted, gold) misses. Skew is not scored (not a content field).
-    Logs throttled per-page progress (shown under -v), matching oe2d.pagetext.'''
+    Logs a run summary (and, sequentially, throttled per-page progress) under -v.'''
     correct: dict[str, int] = collections.defaultdict(int)
     total: dict[str, int] = collections.defaultdict(int)
     misses: list[tuple[str, str, object, object]] = []
     started: float = time.monotonic()
-    last_log: float = started
-    for index, example in enumerate(examples, 1):
-        prediction = program(image=example.image)
+    logger.info('scoring %d pages (%d thread%s)...', len(examples), num_threads,
+                '' if num_threads == 1 else 's')
+    predictions = _predict_all(program, examples, num_threads)
+    for example, prediction in zip(examples, predictions):
         for field in metrics.FIELD_WEIGHTS:
             total[field] += 1
             gold = getattr(example, field, None)
@@ -50,10 +72,6 @@ def score_fields(program: dspy.Module, examples: list) -> tuple[dict, dict, list
                 correct[field] += 1
             else:
                 misses.append((getattr(example, '_fixture', '?'), field, pred, gold))
-        now: float = time.monotonic()
-        if now - last_log >= 10:            # progress at most every ~10s, adapts to speed
-            logger.info('  ...%d/%d (%.0fs elapsed)', index, len(examples), now - started)
-            last_log = now
     logger.info('scored %d pages in %.0fs', len(examples), time.monotonic() - started)
     return correct, total, misses
 
@@ -96,6 +114,8 @@ def main() -> None:
                         help='Evaluate a saved program artifact instead (its baked-in LM governs)')
     parser.add_argument('--val-only', action='store_true',
                         help='Score only the held-out validation split (default: all real pages)')
+    parser.add_argument('--num-threads', type=int, default=4,
+                        help='Parallel rollouts (each a single LM call); lower if throttled')
     parser.add_argument('--temperature', type=float, default=0.0)
     parser.add_argument('--max-tokens', type=int, default=4096)
     parser.add_argument('--num-retries', type=int, default=10)
@@ -115,7 +135,7 @@ def main() -> None:
 
     examples: list = (datasets.load_split()[1] if args.val_only
                       else [e for e in datasets.load_examples() if not getattr(e, '_synthetic', False)])
-    correct, total, misses = score_fields(program, examples)
+    correct, total, misses = score_fields(program, examples, num_threads=args.num_threads)
 
     label: str = args.model or args.student or 'shipped program'
     scope: str = 'validation' if args.val_only else 'real'
