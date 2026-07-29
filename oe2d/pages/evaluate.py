@@ -21,20 +21,26 @@ import argparse
 import collections
 import logging
 import sys
+import time
 
 import dspy
 
 from .. import pages
 from . import datasets, metrics
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 def score_fields(program: dspy.Module, examples: list) -> tuple[dict, dict, list]:
     '''Run program over examples; return per-field {correct}, {total}, and a list of
-    (fixture, field, predicted, gold) misses. Skew is not scored (not a content field).'''
+    (fixture, field, predicted, gold) misses. Skew is not scored (not a content field).
+    Logs throttled per-page progress (shown under -v), matching oe2d.pagetext.'''
     correct: dict[str, int] = collections.defaultdict(int)
     total: dict[str, int] = collections.defaultdict(int)
     misses: list[tuple[str, str, object, object]] = []
-    for example in examples:
+    started: float = time.monotonic()
+    last_log: float = started
+    for index, example in enumerate(examples, 1):
         prediction = program(image=example.image)
         for field in metrics.FIELD_WEIGHTS:
             total[field] += 1
@@ -44,6 +50,11 @@ def score_fields(program: dspy.Module, examples: list) -> tuple[dict, dict, list
                 correct[field] += 1
             else:
                 misses.append((getattr(example, '_fixture', '?'), field, pred, gold))
+        now: float = time.monotonic()
+        if now - last_log >= 10:            # progress at most every ~10s, adapts to speed
+            logger.info('  ...%d/%d (%.0fs elapsed)', index, len(examples), now - started)
+            last_log = now
+    logger.info('scored %d pages in %.0fs', len(examples), time.monotonic() - started)
     return correct, total, misses
 
 
