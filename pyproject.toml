@@ -26,6 +26,7 @@ dependencies = [
 oe2d-contests = "oe2d.contests:main"
 oe2d-pages = "oe2d.pages:main"
 oe2d-pages-optimize = "oe2d.pages.optimize:main"
+oe2d-pages-evaluate = "oe2d.pages.evaluate:main"
 oe2d-rendering = "oe2d.rendering:main"
 
 [tool.setuptools]

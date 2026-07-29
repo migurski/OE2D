@@ -19,7 +19,6 @@ committed PNGs.
 from __future__ import annotations
 
 import argparse
-import collections
 import hashlib
 import logging
 import os
@@ -30,7 +29,7 @@ from dspy import teleprompt
 from dspy.teleprompt.gepa import instruction_proposal
 
 from .. import pages
-from . import datasets, metrics
+from . import datasets, evaluate, metrics
 
 # The task LM reads the page image (pages.LM_KIMI_K2P7 -- the same model the analyzer runs
 # at inference); the reflection LM rewrites the prompt from the metric's feedback, where a
@@ -70,21 +69,6 @@ def build_program() -> dspy.Module:
     metric scores only content fields), so it neither helps nor hurts the search.
     '''
     return pages.PageAnalyzer()
-
-
-def field_accuracy(program: dspy.Module, valset: list) -> dict[str, tuple[int, int]]:
-    '''Per-field (correct, scored) over the validation pages. A rollout that raises
-    propagates -- an unavailable LM is fatal, not silently scored as a miss (which would
-    turn a total LM outage into a plausible-looking zero scorecard).'''
-    correct: dict[str, int] = collections.defaultdict(int)
-    scored: dict[str, int] = collections.defaultdict(int)
-    for example in valset:
-        prediction = program(image=example.image)
-        for name in metrics.FIELD_WEIGHTS:
-            scored[name] += 1
-            if getattr(prediction, name, None) == getattr(example, name, None):
-                correct[name] += 1
-    return {name: (correct[name], scored[name]) for name in metrics.FIELD_WEIGHTS}
 
 
 def main() -> None:
@@ -170,9 +154,8 @@ def main() -> None:
     print(f'\nOptimized program saved to {args.out}')
 
     print('\nValidation accuracy per field:')
-    for name, (hit, total) in field_accuracy(optimized, valset).items():
-        pct: str = f'{hit / total:.0%}' if total else 'n/a'
-        print(f'  {name:24} {hit}/{total} = {pct}')
+    correct, total, misses = evaluate.score_fields(optimized, valset)
+    evaluate.print_scorecard(correct, total, misses, show_misses=False)
 
 
 if __name__ == '__main__':
