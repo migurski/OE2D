@@ -11,15 +11,7 @@ oe2d.pages.deskew.
 '''
 from __future__ import annotations
 
-import enum
-
 import dspy
-
-
-def _value(label) -> object:
-    '''The wire value of a label for feedback: a StrEnum member's .value, or a plain
-    string / bool passed through (gold arrives as JSON strings, predictions as enums).'''
-    return label.value if isinstance(label, enum.Enum) else label
 
 # Weights need not sum to 1; the score normalizes by the total scored weight.
 FIELD_WEIGHTS: dict[str, float] = {
@@ -50,7 +42,7 @@ def score_page(gold, pred, trace=None, pred_name=None, pred_trace=None):
             earned += weight
             hits.append(name)
         else:
-            misses.append(f'{name}: predicted {_value(pred_value)!r}, expected {_value(gold_value)!r}')
+            misses.append(f'{name}: predicted {pred_value!r}, expected {gold_value!r}')
     score: float = earned / total_weight if total_weight else 1.0
 
     if misses:
