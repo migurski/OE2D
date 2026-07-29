@@ -43,12 +43,13 @@ LM_CLAUDE_OPUS45: str = 'bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0'
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def run_digest(examples: list, val_fraction: float) -> str:
+def run_digest(examples: list, val_fraction: float, student: str) -> str:
     '''Fingerprint the run config so a changed setup forks a new checkpoint dir.
 
     Builds a per-example string (fixture, eval_kind, and every output field) and
     hashes the SORTED set of them, so the digest is independent of example order
     (and of object identity) — the same data always yields the same checkpoint dir.
+    The student model id is included, so a different task LM gets its own checkpoint.
     '''
     rows: list[str] = []
     for example in examples:
@@ -56,7 +57,7 @@ def run_digest(examples: list, val_fraction: float) -> str:
         fields += [f'{name}={getattr(example, name, None)!r}' for name in pages.CONTENT_FIELDS]
         rows.append('|'.join(fields))
     parts: list[str] = [
-        f'val={val_fraction}', f'student={pages.LM_KIMI_K2P7}', f'reflect={LM_CLAUDE_OPUS45}',
+        f'val={val_fraction}', f'student={student}', f'reflect={LM_CLAUDE_OPUS45}',
     ] + sorted(rows)
     return hashlib.sha256('\n'.join(parts).encode()).hexdigest()[:8]
 
@@ -93,6 +94,10 @@ def main() -> None:
     parser.add_argument('out',
                         help='Where to save the optimized program JSON (the committed model '
                              f'lives at {pages.OPTIMIZED_MODEL_PATH})')
+    parser.add_argument('--student', default=pages.LM_KIMI_K2P7,
+                        help='litellm model id for the task/vision LM being optimized -- must accept '
+                             'image input. e.g. bedrock/us.meta.llama4-maverick-17b-instruct-v1:0 or '
+                             'fireworks_ai/... (default: the committed inference model)')
     parser.add_argument('--max-metric-calls', type=int, default=180, help='GEPA metric-call budget')
     parser.add_argument('--reflection-minibatch-size', type=int, default=7)
     parser.add_argument('--num-threads', type=int, default=4,
@@ -126,7 +131,7 @@ def main() -> None:
     print(f'Loaded {len(trainset)} train (incl. synthetic) + {len(valset)} val (real only).',
           flush=True)
 
-    student_lm: dspy.LM = dspy.LM(model=pages.LM_KIMI_K2P7, temperature=1.0, max_tokens=4096,
+    student_lm: dspy.LM = dspy.LM(model=args.student, temperature=1.0, max_tokens=4096,
                                   num_retries=args.num_retries)
     reflection_lm: dspy.LM = dspy.LM(model=LM_CLAUDE_OPUS45, temperature=1.0, max_tokens=8192,
                                      num_retries=args.num_retries)
@@ -135,7 +140,7 @@ def main() -> None:
     program.set_lm(student_lm)
 
     log_dir: str = args.log_dir or os.path.join(
-        _REPO_ROOT, f'gepa-pages-{run_digest(trainset + valset, args.val_fraction)}')
+        _REPO_ROOT, f'gepa-pages-{run_digest(trainset + valset, args.val_fraction, args.student)}')
     os.makedirs(log_dir, exist_ok=True)
     resuming: bool = os.path.exists(os.path.join(log_dir, 'gepa_state.bin'))
     print(f'{"Resuming" if resuming else "Starting"} GEPA run in {log_dir}', flush=True)
