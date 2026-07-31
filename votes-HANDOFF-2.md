@@ -29,14 +29,13 @@ Current F1 — both plain (per-row) and vote-weighted (fresh DSPy cache):
 | calaveras us-house | rows | **1.000** | district; Overvotes/Undervotes canonicalized in the interpreter |
 | barry president | columns | **1.000** | was 0.898 — see the write-in section below |
 | barry straight-party | columns | **1.000** | all-zero out-of-county precincts dropped; gold Ward-spacing + no-write-in fixes |
-| calhoun president | columns | **0.992** | rotated-header read + cross-page stitch; residual = 4 mis-transcribed gold write-in rows |
+| calhoun president | columns | **1.000** | rotated-header read + cross-page stitch; 4 write-in gold rows rebuilt from source |
 | calhoun us-house-4 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | calhoun us-house-5 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | gogebic, huron ×4 | — | blocked | **scanned** — need a Textract read path |
 
-Plain and vote-weighted F1 are 1.000 on every passing example (Calhoun president 0.992, its only gap 4
-gold-transcription write-in rows). 11 vector contests pass; the 5 scanned examples are the remaining
-read-path work.
+Plain and vote-weighted F1 are **1.000 on every vector contest** (11 of them). The only remaining work
+is the 5 scanned examples (Textract read path).
 
 16 hand-built gold examples live in `oe2d-data/votes/` (`index.jsonl` + one
 `<county>__<contest>__expected.csv` each). Numbers are **copied from human-authored state-repo
@@ -257,13 +256,9 @@ reference, and special-row spellings that drift between contests in the same cou
   `_split_party`, `_consolidate_write_in`). 19 pass.
 
 ## Next steps (in rough priority)
-1. **Calhoun president write-in gold** — 4 rows (City of Albion P5, City of Marshall P1, City of
-   Springfield P1, Marengo Twp P1) are mis-transcribed: their write-in method columns don't sum to
-   the total (Marengo has av=3 with votes=2, impossible). Same shape as Barry — an "Unresolved
-   Write-In" column plus qualified write-in candidates, added. The extraction's additive values are
-   internally consistent; rebuild these gold rows from source (as Barry) to close president to 1.000.
-2. **Textract read path** — unblocks the 5 scanned examples (Gogebic, Huron ×4). Wire the prototype
-   scripts; deskew per the settled `oe2d.pages` notes. Huron will exercise the cross-page stitch.
+1. **Textract read path** — the last remaining work: unblocks the 5 scanned examples (Gogebic, Huron
+   ×4). Wire the prototype scripts; deskew per the settled `oe2d.pages` notes. Huron will exercise
+   the cross-page precinct stitch (its contests cross page to page).
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
