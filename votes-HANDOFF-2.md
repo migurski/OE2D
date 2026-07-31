@@ -24,10 +24,16 @@ Current F1 — both plain (per-row) and vote-weighted (fresh DSPy cache):
 | oscoda president | columns | **1.000** | |
 | oscoda us-house | columns | **1.000** | district |
 | adams president | rows | **1.000** | explicit `Write-In Totals` column, used as the total |
+| adams attorney-general | rows | **1.000** | shares president's pages+1; gold over/under terms fixed to doc form |
 | calaveras president | rows | **1.000** | |
+| calaveras us-house | rows | **1.000** | district; Overvotes/Undervotes canonicalized in the interpreter |
 | barry president | columns | **1.000** | was 0.898 — see the write-in section below |
-| calhoun ×3, barry straight-party, calaveras us-house, adams AG | — | untested | should run; some need `pages` filled |
+| barry straight-party | columns | **1.000** | all-zero out-of-county precincts dropped; gold Ward-spacing + no-write-in fixes |
+| calhoun ×3 | columns | **blocked** | text-aligned SOVC with rotated/reversed headers — `page_table` finds no columns, `read_text_grid` shatters the label column; needs a rotated-SOVC read path |
 | gogebic, huron ×4 | — | blocked | **scanned** — need a Textract read path |
+
+Both plain and vote-weighted F1 are 1.000 on every passing example. 8 vector contests pass; Calhoun
+(×3, rotated text-aligned) and the 5 scanned examples are the remaining read-path work.
 
 16 hand-built gold examples live in `oe2d-data/votes/` (`index.jsonl` + one
 `<county>__<contest>__expected.csv` each). Numbers are **copied from human-authored state-repo
@@ -67,6 +73,16 @@ matching, method-label→bucket mapping, write-in flagging, and "never a number"
 LM: AWS Bedrock Claude Sonnet 4.5 (`LM_CLAUDE_SONNET45`), temperature 0. `build_interpreter` /
 `build_precinct_interpreter` bind it (or load a trained artifact if present) and call
 `_instrument()` for Cmpnd tracing.
+
+**Signature design — optimization-ready.** All how-to-decide guidance (candidate matching, party
+"don't read it off the doc", write-in vs write-in-total, over/under-vote canonicalization, which
+rows to skip) lives in the Signature **docstrings**, because that instruction text is what a prompt
+optimizer (**GEPA**) mutates. The pydantic `Field(description=…)` on the nested output models render
+into the prompt's output-format spec but are **not** reachable by GEPA, so they state only what each
+field structurally *is* — never edge-case reasoning. Rule going forward: new guidance → docstring;
+Field descriptions stay minimal and structural. (One consequence already paid off:
+`Overvotes`/`Undervotes` canonicalization — rejoining a reader-split `"Ov | ervotes:"` — lives in the
+`InterpretPrecinctPage` docstring and closed Calaveras us-house.)
 
 ### 3. Stitch + emit (deterministic)
 - **columns** `extract_contest`: interpret each page → `walk_page` (schema-driven blocks) →
@@ -176,12 +192,13 @@ proved the Barry write-in rebuild.
 `oe2d/votes/metrics.py` reports two views over whole-row keys:
 - **plain** F1 / IoU: each row counts once (precision, recall, and the actual FP/FN rows). A wrong
   value is both an FP and an FN, so it catches over-emission a recall-only count hides.
-- **vote-weighted** F1: each row contributes by a **concave** weight `votes ** weight_exponent`
-  (default `0.5` = √votes). An error in a 673-vote major-party row (√ ≈ 25.9) costs far more than one
-  in a 3-vote write-in (√ ≈ 1.7) — ~15×, not 224× (linear) and not equal. `weight_exponent` tunes it:
-  `1.0` linear (write-ins nearly free), toward `0` approaches the plain per-row count. Rationale: a
-  mistake in a party row is catastrophic; a small write-in miss should be cheaper, not free. The two
-  views coincide only when there are no errors.
+- **vote-weighted** F1: each row contributes by a **concave** weight `(votes + 1) ** weight_exponent`
+  (default `0.5` = √). An error in a 673-vote major-party row (≈ 25.9) costs far more than one in a
+  3-vote write-in (≈ 2.0) — cheap, not equal. The **+1 smoothing** is deliberate: without it a
+  zero-vote row weighs 0 and a spurious/missing zero row (a phantom out-of-county precinct, a dropped
+  0 row) is *invisible* to the score; with it such a row weighs 1 — small, but it registers.
+  `weight_exponent` tunes it: `1.0` near-linear (small errors nearly free), toward `0` approaches the
+  plain per-row count. The two views coincide only when there are no errors.
 
 ## Gold set
 
@@ -197,9 +214,13 @@ specials, and now consolidated write-ins.
 Gold corrections made (checksums / source cross-checks surface these): Oscoda
 `Write-ins`→`Unresolved Write-In` then consolidated; Adams special-row terms to doc terms; Calaveras
 `Vote by Mail`→`absentee_mail`, `La Riva` party `PF`→`PFP` (drift), specials to doc terms; Barry
-comma-spaces (`Hastings,Ward`→`Hastings, Ward`) and **all 24 president write-in rows rebuilt
-additively from the source** (the reference CSV had zeroed them; county-checksum 66); Calhoun commas
-stripped. Expect more as we add sources — especially write-in columns dropped by the reference.
+comma-spaces (`Hastings,Ward`→`Hastings, Ward`, in president and straight-party) and **all 24
+president write-in rows rebuilt additively from the source** (the reference CSV had zeroed them;
+county-checksum 66); Barry straight-party dropped its 24 spurious `Write-ins`=0 rows (a straight-party
+ticket has no write-in) and its out-of-county precincts; Adams AG + Calaveras us-house `Over
+Votes`/`Under Votes`→`Overvotes`/`Undervotes` to match each county's president gold and the doc form;
+Calhoun commas stripped. Expect more as we add sources — especially write-in columns dropped by the
+reference, and special-row spellings that drift between contests in the same county.
 
 ## Tooling notes
 - **AWS**: profile `cmpnd-mike-root`, region `us-west-2` (Bedrock). Set `AWS_PROFILE`,
@@ -212,23 +233,27 @@ stripped. Expect more as we add sources — especially write-in columns dropped 
   enable_memory_cache=False)`.
 - **Tests**: `oe2d/tests/votes/` — hermetic (no LM/source), cover the walker, both metric views, and
   every robustness helper (`_assign_methods`, `_count_columns`, `_cell_count`, `_contiguous_label`,
-  `_split_party`, `_consolidate_write_in`). 18 pass.
+  `_split_party`, `_consolidate_write_in`). 19 pass.
 
 ## Next steps (in rough priority)
-1. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
+1. **Calhoun rotated text-aligned read** — Calhoun's SOVC is text-aligned with rotated/reversed
+   headers ("acisseJ ztrawS" = Jessica Swartz). `source_table.page_table` finds no column structure
+   (no vertical rules, no multi-segment horizontals) and `read_text_grid` shatters the label column.
+   Blocks calhoun president + us-house ×2 (pages already located: president 17–20; US House 4th on
+   26–31/36–42/121–122, 5th on 32–35/43–46/123–124). Needs a read path that recovers columns from
+   rotated headers (the numeric rows read fine) — possibly the `oe2d.pages` image analyzer.
+2. **Textract read path** — unblocks the 5 scanned examples (Gogebic, Huron ×4). Wire the prototype
+   scripts; deskew per the settled `oe2d.pages` notes.
+3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
    is the real lever (it interprets *every* page — Barry = 15 calls): prototype interpreting from a
    header + first-block slice, and/or interpret the first page fully then reuse its schema on
    siblings, falling back to a full read only when a checksum fails.
-2. **Textract read path** — unblocks the 5 scanned examples (Gogebic, Huron ×4). Wire the prototype
-   scripts; deskew per the settled `oe2d.pages` notes.
-3. **Fill `pages` and run the untested examples** — Calhoun ×3, Barry straight-party, Calaveras
-   us-house, Adams AG (some `index.jsonl` rows still have `pages: null`; scan each source for the
-   contest title). Watch for reference-dropped write-ins as in Barry.
 4. **`evaluate.py` / `optimize.py`** mirroring `pages`/`contests` — a CLI to score the whole gold set
    (report plain + weighted F1) and a GEPA loop over the interpreters, so we measure and improve
-   systematically instead of ad-hoc runs.
+   systematically instead of ad-hoc runs. All interpreter guidance now lives in the signature
+   docstrings, so GEPA can evolve it (see the Interpret section).
 5. **Wire `oe2d.pages` for orientation** — currently passed in / read from gold geometry; it should
    come from the image-based analyzer on a sample page.
 6. **Add the remaining coverage gaps** — a ballot measure (Yes/No), a State House/Senate split.

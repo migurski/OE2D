@@ -50,3 +50,13 @@ def test_weight_exponent_one_makes_a_tiny_write_in_error_nearly_free():
     concave = metrics.score(got, gold, weight_exponent=0.5)
     assert linear['weighted_f1'] > 0.98                   # linear: 5 votes against ~1000 is ~free
     assert concave['weighted_f1'] < linear['weighted_f1']  # concave keeps it cheaper, not free
+
+
+def test_weighted_f1_penalizes_a_spurious_zero_vote_row():
+    # a phantom all-zero row (e.g. an out-of-county precinct) must not be invisible: +1 smoothing
+    # gives a zero-vote row weight 1, so it registers -- small, but not free
+    gold = [_row('A', 'Harris', 100)]
+    got = [_row('A', 'Harris', 100), _row('OOC', 'Harris', 0)]    # extra zero-vote row
+    s = metrics.score(got, gold)
+    assert s['f1'] < 1.0 and s['weighted_f1'] < 1.0       # the zero row is an error in both views
+    assert s['weighted_f1'] > 0.9                         # ...but far cheaper than a real-vote error

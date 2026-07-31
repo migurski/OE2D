@@ -9,9 +9,11 @@ Two views are reported:
    party row. Good for "how many rows are exactly right".
  - weighted: each row contributes by its vote size, so an error in a big party row is far costlier
    than one in a tiny write-in row -- the mistakes we most want to avoid dominate the score. The
-   weight is CONCAVE (votes ** weight_exponent, default 0.5 = sqrt): a small write-in error is
-   cheaper than a big-row error but never negligible. exponent 1.0 -> linear (write-ins nearly
-   free), -> 0 approaches the plain per-row count.
+   weight is CONCAVE with +1 smoothing ((votes + 1) ** weight_exponent, default 0.5 = sqrt): a
+   small write-in error is cheaper than a big-row error but never zero -- a zero-VOTE row still
+   weighs 1, so a spurious or missing zero row (a phantom out-of-county precinct, a dropped 0 row)
+   registers as a small error instead of being invisible. exponent 1.0 -> near-linear, -> 0
+   approaches the plain per-row count.
 '''
 from __future__ import annotations
 
@@ -36,8 +38,10 @@ def _row_votes(row: dict) -> int:
 
 
 def _weight(votes: int, exponent: float) -> float:
-    '''Concave vote weight: a big-row error costs more than a small one, sub-linearly.'''
-    return float(votes) ** exponent
+    '''Concave vote weight with +1 smoothing: a big-row error costs more than a small one,
+    sub-linearly, and a zero-vote row still weighs 1 (so a spurious/missing zero row is a small
+    error, not invisible).'''
+    return float(votes + 1) ** exponent
 
 
 def _weights_by_key(rows: list[dict], exponent: float) -> dict[tuple, float]:
