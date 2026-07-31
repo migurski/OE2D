@@ -32,7 +32,15 @@ class ColumnRole(pydantic.BaseModel):
         default=False,
         description='true if this candidate column is any kind of write-in -- a named/qualified '
                     'write-in candidate, an unresolved/scattered write-in, or a write-in total. '
-                    'All write-in columns are later summed into one consolidated write-in row')
+                    'All write-in columns are later combined into one consolidated write-in row')
+    write_in_total: bool = pydantic.Field(
+        default=False,
+        description='write-in columns only: true ONLY if this column is an explicit AGGREGATE '
+                    'total of write-ins -- a column labeled like "Write-In Totals" / "Total '
+                    'Write-Ins" that already sums the itemized write-ins. Leave FALSE for a '
+                    'scattered/unresolved bare "Write-in" line and for a named qualified write-in '
+                    'candidate (e.g. "Peter Sonski") -- those are components that get summed. When '
+                    'a real total column exists it is used instead of summing the components')
 
 
 class PageSchema(pydantic.BaseModel):
@@ -59,7 +67,8 @@ class CandidateRow(pydantic.BaseModel):
     row_index: int = pydantic.Field(description='0-based grid row of this candidate WITHIN THIS CONTEST -- scopes to the right contest when several are stacked on the page (their write-in/over/under labels repeat)')
     candidate: str = pydantic.Field(description='matched EXPECTED candidate name; or the observed label verbatim for a write-in / vote-integrity row (Write-In Totals, Overvotes, ...)')
     party: str = pydantic.Field(default='', description='matched expected party; blank if unmatched. Do NOT read party off the document')
-    write_in: bool = pydantic.Field(default=False, description='true if this row is any kind of write-in (named/qualified write-in, unresolved/scattered write-in, or write-in total); all write-in rows are summed into one consolidated write-in row')
+    write_in: bool = pydantic.Field(default=False, description='true if this row is any kind of write-in (named/qualified write-in, unresolved/scattered write-in, or write-in total); all write-in rows are combined into one consolidated write-in row')
+    write_in_total: bool = pydantic.Field(default=False, description='write-in rows only: true ONLY if this row is an explicit AGGREGATE total of write-ins (labeled like "Write-In Totals" / "Total Write-Ins") that already sums the itemized write-ins. Leave FALSE for a scattered/unresolved bare "Write-in" row and for a named qualified write-in candidate -- those are components that get summed. A real total row is used instead of summing the components')
 
 
 class PrecinctPageSchema(pydantic.BaseModel):
@@ -87,8 +96,12 @@ class InterpretPrecinctPage(dspy.Signature):
     verbatim with a blank party. Set write_in=true on ANY write-in row (a named/qualified write-in,
     an unresolved/scattered write-in, or a write-in total -- "Qualified Write In", "Unresolved
     Write-In", "Write-In Totals", "Not Assigned", etc.); they are consolidated into one write-in
-    total downstream, so flag them all. Exclude the statistics block and grand-total rows (e.g.
-    "Total Votes Cast", "Contest Totals").
+    total downstream, so flag them all. Additionally set write_in_total=true ONLY on a row that is
+    an explicit AGGREGATE write-in total (labeled like "Write-In Totals" / "Total Write-Ins") --
+    NOT on a bare scattered "Write-in" row and NOT on a named qualified write-in candidate; those
+    are components. When a real total row is present it is used, otherwise the components are
+    summed. Exclude the statistics block and grand-total rows (e.g. "Total Votes Cast", "Contest
+    Totals").
 
     Return ONLY structure -- never read or return a vote number.
     '''
@@ -114,7 +127,12 @@ class InterpretResultsPage(dspy.Signature):
     keeps its observed label verbatim with a blank party. Set write_in=true on ANY write-in column
     (a named/qualified write-in, an unresolved/scattered write-in, or a write-in total -- "Qualified
     Write In", "Unresolved Write-In", "Write-In Totals", "Not Assigned", etc.); they are
-    consolidated into one write-in total downstream, so flag them all.
+    consolidated into one write-in total downstream, so flag them all. Additionally set
+    write_in_total=true ONLY on a column that is an explicit AGGREGATE write-in total (labeled like
+    "Write-In Totals" / "Total Write-Ins") -- NOT on a bare scattered "Write-in" column and NOT on a
+    named qualified write-in candidate; those are components. A real total column is used when
+    present, otherwise the components are summed (so a scattered "Write-in" line and the named
+    qualified write-ins are added together).
 
     Return ONLY structure -- never read or return a vote number.
     '''

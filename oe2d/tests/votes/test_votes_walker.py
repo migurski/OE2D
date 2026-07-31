@@ -69,11 +69,13 @@ class _Role:
         self.row_index = row_index
 
 
-def test_consolidate_write_in_sums_components_but_not_a_total():
-    assert votes._consolidate_write_in([0, 0, 0, 2]) == 2       # qualified write-ins, no total -> sum
-    assert votes._consolidate_write_in([2, 2]) == 2            # total == its sole breakdown -> not doubled
-    assert votes._consolidate_write_in([3, 1, 1, 1]) == 3      # a grand total over its components
-    assert votes._consolidate_write_in([]) == 0
+def test_consolidate_write_in_prefers_a_flagged_total_else_sums_components():
+    # the interpreter marks which columns are an aggregate total vs components; no numeric guessing
+    assert votes._consolidate_write_in([], [0, 0, 0, 2]) == 2   # components only -> sum
+    assert votes._consolidate_write_in([], [6, 2]) == 8         # Barry: scattered + qualified add up
+    assert votes._consolidate_write_in([2], [2]) == 2          # Adams: total over its sole breakdown
+    assert votes._consolidate_write_in([3], [1, 1, 1]) == 3    # an explicit grand total wins
+    assert votes._consolidate_write_in([], []) == 0
 
 
 def test_split_party_pulls_a_trailing_party_out_of_the_name():

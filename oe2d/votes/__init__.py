@@ -105,14 +105,20 @@ def _assign_methods(buckets: list[str], numbers: list[int]) -> dict | None:
     return None
 
 
-def _consolidate_write_in(values: list[int]) -> int:
-    '''Combine several write-in figures into one. If one value equals the sum of the others it is a
-    grand total (a total-plus-breakdown, e.g. "Write-In Totals" over "Not Assigned") -- use it, do
-    not double-count; otherwise the values are separate components (qualified write-ins) -- sum.'''
-    if len(values) <= 1:
-        return values[0] if values else 0
-    biggest: int = max(values)
-    return biggest if biggest == sum(values) - biggest else sum(values)
+def _consolidate_write_in(totals: list[int], components: list[int]) -> int:
+    '''Combine one precinct+method's write-in figures into a single value. The interpreter marks
+    which columns are an explicit AGGREGATE write-in total (write_in_total) versus components. When
+    a real total is present it already sums the itemized write-ins, so use it and do not add the
+    components (a total-plus-breakdown, e.g. Adams "Write-In Totals" over "Not Assigned"). Otherwise
+    the write-in columns are separate components -- a scattered/unresolved "Write-in" line plus the
+    named qualified write-ins -- and they add together (e.g. Barry scattered 6 + Sonski 2 = 8).
+
+    Keeping the total-vs-component call in the interpreter (language) instead of guessing it from the
+    numbers avoids the failure where a scattered value happens to equal a qualified value per method
+    and a numeric "is one the sum of the others" test wrongly collapses them.'''
+    if totals:
+        return max(totals)
+    return sum(components)
 
 
 def _record(components: list[str], values: list[int], total: int) -> dict:
@@ -307,9 +313,10 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
         logger.info('page: %d columns, %d precinct blocks', len(schema.columns), len(pages_schema_blocks[-1][1]))
 
     votes: dict = {}
-    # write-in columns are collected per (precinct, method) and consolidated once at the end, so a
-    # grand-total column is not double-counted against its breakdown.
-    write_ins: dict = collections.defaultdict(lambda: collections.defaultdict(list))
+    # write-in columns are collected per (precinct, method), keeping the interpreter's total-vs-
+    # component split, and consolidated once at the end: a real total wins, else components sum.
+    write_ins: dict = collections.defaultdict(
+        lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
     for group in _precinct_groups(pages_schema_blocks):
         # Precinct labels by consensus across the group's candidate-group pages: a page may drop the
         # first precinct's label to None, but a sibling page carries it.
@@ -333,12 +340,14 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
                             continue
                         store: str = 'votes' if bucket == _TOTAL_BUCKET else bucket
                         if column.write_in:                     # gather; consolidated below
-                            write_ins[precinct][store].append(value)
+                            part = 'total' if column.write_in_total else 'component'
+                            write_ins[precinct][store][part].append(value)
                         else:
                             votes.setdefault((precinct, candidate, party), {})[store] = value
     for precinct, stores in write_ins.items():
-        votes[(precinct, WRITE_IN_LABEL, '')] = {store: _consolidate_write_in(values)
-                                                 for store, values in stores.items()}
+        votes[(precinct, WRITE_IN_LABEL, '')] = {
+            store: _consolidate_write_in(parts['total'], parts['component'])
+            for store, parts in stores.items()}
     return votes
 
 
@@ -377,7 +386,8 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
     # identical, indices scope to the right contest when several stack on a page (their
     # write-in/over/under labels repeat), and it sidesteps labels that wrap mid-word across cells.
     votes: dict = {}
-    write_ins: dict = collections.defaultdict(lambda: collections.defaultdict(list))
+    write_ins: dict = collections.defaultdict(
+        lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
     for page in pages:
         grid: list[list[str]] = read_text_grid(file_path, page)
         precinct: str = ''
@@ -396,14 +406,16 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
                             precinct, role.candidate, role.row_index, len(numbers), len(buckets))
                 continue
             if role.write_in:                                 # gather; consolidated below
+                part = 'total' if role.write_in_total else 'component'
                 for bucket, value in record.items():
-                    write_ins[precinct][bucket].append(value)
+                    write_ins[precinct][bucket][part].append(value)
             else:
                 candidate: str = re.sub(r':+$', '', role.candidate).strip()   # drop trailing-colon artifact
                 votes[(precinct, candidate, role.party)] = record
     for precinct, stores in write_ins.items():
-        votes[(precinct, WRITE_IN_LABEL, '')] = {store: _consolidate_write_in(values)
-                                                 for store, values in stores.items()}
+        votes[(precinct, WRITE_IN_LABEL, '')] = {
+            store: _consolidate_write_in(parts['total'], parts['component'])
+            for store, parts in stores.items()}
     return votes
 
 
