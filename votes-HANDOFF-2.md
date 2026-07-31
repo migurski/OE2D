@@ -255,10 +255,46 @@ reference, and special-row spellings that drift between contests in the same cou
   every robustness helper (`_assign_methods`, `_count_columns`, `_cell_count`, `_contiguous_label`,
   `_split_party`, `_consolidate_write_in`). 19 pass.
 
+## Design notes — pinned topics (revisit with scan evidence, not on spec)
+
+Two related ideas came up while planning the scanned read path. Decision: **do not build either up
+front; look at a real scan first**, because the amount of machinery needed is sized to how noisy the
+OCR actually is, which we can't guess.
+
+1. **Columns from row-vs-row agreement.** We already do the seed of this: `_count_columns` (rows
+   path) finds count-column positions by which columns the *most* candidate rows agree on, outvoting
+   a stray cell. The columns path doesn't yet — it takes columns from reader geometry (exact vector
+   `word.x0`), which won't survive OCR jitter/skew. The generalization for scans: deskew, project
+   every numeric token's x-center across *all* rows into a histogram, and the peaks are the columns
+   — the table self-calibrates, and more rows means sharper peaks. Then snap each row's tokens to the
+   nearest peak, and use checksums (row total == Σmethods, printed Total Votes == Σcandidates,
+   Σprecincts == county total) as the disambiguator when geometry is a coin-flip. Sharp version:
+   **distrust the OCR vendor's own table cells; take its words+boxes and find columns ourselves.**
+
+2. **Perimeter, not the full N×M page grid.** The columns path interprets *every* page; the rows path
+   already interprets one and applies it. A document is a grid of pages: M across (candidate-group
+   splits) × N down (precinct continuations). Structure lives on the perimeter — one horizontal
+   traverse (≈M pages, one per candidate-group-type) teaches all candidate columns; the vertical
+   structure is mostly deterministic. The (N−1)(M−1) interior is pure fill: known columns + Topic-1
+   consensus + checksums, no LLM. This reconciles with "re-interpret every page" because only the
+   *cell level* drifts within a document (handled by the deterministic helpers), not the *structure*.
+   Concretely the win is "**once per distinct page-type, not once per page**" (dozens of calls → a
+   handful), with a checksum-triggered re-interpret for a page that doesn't reconcile. Folds in the
+   header-slice idea (send only the perimeter pages' header band + label column).
+
+These compose: the LLM reads the perimeter to *name* columns/rows (terminology); deterministic
+row-consensus + checksums *fill and validate* the interior (numbers) — the "model decides structure,
+code moves digits" principle lifted to the page-grid level.
+
 ## Next steps (in rough priority)
 1. **Textract read path** — the last remaining work: unblocks the 5 scanned examples (Gogebic, Huron
-   ×4). Wire the prototype scripts; deskew per the settled `oe2d.pages` notes. Huron will exercise
-   the cross-page precinct stitch (its contests cross page to page).
+   ×4). **Decision (from the pinned topics): use Textract's cheap `DetectDocumentText`** (returns
+   words + bounding boxes + confidence), NOT `AnalyzeDocument` with `TABLES` — we reconstruct the
+   grid ourselves (same shape as `read_rotated_grid`: cluster words by y into rows, by x into
+   columns), which sidesteps Textract's unreliable table-splitting and is several times cheaper.
+   Rasterize with `oe2d.rendering`, deskew per the settled `oe2d.pages` notes. Build a minimal
+   scanned reader, run ONE real scan, and only then decide how much of the pinned robustness to pull
+   off the pin. Huron will exercise the cross-page precinct stitch (its contests cross page to page).
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
