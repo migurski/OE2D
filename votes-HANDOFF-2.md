@@ -32,10 +32,12 @@ Current F1 — both plain (per-row) and vote-weighted (fresh DSPy cache):
 | calhoun president | columns | **1.000** | rotated-header read + cross-page stitch; 4 write-in gold rows rebuilt from source |
 | calhoun us-house-4 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | calhoun us-house-5 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
-| gogebic, huron ×4 | — | blocked | **scanned** — need a Textract read path |
+| gogebic president | columns | **1.000** | **scanned** — cheap-mode Textract + own grid reconstruction |
+| huron ×4 | — | pending | scanned; `pages`/orientation still to fill (president 2–3) |
 
-Plain and vote-weighted F1 are **1.000 on every vector contest** (11 of them). The only remaining work
-is the 5 scanned examples (Textract read path).
+Plain and vote-weighted F1 are **1.000 on all 11 vector contests and the first scanned contest**
+(Gogebic). Remaining: the four Huron scanned contests (fill `pages`, run — Huron exercises the
+cross-page precinct stitch on scanned input).
 
 16 hand-built gold examples live in `oe2d-data/votes/` (`index.jsonl` + one
 `<county>__<contest>__expected.csv` each). Numbers are **copied from human-authored state-repo
@@ -63,9 +65,16 @@ Three stages, one narrow LLM judgment, chosen by candidate orientation (from `oe
   No OCR — the text layer is present, just mirrored. `extract_contest` dispatches here when
   `page_table` returns nothing. The bigram reversal is a deterministic text-orientation call; the
   candidate/terminology matching still happens in the LLM.
-- **Scanned** → **Textract (not built yet)**. The three untracked repo-root prototypes
-  (`pdf2excel.py`, `stitch-textract-results.py`, `prepare-openelections-csv.py`) are the starting
-  point. This blocks the 5 scanned examples.
+- **Scanned (no text layer)** → `oe2d.votes.read_scanned_grid` via **cheap-mode Textract**
+  (`DetectDocumentText`, words + boxes, inline PNG bytes — NOT `AnalyzeDocument TABLES`). Renders
+  with `oe2d.rendering`, deskews (`oe2d.pages.deskew`), then reconstructs the grid ourselves: cluster
+  words into rows by y-center; take column x-centers from the counts on real data rows only (≥4
+  integers in the data region), so banners/precinct-numbers don't invent columns; snap counts to the
+  nearest column; rejoin a precinct name that wrapped across lines (`<place>,` + `Precinct N`). This
+  distrusts Textract's table-splitting and is several times cheaper. Blocks are cached under
+  `oe2d-data/votes/.cache/textract/`. Dispatched by `read_page_grid` only when a page has no text
+  layer, so vector documents never pay for it. Thresholds are MI-SOVC-tuned normalized fractions;
+  Textract read the vertical candidate headers upright at 99% confidence (no bigram reversal needed).
 
 ### 2. Interpret (the DSPy judgment)
 Two orientation-specific signatures in `oe2d/votes/signatures.py`, sharing: expected-candidate
@@ -287,14 +296,12 @@ row-consensus + checksums *fill and validate* the interior (numbers) — the "mo
 code moves digits" principle lifted to the page-grid level.
 
 ## Next steps (in rough priority)
-1. **Textract read path** — the last remaining work: unblocks the 5 scanned examples (Gogebic, Huron
-   ×4). **Decision (from the pinned topics): use Textract's cheap `DetectDocumentText`** (returns
-   words + bounding boxes + confidence), NOT `AnalyzeDocument` with `TABLES` — we reconstruct the
-   grid ourselves (same shape as `read_rotated_grid`: cluster words by y into rows, by x into
-   columns), which sidesteps Textract's unreliable table-splitting and is several times cheaper.
-   Rasterize with `oe2d.rendering`, deskew per the settled `oe2d.pages` notes. Build a minimal
-   scanned reader, run ONE real scan, and only then decide how much of the pinned robustness to pull
-   off the pin. Huron will exercise the cross-page precinct stitch (its contests cross page to page).
+1. **Huron (scanned, ×4)** — `read_scanned_grid` is built and validated (Gogebic 1.000). Fill Huron's
+   `pages`/orientation (president is 2–3) and run president + straight-party + us-senate + us-house.
+   Huron's contests cross page to page, so it's the first test of the cross-page precinct stitch on
+   scanned input, and the first check of whether the MI-SOVC-tuned reader thresholds and the pinned
+   robustness (row-consensus columns) hold on another scan. The lightweight reconstruction carried
+   Gogebic without the heavy Topic-1 machinery — watch whether Huron changes that.
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path

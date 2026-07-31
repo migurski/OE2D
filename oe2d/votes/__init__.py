@@ -295,6 +295,144 @@ def read_rotated_grid(path: str, page: int, x_gap: float = 15, y_tol: float = 3)
     return grid
 
 
+def _cluster_1d(values: list[float], gap: float) -> list[float]:
+    '''Split sorted values wherever the gap between neighbours exceeds `gap`; return group centers.'''
+    centers: list[float] = []
+    run: list[float] = []
+    for value in sorted(values):
+        if run and value - run[-1] > gap:
+            centers.append(sum(run) / len(run))
+            run = []
+        run.append(value)
+    if run:
+        centers.append(sum(run) / len(run))
+    return centers
+
+
+def _textract_words(file_path: str, page: int) -> list[dict]:
+    '''Cheap-mode Textract (DetectDocumentText) words for a scanned page, each with text and a
+    normalized center (cx, cy). Renders the page, deskews it, and calls Textract once; the raw
+    Blocks are cached under oe2d-data/votes/.cache/textract/ so re-runs do not re-pay. No S3 (inline
+    PNG bytes) and no TABLES feature -- we reconstruct columns ourselves, which sidesteps Textract's
+    unreliable table-splitting and is several times cheaper.'''
+    import io
+    import hashlib
+    import json
+    import boto3
+    from PIL import Image
+    from .. import rendering
+    from ..pages import deskew
+    key: str = hashlib.sha1(('%s\0%d' % (os.path.abspath(file_path), page)).encode()).hexdigest()
+    cache_dir: str = os.path.join('oe2d-data', 'votes', '.cache', 'textract')
+    cache: str = os.path.join(cache_dir, '%s.json' % key)
+    if os.path.exists(cache):
+        blocks = json.load(open(cache))
+    else:
+        image = Image.open(rendering.render_page(file_path, page, resolution=300)).convert('RGB')
+        angle: float = deskew.detect_skew_pil(image)
+        if abs(angle) > 0.05:
+            image = image.rotate(-angle, resample=Image.BICUBIC, expand=True, fillcolor='white')
+        buffer = io.BytesIO()
+        image.save(buffer, format='PNG')
+        client = boto3.Session(region_name=os.environ.get('AWS_REGION_NAME', 'us-west-2')).client('textract')
+        blocks = client.detect_document_text(Document={'Bytes': buffer.getvalue()})['Blocks']
+        os.makedirs(cache_dir, exist_ok=True)
+        json.dump(blocks, open(cache, 'w'))
+    words: list[dict] = []
+    for block in blocks:
+        if block['BlockType'] != 'WORD':
+            continue
+        geometry = block['Geometry']['BoundingBox']
+        words.append({'text': block.get('Text', ''),
+                      'cx': geometry['Left'] + geometry['Width'] / 2,
+                      'cy': geometry['Top'] + geometry['Height'] / 2})
+    return words
+
+
+def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap: float = 0.02,
+                      data_left: float = 0.14, half: float = 0.45) -> list[list[str]]:
+    '''Read a SCANNED SOVC page into a grid from cheap-mode Textract words -- no vendor table cells.
+
+    Cluster words into rows by their y-center; take column x-centers from the counts on real DATA
+    rows only (>= 4 integer tokens in the data region), so banner rows and stray precinct numbers do
+    not invent columns. A method row's counts snap to the nearest column; a precinct-label row (< 4
+    counts, its name possibly wrapped across lines) keeps the left-half text as its label (the layout
+    duplicates the label across a left statistics block and a right votes block -- we take the left
+    copy). The header band below the contest title is binned into columns so candidate names land
+    under their column for the interpreter. Thresholds are normalized (0-1) page fractions; they fit
+    the MI SOVC scan layout and may need widening for other vendors.'''
+    words: list[dict] = _textract_words(file_path, page)
+    if not words:
+        return []
+    words.sort(key=lambda w: w['cy'])
+    rows: list[list[dict]] = []
+    for word in words:
+        if rows and word['cy'] - rows[-1][-1]['cy'] > row_gap:
+            rows.append([])
+        elif not rows:
+            rows.append([])
+        rows[-1].append(word)
+
+    def data_counts(row: list[dict]) -> list[dict]:
+        return [w for w in row if re.fullmatch(r'-?[\d,]+', w['text']) and data_left < w['cx'] < 0.95]
+
+    data_rows: list[list[dict]] = [row for row in rows if len(data_counts(row)) >= 4]
+    if not data_rows:
+        return []
+    centers: list[float] = _cluster_1d([w['cx'] for row in data_rows for w in data_counts(row)], col_gap)
+    label_bound: float = centers[0] - 0.04
+    first_data_y: float = min(min(w['cy'] for w in row) for row in data_rows)
+    nearest = lambda cx: min(range(len(centers)), key=lambda i: abs(centers[i] - cx))
+
+    header: list[str] = [''] * (len(centers) + 1)
+    for row in rows:
+        for word in row:
+            if 0.12 < word['cy'] < first_data_y and word['cx'] >= label_bound and '%' not in word['text']:
+                header[nearest(word['cx']) + 1] = (header[nearest(word['cx']) + 1] + ' ' + word['text']).strip()
+
+    grid: list[list[str]] = [header]
+    for row in sorted(rows, key=lambda r: min(w['cy'] for w in r)):
+        counts = data_counts(row)
+        cells: list[str] = [''] * (len(centers) + 1)
+        if len(counts) >= 4:                             # method row: label at left, counts in columns
+            cells[0] = ' '.join(w['text'] for w in sorted(row, key=lambda w: w['cx']) if w['cx'] < label_bound)
+            for word in counts:
+                cells[nearest(word['cx']) + 1] = word['text']
+        else:                                            # precinct-label / banner row: left-half text
+            cells[0] = ' '.join(w['text'] for w in sorted(row, key=lambda w: w['cx']) if w['cx'] < half)
+        grid.append(cells)
+
+    # Rejoin a precinct name that wrapped across lines so the interpreter's first_data_row cannot
+    # split it: MI names wrap as "<place>," + "Precinct N", so a label-only row whose nearest
+    # preceding label-only row ends in a comma is that row's continuation (blank lines between are
+    # skipped). Banners and section headers do not end in a comma, so they are untouched.
+    previous: list[str] | None = None
+    for cell_row in grid[1:]:
+        if not any(cell_row):
+            continue                                     # blank row: keep the pending label
+        is_label: bool = bool(cell_row[0]) and not any(cell_row[1:])
+        if is_label and previous is not None and previous[0].rstrip().endswith(','):
+            previous[0] = (previous[0] + ' ' + cell_row[0]).strip()
+            cell_row[0] = ''
+        else:
+            previous = cell_row if is_label else None
+    return grid
+
+
+def read_page_grid(file_path: str, page: int) -> list[list[str]]:
+    '''One page's grid, choosing the reader by what the page offers: ruled Hart SOVC
+    (source_table) -> rotated-header text-aligned SOVC (read_rotated_grid) -> a scanned page with no
+    text layer at all (read_scanned_grid via Textract). The Textract path only fires when the page
+    has no extractable words, so a vector document never pays for it.'''
+    grid: list[list[str]] = source_table.page_table(file_path, page) or read_rotated_grid(file_path, page)
+    if grid:
+        return grid
+    pdf: pdfplumber.PDF = _open_pdf(file_path)
+    if 1 <= page <= len(pdf.pages) and not pdf.pages[page - 1].extract_words():
+        return read_scanned_grid(file_path, page)
+    return []
+
+
 def build_interpreter() -> dspy.Module:
     '''Construct the page interpreter. A trained artifact, when present, fully governs (its
     saved prompt AND lm win); otherwise bind the stock inference LM (temperature 0). Turns on
@@ -388,9 +526,7 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
     interpreter = interpreter or build_interpreter()
     page_schemas: list[tuple] = []
     for page in pages:
-        # ruled Hart SOVCs read with source_table; a text-aligned SOVC with rotated headers (no
-        # ruled lines) falls back to read_rotated_grid, which un-mirrors the headers from geometry.
-        rows: list[list[str]] = source_table.page_table(file_path, page) or read_rotated_grid(file_path, page)
+        rows: list[list[str]] = read_page_grid(file_path, page)
         schema: signatures.PageSchema = interpret_page(interpreter, office, candidate_context, rows)
         page_schemas.append((schema, rows))
 
@@ -450,13 +586,15 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
         lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
     for group in _precinct_groups(pages_schema_blocks):
         # Precinct labels by consensus across the group's candidate-group pages: a page may drop the
-        # first precinct's label to None, but a sibling page carries it.
+        # first precinct's label to None (a sibling page carries it) or read a wrapped name as only a
+        # fragment ("Precinct 1" for "Ironwood Charter Township, Precinct 1"); take the MOST COMPLETE
+        # (longest) reading at each position, so the fullest page wins.
         span: int = max(len(blocks) for _schema, blocks in group)
         labels: list = []
         for index in range(span):
-            found = next((blocks[index]['label'] for _schema, blocks in group
-                          if index < len(blocks) and blocks[index]['label']), None)
-            labels.append(found)
+            seen = [blocks[index]['label'] for _schema, blocks in group
+                    if index < len(blocks) and blocks[index]['label']]
+            labels.append(max(seen, key=len) if seen else None)
         for index, precinct in enumerate(labels):
             for schema, blocks in group:
                 if index >= len(blocks):
