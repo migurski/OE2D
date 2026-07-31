@@ -250,17 +250,46 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
     lists. The interpreter never touches a number; this function moves them.
     '''
     interpreter = interpreter or build_interpreter()
-    pages_schema_blocks: list[tuple] = []
+    page_schemas: list[tuple] = []
     for page in pages:
         rows: list[list[str]] = source_table.page_table(file_path, page) or []
         schema: signatures.PageSchema = interpret_page(interpreter, office, candidate_context, rows)
+        page_schemas.append((schema, rows))
+
+    # A first walk with each page's own skip labels, to learn the document's real precinct labels.
+    first_blocks: list[list[dict]] = [walk_page(rows, schema) for schema, rows in page_schemas]
+    precinct_labels: set[str] = {block['label'] for blocks in first_blocks
+                                 for block in blocks if block['label']}
+
+    # Consensus skip labels: a label is a total/header only if MULTIPLE pages call it one AND it is
+    # not a fragment of any real precinct label. This drops a single page's mistake (a precinct name
+    # in skip_labels collapses that group) and a common wrap fragment ("Precinct 1") that several
+    # pages mis-skip -- while keeping a genuine total ("Barry County Michigan"), which never appears
+    # inside a precinct name.
+    skip_frequency: dict[str, int] = collections.defaultdict(int)
+    for schema, _rows in page_schemas:
+        for label in set(schema.skip_labels):
+            skip_frequency[label] += 1
+    consensus_skip: list[str] = [
+        label for label, count in skip_frequency.items()
+        if count >= 2 and not any(label in precinct for precinct in precinct_labels)]
+
+    pages_schema_blocks: list[tuple] = []
+    for schema, rows in page_schemas:
+        schema.skip_labels = consensus_skip
         pages_schema_blocks.append((schema, walk_page(rows, schema)))
-        logger.info('page %d: %d columns, %d precinct blocks',
-                    page, len(schema.columns), len(pages_schema_blocks[-1][1]))
+        logger.info('page: %d columns, %d precinct blocks', len(schema.columns), len(pages_schema_blocks[-1][1]))
 
     votes: dict = {}
     for group in _precinct_groups(pages_schema_blocks):
-        labels: list = [block['label'] for block in group[0][1]]     # labels from candidate-group 1
+        # Precinct labels by consensus across the group's candidate-group pages: a page may drop the
+        # first precinct's label to None, but a sibling page carries it.
+        span: int = max(len(blocks) for _schema, blocks in group)
+        labels: list = []
+        for index in range(span):
+            found = next((blocks[index]['label'] for _schema, blocks in group
+                          if index < len(blocks) and blocks[index]['label']), None)
+            labels.append(found)
         for index, precinct in enumerate(labels):
             for schema, blocks in group:
                 if index >= len(blocks):
