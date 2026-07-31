@@ -196,6 +196,105 @@ def read_text_grid(path: str, page: int, text_tolerance: int = 3) -> list[list[s
     return max(tables, key=lambda table: len(table.extract())).extract()
 
 
+# Common English bigrams -- enough to tell, cheaply and deterministically, whether a run of text
+# reads more like English forwards or reversed. Used only to decide page ORIENTATION (is this a
+# rotated SOVC whose header text came out mirrored?); the candidate/terminology matching still
+# happens in the LLM interpreter.
+_COMMON_BIGRAMS: frozenset = frozenset((
+    'th he in er an re on at en nd ti es or te of ed is it al ar st to nt ng se ha as ou io le ve co '
+    'me de hi ri ro ic ne ea ra ce li ch ll be ma si om ur ca el ta la ns').split())
+
+
+def _bigram_score(text: str) -> int:
+    letters: str = re.sub(r'[^a-z]', '', text.lower())
+    return sum(letters[i:i + 2] in _COMMON_BIGRAMS for i in range(len(letters) - 1))
+
+
+def _reads_better_reversed(tokens: list[str]) -> bool:
+    '''True when the tokens, as a set, score higher reversed than forward -- i.e. the text layer is
+    mirrored (a 90deg-rotated header extracted character-reversed, "acisseJ" for "Jessica").'''
+    forward: int = sum(_bigram_score(token) for token in tokens)
+    reverse: int = sum(_bigram_score(token[::-1]) for token in tokens)
+    return reverse > forward
+
+
+def read_rotated_grid(path: str, page: int, x_gap: float = 15, y_tol: float = 3) -> list[list[str]]:
+    '''Read a rotated-header text-aligned SOVC page (e.g. Calhoun MI) into a grid.
+
+    These pages have no ruled lines (so source_table.page_table finds no columns) and their column
+    HEADERS are rotated 90deg, which the text layer emits character-reversed and word-scrambled
+    ("acisseJ ztrawS )MED(" for "Jessica Swartz (DEM)"). The vote NUMBERS are upright and read fine.
+    We recover columns from geometry: cluster the rotated header words into candidate columns by an
+    x-gap, un-mirror each token (only when the page as a whole reads better reversed), and bin the
+    upright body words into those columns by x. The precinct name is duplicated across a left
+    (statistics) block and a right (votes) block; the left copy sits in the label column and is
+    read as-is. Returns a normal grid the columns pipeline consumes -- no OCR (the text layer is
+    present, just mirrored).'''
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return []
+    words: list[dict] = pdf.pages[page - 1].extract_words(extra_attrs=['upright'])
+    rotated: list[dict] = [w for w in words if not w.get('upright', True)]
+    upright: list[dict] = [w for w in words if w.get('upright', True)]
+    if not rotated:
+        return []
+    unmirror = (lambda t: t[::-1]) if _reads_better_reversed([w['text'] for w in rotated]) else (lambda t: t)
+
+    # cluster rotated header words into columns by an x-gap between adjacent x0
+    rotated.sort(key=lambda w: w['x0'])
+    bands: list[list[dict]] = []
+    for word in rotated:
+        if bands and word['x0'] - bands[-1][-1]['x0'] > x_gap:
+            bands.append([])
+        elif not bands:
+            bands.append([])
+        bands[-1].append(word)
+    band_defs: list[list] = []                       # [lo, hi, header_name]
+    for band in bands:
+        xs: list[float] = [w['x0'] for w in band]
+        name: str = ' '.join(unmirror(w['text']) for w in sorted(band, key=lambda w: (round(w['x0']), w['top'])))
+        band_defs.append([min(xs), max(xs), name])
+    band_defs.sort()
+    centers: list[float] = [(lo + hi) / 2 for lo, hi, _ in band_defs]
+    edges: list[float] = [(centers[i] + centers[i + 1]) / 2 for i in range(len(centers) - 1)]
+    first_edge: float = band_defs[0][0] - 6
+
+    def column_of(x: float) -> int:
+        if x < first_edge:
+            return -1                                # the label column (left of every header band)
+        index: int = 0
+        while index < len(edges) and x >= edges[index]:
+            index += 1
+        return index
+
+    # bin upright body words into rows (cluster by top), then into columns by x
+    upright.sort(key=lambda w: w['top'])
+    row_groups: list[list[dict]] = []
+    for word in upright:
+        if row_groups and word['top'] - row_groups[-1][-1]['top'] > y_tol:
+            row_groups.append([])
+        elif not row_groups:
+            row_groups.append([])
+        row_groups[-1].append(word)
+
+    grid: list[list[str]] = [[''] + [name for _lo, _hi, name in band_defs]]
+    for row in row_groups:
+        cells: list[str] = [''] * (len(band_defs) + 1)
+        label_parts: list[str] = []
+        for word in sorted(row, key=lambda w: w['x0']):
+            # bin by the word's CENTER, not its left edge: vote counts are right-aligned, so a wide
+            # number (a 4-digit "Times Cast") reaches left far enough that its x0 lands in the label
+            # column and merges into the "Total" label -- which then stops matching a method row.
+            column: int = column_of((word['x0'] + word['x1']) / 2)
+            if column == -1:
+                label_parts.append(word['text'])
+            elif '%' not in word['text'] and re.fullmatch(r'-?[\d,]+', word['text']) and not cells[column + 1]:
+                cells[column + 1] = word['text']       # the count (percents dropped)
+        cells[0] = ' '.join(label_parts)
+        grid.append(cells)
+    return grid
+
+
 def build_interpreter() -> dspy.Module:
     '''Construct the page interpreter. A trained artifact, when present, fully governs (its
     saved prompt AND lm win); otherwise bind the stock inference LM (temperature 0). Turns on
@@ -249,6 +348,11 @@ def walk_page(rows: list[list[str]], schema: signatures.PageSchema) -> list[dict
                 label_parts, methods = [], {}
             label_parts.append(label)
     flush()
+    # A precinct label at the very bottom of the page whose vote rows continue onto the NEXT page
+    # leaves label_parts set with no methods: emit it as a partial block (empty methods) so the
+    # cross-page stitch can join it to that next page's leading (label-less) vote rows.
+    if label_parts and not methods:
+        blocks.append({'label': ' '.join(label_parts), 'methods': {}})
     return blocks
 
 
@@ -284,7 +388,9 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
     interpreter = interpreter or build_interpreter()
     page_schemas: list[tuple] = []
     for page in pages:
-        rows: list[list[str]] = source_table.page_table(file_path, page) or []
+        # ruled Hart SOVCs read with source_table; a text-aligned SOVC with rotated headers (no
+        # ruled lines) falls back to read_rotated_grid, which un-mirrors the headers from geometry.
+        rows: list[list[str]] = source_table.page_table(file_path, page) or read_rotated_grid(file_path, page)
         schema: signatures.PageSchema = interpret_page(interpreter, office, candidate_context, rows)
         page_schemas.append((schema, rows))
 
@@ -311,6 +417,31 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
         schema.skip_labels = consensus_skip
         pages_schema_blocks.append((schema, walk_page(rows, schema)))
         logger.info('page: %d columns, %d precinct blocks', len(schema.columns), len(pages_schema_blocks[-1][1]))
+
+    # Cross-page precinct stitching (vertical continuation): a precinct whose rows straddle a page
+    # break leaves its label -- and any early method rows that still fit -- as the LAST block of page
+    # N, and the remaining method rows as a label-less FIRST block of page N+1. Merge the two: the
+    # tail's label and methods fold into the next page's leading block. Guard by requiring the two
+    # blocks' method buckets to be DISJOINT -- a true straddle splits the four methods across the
+    # break (Election Day here, the rest there), whereas a complete last precinct followed by a
+    # separately label-less one would overlap. Same-contest continuation means identical columns, so
+    # reading the tail's rows under the next page's schema is safe. No-op for documents (Barry,
+    # Oscoda) whose precincts never straddle a page. Then drop any partial with no continuation.
+    for index in range(len(pages_schema_blocks) - 1):
+        current: list[dict] = pages_schema_blocks[index][1]
+        following: list[dict] = pages_schema_blocks[index + 1][1]
+        if not (current and following):
+            continue
+        tail: dict = current[-1]
+        head: dict = following[0]
+        if tail['label'] and head['label'] is None and head['methods'] \
+                and not (tail['methods'].keys() & head['methods'].keys()):
+            head['label'] = tail['label']
+            for bucket, row in tail['methods'].items():
+                head['methods'].setdefault(bucket, row)
+            current.pop()
+    for _schema, blocks in pages_schema_blocks:
+        blocks[:] = [block for block in blocks if block['methods']]
 
     votes: dict = {}
     # write-in columns are collected per (precinct, method), keeping the interpreter's total-vs-

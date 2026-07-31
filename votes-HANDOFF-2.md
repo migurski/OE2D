@@ -29,11 +29,14 @@ Current F1 — both plain (per-row) and vote-weighted (fresh DSPy cache):
 | calaveras us-house | rows | **1.000** | district; Overvotes/Undervotes canonicalized in the interpreter |
 | barry president | columns | **1.000** | was 0.898 — see the write-in section below |
 | barry straight-party | columns | **1.000** | all-zero out-of-county precincts dropped; gold Ward-spacing + no-write-in fixes |
-| calhoun ×3 | columns | **blocked** | text-aligned SOVC with rotated/reversed headers — `page_table` finds no columns, `read_text_grid` shatters the label column; needs a rotated-SOVC read path |
+| calhoun president | columns | **0.992** | rotated-header read + cross-page stitch; residual = 4 mis-transcribed gold write-in rows |
+| calhoun us-house-4 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
+| calhoun us-house-5 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | gogebic, huron ×4 | — | blocked | **scanned** — need a Textract read path |
 
-Both plain and vote-weighted F1 are 1.000 on every passing example. 8 vector contests pass; Calhoun
-(×3, rotated text-aligned) and the 5 scanned examples are the remaining read-path work.
+Plain and vote-weighted F1 are 1.000 on every passing example (Calhoun president 0.992, its only gap 4
+gold-transcription write-in rows). 11 vector contests pass; the 5 scanned examples are the remaining
+read-path work.
 
 16 hand-built gold examples live in `oe2d-data/votes/` (`index.jsonl` + one
 `<county>__<contest>__expected.csv` each). Numbers are **copied from human-authored state-repo
@@ -51,6 +54,16 @@ Three stages, one narrow LLM judgment, chosen by candidate orientation (from `oe
 - **Vector-PDF, text-aligned (Electionware, CA vendor)** → `oe2d.votes.read_text_grid` (pdfplumber
   `find_tables` with `vertical/horizontal_strategy='text'`, `text_tolerance=3`). `source_table`'s
   ruled settings mis-read these and split numbers. Kept in `votes` (vendor-specific to this step).
+- **Vector-PDF, rotated-header text-aligned (Calhoun MI SOVC)** → `oe2d.votes.read_rotated_grid`.
+  No ruled lines (so `page_table` finds nothing) and column HEADERS are rotated 90°, which the text
+  layer emits character-reversed ("acisseJ" for "Jessica"). We recover columns from geometry:
+  cluster the `upright=False` header words into candidate columns by an x-gap, un-mirror each token
+  (only when the page as a whole scores better reversed — a cheap English-**bigram** check,
+  `_reads_better_reversed`, which doubles as the "is this a rotated SOVC" dispatch signal), and bin
+  the upright body words by their **center** x (right-aligned counts shift left with more digits).
+  No OCR — the text layer is present, just mirrored. `extract_contest` dispatches here when
+  `page_table` returns nothing. The bigram reversal is a deterministic text-orientation call; the
+  candidate/terminology matching still happens in the LLM.
 - **Scanned** → **Textract (not built yet)**. The three untracked repo-root prototypes
   (`pdf2excel.py`, `stitch-textract-results.py`, `prepare-openelections-csv.py`) are the starting
   point. This blocks the 5 scanned examples.
@@ -86,8 +99,16 @@ Field descriptions stay minimal and structural. (One consequence already paid of
 
 ### 3. Stitch + emit (deterministic)
 - **columns** `extract_contest`: interpret each page → `walk_page` (schema-driven blocks) →
-  `_precinct_groups` (a repeated candidate starts a new group) → align candidate-pages within a
-  group and accumulate. `votes_to_rows` → canonical CSV.
+  **cross-page precinct stitch** → `_precinct_groups` (a repeated candidate starts a new group) →
+  align candidate-pages within a group and accumulate. `votes_to_rows` → canonical CSV.
+  - **Cross-page precinct stitch (vertical continuation).** We reconstruct tables *horizontally*
+    (candidate-group splits, via `_precinct_groups`) AND now *vertically*: a precinct whose rows
+    straddle a page break leaves its label plus any early method rows as page N's last block and the
+    remaining rows as a label-less first block on page N+1. The stitch merges them when their method
+    buckets are **disjoint** (a real straddle splits the four methods across the break; two separate
+    precincts would overlap). `walk_page` emits a trailing label-only block so the label survives.
+    No-op for documents whose precincts never straddle (Barry, Oscoda). This was the missing piece
+    Calhoun exposed and Huron will lean on.
 - **rows** `extract_precinct_contest`: learn sample schema → per page, read each candidate row's
   numbers at the **page-consensus count columns** and align to buckets.
 - `extract(file, pages, office, context, orientation)` dispatches.
@@ -236,14 +257,13 @@ reference, and special-row spellings that drift between contests in the same cou
   `_split_party`, `_consolidate_write_in`). 19 pass.
 
 ## Next steps (in rough priority)
-1. **Calhoun rotated text-aligned read** — Calhoun's SOVC is text-aligned with rotated/reversed
-   headers ("acisseJ ztrawS" = Jessica Swartz). `source_table.page_table` finds no column structure
-   (no vertical rules, no multi-segment horizontals) and `read_text_grid` shatters the label column.
-   Blocks calhoun president + us-house ×2 (pages already located: president 17–20; US House 4th on
-   26–31/36–42/121–122, 5th on 32–35/43–46/123–124). Needs a read path that recovers columns from
-   rotated headers (the numeric rows read fine) — possibly the `oe2d.pages` image analyzer.
+1. **Calhoun president write-in gold** — 4 rows (City of Albion P5, City of Marshall P1, City of
+   Springfield P1, Marengo Twp P1) are mis-transcribed: their write-in method columns don't sum to
+   the total (Marengo has av=3 with votes=2, impossible). Same shape as Barry — an "Unresolved
+   Write-In" column plus qualified write-in candidates, added. The extraction's additive values are
+   internally consistent; rebuild these gold rows from source (as Barry) to close president to 1.000.
 2. **Textract read path** — unblocks the 5 scanned examples (Gogebic, Huron ×4). Wire the prototype
-   scripts; deskew per the settled `oe2d.pages` notes.
+   scripts; deskew per the settled `oe2d.pages` notes. Huron will exercise the cross-page stitch.
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
