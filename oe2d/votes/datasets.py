@@ -41,14 +41,19 @@ def expected_rows(record: dict) -> list[dict]:
 
 
 def candidate_context(record: dict) -> str:
-    '''The expected-candidate prose for a record's contest: one "Name (PARTY)" line per real
-    candidate (write-ins and vote-integrity rows excluded -- the interpreter reads those from the
-    document). Stands in for what oe2d.contests supplies.'''
+    '''The expected-candidate prose supplied to the interpreter, one "Name (PARTY)" line per
+    distinct candidate. Stands in for what oe2d.contests provides from external race knowledge.
+
+    Deliberately does NOT string-classify rows into candidate vs write-in/vote-integrity -- that
+    is language interpretation, which is the LLM's job, not Python's. Every distinct label is
+    listed; the interpreter matches columns/rows to these (echoing the supplied name+party) and
+    keeps anything unmatched verbatim, so listing a special here is harmless. (In production the
+    list comes from oe2d.contests and naturally contains only the real candidates.)'''
     lines: list[str] = []
     seen: set[str] = set()
     for row in expected_rows(record):
         name, party = row['candidate'], row['party']
-        if 'Write-In' in name or name in ('Over Votes', 'Under Votes') or name in seen:
+        if name in seen:
             continue
         seen.add(name)
         lines.append('%s (%s)' % (name, party) if party else name)
