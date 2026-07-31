@@ -429,9 +429,18 @@ def extract(file_path: str, pages: list[int], office: str, candidate_context: st
 
 
 def votes_to_rows(votes: dict, county: str, office: str, district: str = '') -> list[dict]:
-    '''Canonical precinct rows from a stitched votes mapping.'''
+    '''Canonical precinct rows from a stitched votes mapping.
+
+    A precinct whose every candidate total is zero carries no result and is dropped: MI SOVCs list
+    out-of-county split fragments ("... (Eaton OOC)") that the county reports as all-zero, and the
+    human-authored CSVs exclude them. This is a data-integrity rule (no votes -> not a result row),
+    not a name/terminology decision, so it stays in code.'''
+    live: set = {precinct for (precinct, _candidate, _party), buckets in votes.items()
+                 if (buckets.get('votes') or 0)}
     rows: list[dict] = []
     for (precinct, candidate, party), buckets in votes.items():
+        if precinct not in live:
+            continue
         row: dict = {column: '' for column in CANON_COLUMNS}
         row.update(county=county, precinct=precinct, office=office, district=district,
                    party=party, candidate=candidate)
