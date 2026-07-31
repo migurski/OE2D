@@ -49,6 +49,46 @@ class PageSchema(pydantic.BaseModel):
                     'grand-total row, a cumulative section, a "County" header)')
 
 
+class CandidateRow(pydantic.BaseModel):
+    '''One candidate's row in a precinct-major (candidates-as-rows) table.'''
+    source_label: str = pydantic.Field(description='the row-label cell verbatim, e.g. "DEM HARRIS and WALZ" -- used to find this row on every page (labels are identical across a document)')
+    candidate: str = pydantic.Field(description='matched EXPECTED candidate name; or the observed label verbatim for a write-in / vote-integrity row (Write-In Totals, Overvotes, ...)')
+    party: str = pydantic.Field(default='', description='matched expected party; blank if unmatched. Do NOT read party off the document')
+
+
+class PrecinctPageSchema(pydantic.BaseModel):
+    '''Structure of a precinct-major page (one precinct per page, contests stacked, candidates
+    down the rows, vote methods across the columns). Learned once from a sample page and applied
+    to every structurally-identical page in the document.'''
+    precinct_row: int = pydantic.Field(description='row index whose label cell holds the PRECINCT name (the page title, e.g. "Abbottstown")')
+    precinct_column: int = pydantic.Field(description='column index of the precinct-name cell (usually 0)')
+    method_columns: dict[int, str] = pydantic.Field(description='column index -> canonical bucket (election_day, early_voting, absentee_mail, provisional, or total)')
+    candidate_rows: list[CandidateRow] = pydantic.Field(description="rows of THIS contest's choices (match office + expected candidates; exclude the statistics block and grand-total rows)")
+
+
+class InterpretPrecinctPage(dspy.Signature):
+    '''Interpret ONE precinct-major results page into a reusable structural schema.
+
+    The page is a single precinct (its name is the page title); contests are stacked down the page,
+    candidates run DOWN the rows of a contest, and the vote methods (Total, Election Day, Mail,
+    Provisional) run ACROSS the columns. There is also a statistics block (Registered Voters,
+    Ballots Cast) that is NOT part of any contest.
+
+    For the given office, return: which row/column holds the precinct name; which columns are which
+    vote method; and the contest's candidate rows -- each with its row-label verbatim (so the same
+    rows can be found on every page) and the matched EXPECTED candidate name and party. A row that
+    matches no expected candidate (a write-in or vote-integrity line) keeps its observed label
+    verbatim with a blank party. Exclude the statistics block and grand-total rows (e.g. "Total
+    Votes Cast", "Contest Totals").
+
+    Return ONLY structure -- never read or return a vote number.
+    '''
+    office: str = dspy.InputField()
+    candidate_context: str = dspy.InputField(desc='the expected candidates, one per line as "Name (PARTY)" or just "Name"')
+    grid: str = dspy.InputField(desc='raw cells of ONE sample page; one row per line as "<rownum>: cell0 | cell1 | ..."')
+    precinct_schema: PrecinctPageSchema = dspy.OutputField()
+
+
 class InterpretResultsPage(dspy.Signature):
     '''Interpret ONE page of a precinct election-results grid into a structural schema.
 

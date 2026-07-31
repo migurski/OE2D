@@ -58,3 +58,14 @@ def test_votes_to_rows_canonical_shape():
     assert list(rows[0].keys()) == list(votes.CANON_COLUMNS)
     assert rows[0]['candidate'] == 'Kamala D. Harris' and rows[0]['votes'] == 222
     assert rows[0]['early_voting'] == ''
+
+
+def test_split_row_joins_wrapped_label_and_collects_numbers():
+    # label wrapped mid-word across two cells; spacer columns between values (precinct-major grid)
+    label, numbers = votes._split_row(['LIB OLIVER and T', 'ER MAAT', '', '5', '', '2', '3', '0'])
+    assert votes._norm(label) == votes._norm('LIB OLIVER and TER MAAT')
+    assert numbers == [5, 2, 3, 0]
+
+
+def test_norm_is_whitespace_and_case_insensitive():
+    assert votes._norm('DEM HARRIS and  WALZ') == votes._norm('dem harris andwalz')

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import functools
 import logging
 import os
 import re
@@ -27,6 +28,7 @@ import sys
 
 import dotenv
 import dspy
+import pdfplumber
 
 from .. import source_table
 from . import signatures
@@ -53,9 +55,31 @@ def _clean(text: str | None) -> str:
     return re.sub(r'\s+', ' ', (text or '').strip())
 
 
+def _norm(text: str) -> str:
+    '''Whitespace-and-case-insensitive key: a wrapped label can split mid-word across cells
+    ("...and T" + "ER MAAT"), so match on the spaces removed entirely.'''
+    return re.sub(r'\s+', '', (text or '')).lower()
+
+
 def _parse_number(text: str) -> int | None:
     text = _clean(text).replace(',', '')            # canonical: no commas in totals
     return int(text) if re.fullmatch(r'-?\d+', text) else None
+
+
+def _split_row(row: list[str]) -> tuple[str, list[int]]:
+    '''A grid row's leading text label (joined across cells, since a long label can wrap into the
+    next column) and its numeric cells in order. Robust to spacer columns and split labels.'''
+    label_parts: list[str] = []
+    numbers: list[int] = []
+    hit_number: bool = False
+    for cell in row:
+        value: int | None = _parse_number(cell)
+        if value is not None:
+            hit_number = True
+            numbers.append(value)
+        elif not hit_number and _clean(cell):
+            label_parts.append(_clean(cell))
+    return ' '.join(label_parts), numbers
 
 
 def grid_to_text(rows: list[list[str]]) -> str:
@@ -64,9 +88,31 @@ def grid_to_text(rows: list[list[str]]) -> str:
                      for i, row in enumerate(rows))
 
 
+@functools.lru_cache(maxsize=None)
+def _open_pdf(path: str) -> 'pdfplumber.PDF':
+    return pdfplumber.open(path)
+
+
+def read_text_grid(path: str, page: int, text_tolerance: int = 3) -> list[list[str]]:
+    '''Vendor-adaptive read for precinct-major (Electionware-style) pages: text-alignment table
+    reconstruction. source_table.page_table is tuned for the ruled Hart SOVCs and mis-reads these
+    (ruled lines only bound fragments); text alignment recovers the full grid, and text_tolerance
+    keeps numbers from splitting ("509" -> "50","9"). Kept in oe2d.votes -- specific to this step.'''
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return []
+    tables = pdf.pages[page - 1].find_tables(
+        {'vertical_strategy': 'text', 'horizontal_strategy': 'text', 'text_tolerance': text_tolerance})
+    if not tables:
+        return []
+    return max(tables, key=lambda table: len(table.extract())).extract()
+
+
 def build_interpreter() -> dspy.Module:
     '''Construct the page interpreter. A trained artifact, when present, fully governs (its
-    saved prompt AND lm win); otherwise bind the stock inference LM (temperature 0).'''
+    saved prompt AND lm win); otherwise bind the stock inference LM (temperature 0). Turns on
+    cmpnd tracing here so every path that runs the interpreter reports its LLM calls.'''
+    _instrument()
     interpreter: dspy.Module = dspy.Predict(signatures.InterpretResultsPage)
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         interpreter.load(OPTIMIZED_MODEL_PATH)
@@ -175,6 +221,70 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
     return votes
 
 
+def build_precinct_interpreter() -> dspy.Module:
+    '''The precinct-major (candidates-as-rows) interpreter. Instruments like build_interpreter.'''
+    _instrument()
+    interpreter: dspy.Module = dspy.Predict(signatures.InterpretPrecinctPage)
+    if os.path.exists(OPTIMIZED_MODEL_PATH):
+        interpreter.load(OPTIMIZED_MODEL_PATH)
+    else:
+        interpreter.set_lm(dspy.LM(LM_CLAUDE_SONNET45, temperature=0.0, max_tokens=4096))
+    return interpreter
+
+
+def extract_precinct_contest(file_path: str, pages: list[int], office: str, candidate_context: str,
+                             interpreter: dspy.Module | None = None) -> dict:
+    '''Extract a candidates-as-rows contest whose precincts are one-per-page (precinct in the page
+    header, methods across columns). The document's pages are structurally identical, so interpret
+    ONE sample page and apply that schema to every page -- one LLM call per document, then
+    deterministic exact-label extraction. Candidate rows are found by their verbatim row-label
+    (identical across pages); the precinct name is read from the learned header cell.'''
+    interpreter = interpreter or build_precinct_interpreter()
+    sample: list[list[str]] = read_text_grid(file_path, pages[0])
+    prediction = interpreter(office=office, candidate_context=candidate_context,
+                             grid=grid_to_text(sample))
+    schema: signatures.PrecinctPageSchema = prediction.precinct_schema
+    # The interpreter names the method buckets in left-to-right order; trust that order, not its
+    # exact column indices (split/garbled headers throw those off). Code maps the buckets onto each
+    # candidate row's actual numeric cells, so spacer columns and header noise don't matter.
+    buckets: list[str] = [bucket for _index, bucket in sorted(schema.method_columns.items(),
+                                                              key=lambda item: int(item[0]))]
+    label_role: dict[str, signatures.CandidateRow] = {_norm(row.source_label): row
+                                                       for row in schema.candidate_rows}
+    logger.info('learned precinct schema: %d candidate rows, method order %s, precinct at (%d,%d)',
+                len(label_role), buckets, schema.precinct_row, schema.precinct_column)
+
+    votes: dict = {}
+    for page in pages:
+        grid: list[list[str]] = read_text_grid(file_path, page)
+        precinct: str = ''
+        if schema.precinct_row < len(grid):
+            precinct = ' '.join(_clean(cell) for cell in grid[schema.precinct_row] if _clean(cell))
+        for row in grid:
+            label, numbers = _split_row(row)      # leading text vs numeric cells (label may wrap)
+            role = label_role.get(_norm(label))
+            if role is None:
+                continue
+            if len(numbers) != len(buckets):
+                logger.info('  %s / %s: %d numeric cells, expected %d -- skipped',
+                            precinct, role.candidate, len(numbers), len(buckets))
+                continue
+            record: dict = {}
+            for bucket, value in zip(buckets, numbers):
+                record['votes' if bucket == _TOTAL_BUCKET else bucket] = value
+            votes[(precinct, role.candidate, role.party)] = record
+    return votes
+
+
+def extract(file_path: str, pages: list[int], office: str, candidate_context: str,
+            orientation: str = 'columns', interpreter: dspy.Module | None = None) -> dict:
+    '''Dispatch on candidate orientation (from oe2d.pages): 'rows' -> precinct-major path,
+    'columns' -> contest-major path.'''
+    if orientation == 'rows':
+        return extract_precinct_contest(file_path, pages, office, candidate_context, interpreter)
+    return extract_contest(file_path, pages, office, candidate_context, interpreter)
+
+
 def votes_to_rows(votes: dict, county: str, office: str, district: str = '') -> list[dict]:
     '''Canonical precinct rows from a stitched votes mapping.'''
     rows: list[dict] = []
@@ -244,9 +354,8 @@ def main() -> None:
         logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(message)s')
         logging.getLogger('oe2d').setLevel(logging.INFO)
 
-    _instrument()
     votes = extract_contest(args.path, _parse_pages(args.pages), args.office,
-                            resolve_context(args.context))
+                            resolve_context(args.context))       # build_interpreter() instruments
     rows = votes_to_rows(votes, args.county, args.office, args.district)
     writer = csv.DictWriter(sys.stdout, CANON_COLUMNS)
     writer.writeheader()
