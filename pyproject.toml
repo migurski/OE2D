@@ -27,13 +27,15 @@ oe2d-contests = "oe2d.contests:main"
 oe2d-pages = "oe2d.pages:main"
 oe2d-pages-optimize = "oe2d.pages.optimize:main"
 oe2d-pages-evaluate = "oe2d.pages.evaluate:main"
+oe2d-votes = "oe2d.votes:main"
 oe2d-rendering = "oe2d.rendering:main"
 
 [tool.setuptools]
-packages = ["oe2d", "oe2d.pages", "oe2d.contests"]
+packages = ["oe2d", "oe2d.pages", "oe2d.contests", "oe2d.votes"]
 
 # The trained programs ship as package data; the oe2d-data/ gold sets, fixtures,
 # and page images are outside any package dir, so they are never in the wheel.
 [tool.setuptools.package-data]
 "oe2d.pages" = ["model/*.json"]
 "oe2d.contests" = ["model/*.json"]
+"oe2d.votes" = ["model/*.json"]

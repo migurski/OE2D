@@ -1,0 +1,511 @@
+county,precinct,office,district,party,candidate,votes,election_day,early_voting,absentee_mail,provisional
+Adams,Abbottstown,Attorney General,,DEM,EUGENE DEPASQUALE,135,91,,42,2
+Adams,Abbottstown,Attorney General,,REP,DAVE SUNDAY,348,285,,62,1
+Adams,Abbottstown,Attorney General,,LIB,ROBERT COWBURN,13,12,,1,0
+Adams,Abbottstown,Attorney General,,GNP,RICHARD L WEISS,3,2,,1,0
+Adams,Abbottstown,Attorney General,,CST,JUSTIN L MAGILL,2,2,,0,0
+Adams,Abbottstown,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,Abbottstown,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Abbottstown,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Abbottstown,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Abbottstown,Attorney General,,,Under Votes,7,5,,2,0
+Adams,Arendtsville,Attorney General,,DEM,EUGENE DEPASQUALE,149,108,,40,1
+Adams,Arendtsville,Attorney General,,REP,DAVE SUNDAY,272,230,,38,4
+Adams,Arendtsville,Attorney General,,LIB,ROBERT COWBURN,4,4,,0,0
+Adams,Arendtsville,Attorney General,,GNP,RICHARD L WEISS,3,3,,0,0
+Adams,Arendtsville,Attorney General,,CST,JUSTIN L MAGILL,7,7,,0,0
+Adams,Arendtsville,Attorney General,,FWD,ERIC L SETTLE,3,2,,1,0
+Adams,Arendtsville,Attorney General,,,Write-ins,1,1,,0,0
+Adams,Arendtsville,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,Arendtsville,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Arendtsville,Attorney General,,,Under Votes,7,5,,2,0
+Adams,Bendersville,Attorney General,,DEM,EUGENE DEPASQUALE,91,73,,18,0
+Adams,Bendersville,Attorney General,,REP,DAVE SUNDAY,204,187,,17,0
+Adams,Bendersville,Attorney General,,LIB,ROBERT COWBURN,4,4,,0,0
+Adams,Bendersville,Attorney General,,GNP,RICHARD L WEISS,1,1,,0,0
+Adams,Bendersville,Attorney General,,CST,JUSTIN L MAGILL,0,0,,0,0
+Adams,Bendersville,Attorney General,,FWD,ERIC L SETTLE,0,0,,0,0
+Adams,Bendersville,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Bendersville,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Bendersville,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Bendersville,Attorney General,,,Under Votes,0,0,,0,0
+Adams,Berwick,Attorney General,,DEM,EUGENE DEPASQUALE,400,242,,156,2
+Adams,Berwick,Attorney General,,REP,DAVE SUNDAY,1056,797,,254,5
+Adams,Berwick,Attorney General,,LIB,ROBERT COWBURN,20,17,,3,0
+Adams,Berwick,Attorney General,,GNP,RICHARD L WEISS,12,9,,3,0
+Adams,Berwick,Attorney General,,CST,JUSTIN L MAGILL,7,7,,0,0
+Adams,Berwick,Attorney General,,FWD,ERIC L SETTLE,2,2,,0,0
+Adams,Berwick,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Berwick,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Berwick,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Berwick,Attorney General,,,Under Votes,28,20,,8,0
+Adams,Biglerville,Attorney General,,DEM,EUGENE DEPASQUALE,180,124,,53,3
+Adams,Biglerville,Attorney General,,REP,DAVE SUNDAY,357,298,,56,3
+Adams,Biglerville,Attorney General,,LIB,ROBERT COWBURN,11,10,,1,0
+Adams,Biglerville,Attorney General,,GNP,RICHARD L WEISS,6,6,,0,0
+Adams,Biglerville,Attorney General,,CST,JUSTIN L MAGILL,4,4,,0,0
+Adams,Biglerville,Attorney General,,FWD,ERIC L SETTLE,4,2,,2,0
+Adams,Biglerville,Attorney General,,,Write-ins,1,0,,1,0
+Adams,Biglerville,Attorney General,,,Not Assigned,1,0,,1,0
+Adams,Biglerville,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Biglerville,Attorney General,,,Under Votes,5,4,,1,0
+Adams,Bonneauville,Attorney General,,DEM,EUGENE DEPASQUALE,255,184,,70,1
+Adams,Bonneauville,Attorney General,,REP,DAVE SUNDAY,593,503,,88,2
+Adams,Bonneauville,Attorney General,,LIB,ROBERT COWBURN,16,15,,0,1
+Adams,Bonneauville,Attorney General,,GNP,RICHARD L WEISS,6,5,,1,0
+Adams,Bonneauville,Attorney General,,CST,JUSTIN L MAGILL,2,2,,0,0
+Adams,Bonneauville,Attorney General,,FWD,ERIC L SETTLE,3,1,,1,1
+Adams,Bonneauville,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Bonneauville,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Bonneauville,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Bonneauville,Attorney General,,,Under Votes,12,11,,1,0
+Adams,Butler,Attorney General,,DEM,EUGENE DEPASQUALE,348,183,,162,3
+Adams,Butler,Attorney General,,REP,DAVE SUNDAY,1016,686,,330,0
+Adams,Butler,Attorney General,,LIB,ROBERT COWBURN,39,29,,10,0
+Adams,Butler,Attorney General,,GNP,RICHARD L WEISS,20,12,,8,0
+Adams,Butler,Attorney General,,CST,JUSTIN L MAGILL,7,4,,3,0
+Adams,Butler,Attorney General,,FWD,ERIC L SETTLE,3,3,,0,0
+Adams,Butler,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Butler,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Butler,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Butler,Attorney General,,,Under Votes,37,21,,16,0
+Adams,Carroll Valley 1,Attorney General,,DEM,EUGENE DEPASQUALE,440,269,,170,1
+Adams,Carroll Valley 1,Attorney General,,REP,DAVE SUNDAY,968,767,,200,1
+Adams,Carroll Valley 1,Attorney General,,LIB,ROBERT COWBURN,25,20,,5,0
+Adams,Carroll Valley 1,Attorney General,,GNP,RICHARD L WEISS,7,6,,1,0
+Adams,Carroll Valley 1,Attorney General,,CST,JUSTIN L MAGILL,13,8,,5,0
+Adams,Carroll Valley 1,Attorney General,,FWD,ERIC L SETTLE,4,3,,1,0
+Adams,Carroll Valley 1,Attorney General,,,Write-ins,4,3,,1,0
+Adams,Carroll Valley 1,Attorney General,,,Not Assigned,4,3,,1,0
+Adams,Carroll Valley 1,Attorney General,,,Over Votes,1,0,,1,0
+Adams,Carroll Valley 1,Attorney General,,,Under Votes,30,23,,7,0
+Adams,Carroll Valley 2,Attorney General,,DEM,EUGENE DEPASQUALE,314,182,,132,0
+Adams,Carroll Valley 2,Attorney General,,REP,DAVE SUNDAY,825,676,,148,1
+Adams,Carroll Valley 2,Attorney General,,LIB,ROBERT COWBURN,16,12,,4,0
+Adams,Carroll Valley 2,Attorney General,,GNP,RICHARD L WEISS,11,8,,3,0
+Adams,Carroll Valley 2,Attorney General,,CST,JUSTIN L MAGILL,7,7,,0,0
+Adams,Carroll Valley 2,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,Carroll Valley 2,Attorney General,,,Write-ins,1,0,,1,0
+Adams,Carroll Valley 2,Attorney General,,,Not Assigned,1,0,,1,0
+Adams,Carroll Valley 2,Attorney General,,,Over Votes,1,1,,0,0
+Adams,Carroll Valley 2,Attorney General,,,Under Votes,25,16,,9,0
+Adams,Conewago 1,Attorney General,,DEM,EUGENE DEPASQUALE,470,219,,247,4
+Adams,Conewago 1,Attorney General,,REP,DAVE SUNDAY,957,705,,252,0
+Adams,Conewago 1,Attorney General,,LIB,ROBERT COWBURN,19,15,,4,0
+Adams,Conewago 1,Attorney General,,GNP,RICHARD L WEISS,13,8,,5,0
+Adams,Conewago 1,Attorney General,,CST,JUSTIN L MAGILL,6,2,,4,0
+Adams,Conewago 1,Attorney General,,FWD,ERIC L SETTLE,2,2,,0,0
+Adams,Conewago 1,Attorney General,,,Write-ins,2,1,,1,0
+Adams,Conewago 1,Attorney General,,,Not Assigned,2,1,,1,0
+Adams,Conewago 1,Attorney General,,,Over Votes,1,0,,1,0
+Adams,Conewago 1,Attorney General,,,Under Votes,16,10,,5,1
+Adams,Conewago 2,Attorney General,,DEM,EUGENE DEPASQUALE,398,181,,212,5
+Adams,Conewago 2,Attorney General,,REP,DAVE SUNDAY,1026,723,,294,9
+Adams,Conewago 2,Attorney General,,LIB,ROBERT COWBURN,22,16,,6,0
+Adams,Conewago 2,Attorney General,,GNP,RICHARD L WEISS,10,8,,2,0
+Adams,Conewago 2,Attorney General,,CST,JUSTIN L MAGILL,8,5,,3,0
+Adams,Conewago 2,Attorney General,,FWD,ERIC L SETTLE,1,0,,1,0
+Adams,Conewago 2,Attorney General,,,Write-ins,1,0,,1,0
+Adams,Conewago 2,Attorney General,,,Not Assigned,1,0,,1,0
+Adams,Conewago 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Conewago 2,Attorney General,,,Under Votes,30,15,,15,0
+Adams,Conewago 3,Attorney General,,DEM,EUGENE DEPASQUALE,428,203,,223,2
+Adams,Conewago 3,Attorney General,,REP,DAVE SUNDAY,995,767,,226,2
+Adams,Conewago 3,Attorney General,,LIB,ROBERT COWBURN,17,17,,0,0
+Adams,Conewago 3,Attorney General,,GNP,RICHARD L WEISS,11,7,,4,0
+Adams,Conewago 3,Attorney General,,CST,JUSTIN L MAGILL,9,6,,3,0
+Adams,Conewago 3,Attorney General,,FWD,ERIC L SETTLE,2,2,,0,0
+Adams,Conewago 3,Attorney General,,,Write-ins,2,0,,2,0
+Adams,Conewago 3,Attorney General,,,Not Assigned,2,0,,2,0
+Adams,Conewago 3,Attorney General,,,Over Votes,1,0,,1,0
+Adams,Conewago 3,Attorney General,,,Under Votes,17,13,,4,0
+Adams,Cumberland 1,Attorney General,,DEM,EUGENE DEPASQUALE,557,313,,240,4
+Adams,Cumberland 1,Attorney General,,REP,DAVE SUNDAY,726,538,,188,0
+Adams,Cumberland 1,Attorney General,,LIB,ROBERT COWBURN,25,18,,6,1
+Adams,Cumberland 1,Attorney General,,GNP,RICHARD L WEISS,12,10,,2,0
+Adams,Cumberland 1,Attorney General,,CST,JUSTIN L MAGILL,7,5,,2,0
+Adams,Cumberland 1,Attorney General,,FWD,ERIC L SETTLE,6,4,,2,0
+Adams,Cumberland 1,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Cumberland 1,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Cumberland 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Cumberland 1,Attorney General,,,Under Votes,26,18,,7,1
+Adams,Cumberland 2,Attorney General,,DEM,EUGENE DEPASQUALE,299,166,,130,3
+Adams,Cumberland 2,Attorney General,,REP,DAVE SUNDAY,648,521,,120,7
+Adams,Cumberland 2,Attorney General,,LIB,ROBERT COWBURN,7,6,,1,0
+Adams,Cumberland 2,Attorney General,,GNP,RICHARD L WEISS,6,2,,4,0
+Adams,Cumberland 2,Attorney General,,CST,JUSTIN L MAGILL,6,6,,0,0
+Adams,Cumberland 2,Attorney General,,FWD,ERIC L SETTLE,0,0,,0,0
+Adams,Cumberland 2,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Cumberland 2,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Cumberland 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Cumberland 2,Attorney General,,,Under Votes,23,18,,4,1
+Adams,Cumberland 3,Attorney General,,DEM,EUGENE DEPASQUALE,510,252,,256,2
+Adams,Cumberland 3,Attorney General,,REP,DAVE SUNDAY,633,444,,188,1
+Adams,Cumberland 3,Attorney General,,LIB,ROBERT COWBURN,17,13,,4,0
+Adams,Cumberland 3,Attorney General,,GNP,RICHARD L WEISS,4,1,,3,0
+Adams,Cumberland 3,Attorney General,,CST,JUSTIN L MAGILL,6,2,,4,0
+Adams,Cumberland 3,Attorney General,,FWD,ERIC L SETTLE,2,0,,2,0
+Adams,Cumberland 3,Attorney General,,,Write-ins,2,2,,0,0
+Adams,Cumberland 3,Attorney General,,,Not Assigned,2,2,,0,0
+Adams,Cumberland 3,Attorney General,,,Over Votes,1,0,,1,0
+Adams,Cumberland 3,Attorney General,,,Under Votes,11,4,,7,0
+Adams,Cumberland 4,Attorney General,,DEM,EUGENE DEPASQUALE,683,332,,347,4
+Adams,Cumberland 4,Attorney General,,REP,DAVE SUNDAY,696,469,,226,1
+Adams,Cumberland 4,Attorney General,,LIB,ROBERT COWBURN,20,19,,1,0
+Adams,Cumberland 4,Attorney General,,GNP,RICHARD L WEISS,13,9,,4,0
+Adams,Cumberland 4,Attorney General,,CST,JUSTIN L MAGILL,9,8,,1,0
+Adams,Cumberland 4,Attorney General,,FWD,ERIC L SETTLE,2,0,,2,0
+Adams,Cumberland 4,Attorney General,,,Write-ins,1,1,,0,0
+Adams,Cumberland 4,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,Cumberland 4,Attorney General,,,Over Votes,1,1,,0,0
+Adams,Cumberland 4,Attorney General,,,Under Votes,18,6,,12,0
+Adams,East Berlin,Attorney General,,DEM,EUGENE DEPASQUALE,241,176,,64,1
+Adams,East Berlin,Attorney General,,REP,DAVE SUNDAY,611,533,,78,0
+Adams,East Berlin,Attorney General,,LIB,ROBERT COWBURN,8,6,,1,1
+Adams,East Berlin,Attorney General,,GNP,RICHARD L WEISS,8,8,,0,0
+Adams,East Berlin,Attorney General,,CST,JUSTIN L MAGILL,3,2,,0,1
+Adams,East Berlin,Attorney General,,FWD,ERIC L SETTLE,3,2,,1,0
+Adams,East Berlin,Attorney General,,,Write-ins,0,0,,0,0
+Adams,East Berlin,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,East Berlin,Attorney General,,,Over Votes,0,0,,0,0
+Adams,East Berlin,Attorney General,,,Under Votes,14,9,,5,0
+Adams,Fairfield,Attorney General,,DEM,EUGENE DEPASQUALE,126,87,,39,0
+Adams,Fairfield,Attorney General,,REP,DAVE SUNDAY,189,165,,23,1
+Adams,Fairfield,Attorney General,,LIB,ROBERT COWBURN,7,7,,0,0
+Adams,Fairfield,Attorney General,,GNP,RICHARD L WEISS,1,1,,0,0
+Adams,Fairfield,Attorney General,,CST,JUSTIN L MAGILL,2,1,,1,0
+Adams,Fairfield,Attorney General,,FWD,ERIC L SETTLE,2,2,,0,0
+Adams,Fairfield,Attorney General,,,Write-ins,2,2,,0,0
+Adams,Fairfield,Attorney General,,,Not Assigned,2,2,,0,0
+Adams,Fairfield,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Fairfield,Attorney General,,,Under Votes,13,12,,1,0
+Adams,Franklin 1,Attorney General,,DEM,EUGENE DEPASQUALE,430,221,,208,1
+Adams,Franklin 1,Attorney General,,REP,DAVE SUNDAY,991,785,,203,3
+Adams,Franklin 1,Attorney General,,LIB,ROBERT COWBURN,26,19,,7,0
+Adams,Franklin 1,Attorney General,,GNP,RICHARD L WEISS,10,8,,1,1
+Adams,Franklin 1,Attorney General,,CST,JUSTIN L MAGILL,11,6,,5,0
+Adams,Franklin 1,Attorney General,,FWD,ERIC L SETTLE,7,5,,2,0
+Adams,Franklin 1,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Franklin 1,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Franklin 1,Attorney General,,,Over Votes,2,0,,2,0
+Adams,Franklin 1,Attorney General,,,Under Votes,23,14,,8,1
+Adams,Franklin 2,Attorney General,,DEM,EUGENE DEPASQUALE,314,142,,172,0
+Adams,Franklin 2,Attorney General,,REP,DAVE SUNDAY,962,648,,314,0
+Adams,Franklin 2,Attorney General,,LIB,ROBERT COWBURN,20,17,,3,0
+Adams,Franklin 2,Attorney General,,GNP,RICHARD L WEISS,8,5,,3,0
+Adams,Franklin 2,Attorney General,,CST,JUSTIN L MAGILL,11,9,,2,0
+Adams,Franklin 2,Attorney General,,FWD,ERIC L SETTLE,5,3,,2,0
+Adams,Franklin 2,Attorney General,,,Write-ins,1,1,,0,0
+Adams,Franklin 2,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,Franklin 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Franklin 2,Attorney General,,,Under Votes,28,17,,11,0
+Adams,Freedom,Attorney General,,DEM,EUGENE DEPASQUALE,164,107,,57,0
+Adams,Freedom,Attorney General,,REP,DAVE SUNDAY,408,340,,65,3
+Adams,Freedom,Attorney General,,LIB,ROBERT COWBURN,11,10,,1,0
+Adams,Freedom,Attorney General,,GNP,RICHARD L WEISS,5,5,,0,0
+Adams,Freedom,Attorney General,,CST,JUSTIN L MAGILL,1,1,,0,0
+Adams,Freedom,Attorney General,,FWD,ERIC L SETTLE,2,1,,1,0
+Adams,Freedom,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Freedom,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Freedom,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Freedom,Attorney General,,,Under Votes,12,11,,1,0
+Adams,Germany,Attorney General,,DEM,EUGENE DEPASQUALE,398,185,,212,1
+Adams,Germany,Attorney General,,REP,DAVE SUNDAY,1407,1024,,378,5
+Adams,Germany,Attorney General,,LIB,ROBERT COWBURN,27,19,,8,0
+Adams,Germany,Attorney General,,GNP,RICHARD L WEISS,5,4,,1,0
+Adams,Germany,Attorney General,,CST,JUSTIN L MAGILL,8,8,,0,0
+Adams,Germany,Attorney General,,FWD,ERIC L SETTLE,0,0,,0,0
+Adams,Germany,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Germany,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Germany,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Germany,Attorney General,,,Under Votes,32,20,,12,0
+Adams,Gettysburg 1,Attorney General,,DEM,EUGENE DEPASQUALE,549,362,,186,1
+Adams,Gettysburg 1,Attorney General,,REP,DAVE SUNDAY,368,290,,78,0
+Adams,Gettysburg 1,Attorney General,,LIB,ROBERT COWBURN,17,15,,2,0
+Adams,Gettysburg 1,Attorney General,,GNP,RICHARD L WEISS,19,16,,1,2
+Adams,Gettysburg 1,Attorney General,,CST,JUSTIN L MAGILL,5,3,,2,0
+Adams,Gettysburg 1,Attorney General,,FWD,ERIC L SETTLE,4,1,,3,0
+Adams,Gettysburg 1,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Gettysburg 1,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Gettysburg 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Gettysburg 1,Attorney General,,,Under Votes,25,14,,11,0
+Adams,Gettysburg 2,Attorney General,,DEM,EUGENE DEPASQUALE,886,716,,163,7
+Adams,Gettysburg 2,Attorney General,,REP,DAVE SUNDAY,308,243,,63,2
+Adams,Gettysburg 2,Attorney General,,LIB,ROBERT COWBURN,19,17,,2,0
+Adams,Gettysburg 2,Attorney General,,GNP,RICHARD L WEISS,17,13,,4,0
+Adams,Gettysburg 2,Attorney General,,CST,JUSTIN L MAGILL,4,3,,1,0
+Adams,Gettysburg 2,Attorney General,,FWD,ERIC L SETTLE,4,2,,1,1
+Adams,Gettysburg 2,Attorney General,,,Write-ins,3,3,,0,0
+Adams,Gettysburg 2,Attorney General,,,Not Assigned,3,3,,0,0
+Adams,Gettysburg 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Gettysburg 2,Attorney General,,,Under Votes,57,50,,6,1
+Adams,Gettysburg 3,Attorney General,,DEM,EUGENE DEPASQUALE,469,282,,184,3
+Adams,Gettysburg 3,Attorney General,,REP,DAVE SUNDAY,385,265,,116,4
+Adams,Gettysburg 3,Attorney General,,LIB,ROBERT COWBURN,12,11,,1,0
+Adams,Gettysburg 3,Attorney General,,GNP,RICHARD L WEISS,5,4,,1,0
+Adams,Gettysburg 3,Attorney General,,CST,JUSTIN L MAGILL,6,6,,0,0
+Adams,Gettysburg 3,Attorney General,,FWD,ERIC L SETTLE,4,1,,3,0
+Adams,Gettysburg 3,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Gettysburg 3,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Gettysburg 3,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Gettysburg 3,Attorney General,,,Under Votes,14,7,,6,1
+Adams,Hamilton,Attorney General,,DEM,EUGENE DEPASQUALE,366,180,,185,1
+Adams,Hamilton,Attorney General,,REP,DAVE SUNDAY,1166,824,,339,3
+Adams,Hamilton,Attorney General,,LIB,ROBERT COWBURN,29,22,,6,1
+Adams,Hamilton,Attorney General,,GNP,RICHARD L WEISS,7,5,,2,0
+Adams,Hamilton,Attorney General,,CST,JUSTIN L MAGILL,5,3,,2,0
+Adams,Hamilton,Attorney General,,FWD,ERIC L SETTLE,5,4,,1,0
+Adams,Hamilton,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Hamilton,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Hamilton,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Hamilton,Attorney General,,,Under Votes,19,11,,8,0
+Adams,Hamiltonban,Attorney General,,DEM,EUGENE DEPASQUALE,323,179,,143,1
+Adams,Hamiltonban,Attorney General,,REP,DAVE SUNDAY,1024,778,,243,3
+Adams,Hamiltonban,Attorney General,,LIB,ROBERT COWBURN,10,9,,1,0
+Adams,Hamiltonban,Attorney General,,GNP,RICHARD L WEISS,7,7,,0,0
+Adams,Hamiltonban,Attorney General,,CST,JUSTIN L MAGILL,7,6,,1,0
+Adams,Hamiltonban,Attorney General,,FWD,ERIC L SETTLE,3,3,,0,0
+Adams,Hamiltonban,Attorney General,,,Write-ins,1,1,,0,0
+Adams,Hamiltonban,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,Hamiltonban,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Hamiltonban,Attorney General,,,Under Votes,24,23,,1,0
+Adams,Highland,Attorney General,,DEM,EUGENE DEPASQUALE,193,112,,80,1
+Adams,Highland,Attorney General,,REP,DAVE SUNDAY,460,370,,89,1
+Adams,Highland,Attorney General,,LIB,ROBERT COWBURN,7,5,,2,0
+Adams,Highland,Attorney General,,GNP,RICHARD L WEISS,2,1,,1,0
+Adams,Highland,Attorney General,,CST,JUSTIN L MAGILL,1,0,,1,0
+Adams,Highland,Attorney General,,FWD,ERIC L SETTLE,3,0,,3,0
+Adams,Highland,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Highland,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Highland,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Highland,Attorney General,,,Under Votes,9,6,,3,0
+Adams,Huntington,Attorney General,,DEM,EUGENE DEPASQUALE,261,152,,108,1
+Adams,Huntington,Attorney General,,REP,DAVE SUNDAY,1069,899,,169,1
+Adams,Huntington,Attorney General,,LIB,ROBERT COWBURN,9,7,,2,0
+Adams,Huntington,Attorney General,,GNP,RICHARD L WEISS,8,4,,4,0
+Adams,Huntington,Attorney General,,CST,JUSTIN L MAGILL,5,1,,4,0
+Adams,Huntington,Attorney General,,FWD,ERIC L SETTLE,0,0,,0,0
+Adams,Huntington,Attorney General,,,Write-ins,3,3,,0,0
+Adams,Huntington,Attorney General,,,Not Assigned,3,3,,0,0
+Adams,Huntington,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Huntington,Attorney General,,,Under Votes,16,13,,3,0
+Adams,Latimore,Attorney General,,DEM,EUGENE DEPASQUALE,418,224,,192,2
+Adams,Latimore,Attorney General,,REP,DAVE SUNDAY,1189,886,,299,4
+Adams,Latimore,Attorney General,,LIB,ROBERT COWBURN,29,24,,4,1
+Adams,Latimore,Attorney General,,GNP,RICHARD L WEISS,15,11,,4,0
+Adams,Latimore,Attorney General,,CST,JUSTIN L MAGILL,8,8,,0,0
+Adams,Latimore,Attorney General,,FWD,ERIC L SETTLE,5,1,,4,0
+Adams,Latimore,Attorney General,,,Write-ins,2,2,,0,0
+Adams,Latimore,Attorney General,,,Not Assigned,2,2,,0,0
+Adams,Latimore,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Latimore,Attorney General,,,Under Votes,28,21,,7,0
+Adams,Liberty,Attorney General,,DEM,EUGENE DEPASQUALE,229,147,,82,0
+Adams,Liberty,Attorney General,,REP,DAVE SUNDAY,636,520,,115,1
+Adams,Liberty,Attorney General,,LIB,ROBERT COWBURN,21,19,,2,0
+Adams,Liberty,Attorney General,,GNP,RICHARD L WEISS,4,4,,0,0
+Adams,Liberty,Attorney General,,CST,JUSTIN L MAGILL,5,4,,1,0
+Adams,Liberty,Attorney General,,FWD,ERIC L SETTLE,2,2,,0,0
+Adams,Liberty,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Liberty,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Liberty,Attorney General,,,Over Votes,1,1,,0,0
+Adams,Liberty,Attorney General,,,Under Votes,19,18,,1,0
+Adams,Littlestown 1,Attorney General,,DEM,EUGENE DEPASQUALE,269,174,,94,1
+Adams,Littlestown 1,Attorney General,,REP,DAVE SUNDAY,832,682,,147,3
+Adams,Littlestown 1,Attorney General,,LIB,ROBERT COWBURN,25,21,,3,1
+Adams,Littlestown 1,Attorney General,,GNP,RICHARD L WEISS,6,5,,1,0
+Adams,Littlestown 1,Attorney General,,CST,JUSTIN L MAGILL,14,11,,3,0
+Adams,Littlestown 1,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,Littlestown 1,Attorney General,,,Write-ins,2,1,,1,0
+Adams,Littlestown 1,Attorney General,,,Not Assigned,2,1,,1,0
+Adams,Littlestown 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Littlestown 1,Attorney General,,,Under Votes,21,14,,7,0
+Adams,Littlestown 2,Attorney General,,DEM,EUGENE DEPASQUALE,369,207,,159,3
+Adams,Littlestown 2,Attorney General,,REP,DAVE SUNDAY,965,710,,249,6
+Adams,Littlestown 2,Attorney General,,LIB,ROBERT COWBURN,19,18,,1,0
+Adams,Littlestown 2,Attorney General,,GNP,RICHARD L WEISS,11,6,,5,0
+Adams,Littlestown 2,Attorney General,,CST,JUSTIN L MAGILL,6,4,,2,0
+Adams,Littlestown 2,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,Littlestown 2,Attorney General,,,Write-ins,2,2,,0,0
+Adams,Littlestown 2,Attorney General,,,Not Assigned,2,2,,0,0
+Adams,Littlestown 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Littlestown 2,Attorney General,,,Under Votes,23,14,,9,0
+Adams,McSherrystown 1,Attorney General,,DEM,EUGENE DEPASQUALE,258,160,,96,2
+Adams,McSherrystown 1,Attorney General,,REP,DAVE SUNDAY,518,417,,95,6
+Adams,McSherrystown 1,Attorney General,,LIB,ROBERT COWBURN,17,12,,5,0
+Adams,McSherrystown 1,Attorney General,,GNP,RICHARD L WEISS,9,7,,2,0
+Adams,McSherrystown 1,Attorney General,,CST,JUSTIN L MAGILL,3,3,,0,0
+Adams,McSherrystown 1,Attorney General,,FWD,ERIC L SETTLE,4,2,,2,0
+Adams,McSherrystown 1,Attorney General,,,Write-ins,0,0,,0,0
+Adams,McSherrystown 1,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,McSherrystown 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,McSherrystown 1,Attorney General,,,Under Votes,15,10,,4,1
+Adams,McSherrystown 2,Attorney General,,DEM,EUGENE DEPASQUALE,173,100,,72,1
+Adams,McSherrystown 2,Attorney General,,REP,DAVE SUNDAY,392,323,,69,0
+Adams,McSherrystown 2,Attorney General,,LIB,ROBERT COWBURN,8,8,,0,0
+Adams,McSherrystown 2,Attorney General,,GNP,RICHARD L WEISS,3,2,,1,0
+Adams,McSherrystown 2,Attorney General,,CST,JUSTIN L MAGILL,3,2,,1,0
+Adams,McSherrystown 2,Attorney General,,FWD,ERIC L SETTLE,3,3,,0,0
+Adams,McSherrystown 2,Attorney General,,,Write-ins,0,0,,0,0
+Adams,McSherrystown 2,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,McSherrystown 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,McSherrystown 2,Attorney General,,,Under Votes,7,5,,2,0
+Adams,Menallen,Attorney General,,DEM,EUGENE DEPASQUALE,510,258,,248,4
+Adams,Menallen,Attorney General,,REP,DAVE SUNDAY,1420,1137,,281,2
+Adams,Menallen,Attorney General,,LIB,ROBERT COWBURN,25,20,,5,0
+Adams,Menallen,Attorney General,,GNP,RICHARD L WEISS,4,3,,0,1
+Adams,Menallen,Attorney General,,CST,JUSTIN L MAGILL,14,11,,3,0
+Adams,Menallen,Attorney General,,FWD,ERIC L SETTLE,6,6,,0,0
+Adams,Menallen,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Menallen,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Menallen,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Menallen,Attorney General,,,Under Votes,20,16,,4,0
+Adams,Mt Joy 1,Attorney General,,DEM,EUGENE DEPASQUALE,411,178,,233,0
+Adams,Mt Joy 1,Attorney General,,REP,DAVE SUNDAY,727,484,,240,3
+Adams,Mt Joy 1,Attorney General,,LIB,ROBERT COWBURN,21,12,,8,1
+Adams,Mt Joy 1,Attorney General,,GNP,RICHARD L WEISS,8,7,,1,0
+Adams,Mt Joy 1,Attorney General,,CST,JUSTIN L MAGILL,6,4,,2,0
+Adams,Mt Joy 1,Attorney General,,FWD,ERIC L SETTLE,0,0,,0,0
+Adams,Mt Joy 1,Attorney General,,,Write-ins,2,0,,1,1
+Adams,Mt Joy 1,Attorney General,,,Not Assigned,2,0,,1,1
+Adams,Mt Joy 1,Attorney General,,,Over Votes,1,1,,0,0
+Adams,Mt Joy 1,Attorney General,,,Under Votes,18,12,,6,0
+Adams,Mt Joy 2,Attorney General,,DEM,EUGENE DEPASQUALE,374,167,,207,0
+Adams,Mt Joy 2,Attorney General,,REP,DAVE SUNDAY,930,624,,304,2
+Adams,Mt Joy 2,Attorney General,,LIB,ROBERT COWBURN,15,11,,4,0
+Adams,Mt Joy 2,Attorney General,,GNP,RICHARD L WEISS,10,5,,5,0
+Adams,Mt Joy 2,Attorney General,,CST,JUSTIN L MAGILL,5,5,,0,0
+Adams,Mt Joy 2,Attorney General,,FWD,ERIC L SETTLE,5,3,,2,0
+Adams,Mt Joy 2,Attorney General,,,Write-ins,1,0,,1,0
+Adams,Mt Joy 2,Attorney General,,,Not Assigned,1,0,,1,0
+Adams,Mt Joy 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Mt Joy 2,Attorney General,,,Under Votes,30,20,,10,0
+Adams,Mt Pleasant 1,Attorney General,,DEM,EUGENE DEPASQUALE,453,181,,271,1
+Adams,Mt Pleasant 1,Attorney General,,REP,DAVE SUNDAY,1105,728,,372,5
+Adams,Mt Pleasant 1,Attorney General,,LIB,ROBERT COWBURN,17,9,,8,0
+Adams,Mt Pleasant 1,Attorney General,,GNP,RICHARD L WEISS,13,7,,6,0
+Adams,Mt Pleasant 1,Attorney General,,CST,JUSTIN L MAGILL,9,6,,3,0
+Adams,Mt Pleasant 1,Attorney General,,FWD,ERIC L SETTLE,4,2,,2,0
+Adams,Mt Pleasant 1,Attorney General,,,Write-ins,2,1,,1,0
+Adams,Mt Pleasant 1,Attorney General,,,Not Assigned,2,1,,1,0
+Adams,Mt Pleasant 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Mt Pleasant 1,Attorney General,,,Under Votes,25,14,,11,0
+Adams,Mt Pleasant 2,Attorney General,,DEM,EUGENE DEPASQUALE,232,147,,84,1
+Adams,Mt Pleasant 2,Attorney General,,REP,DAVE SUNDAY,703,532,,169,2
+Adams,Mt Pleasant 2,Attorney General,,LIB,ROBERT COWBURN,17,14,,3,0
+Adams,Mt Pleasant 2,Attorney General,,GNP,RICHARD L WEISS,4,4,,0,0
+Adams,Mt Pleasant 2,Attorney General,,CST,JUSTIN L MAGILL,4,4,,0,0
+Adams,Mt Pleasant 2,Attorney General,,FWD,ERIC L SETTLE,0,0,,0,0
+Adams,Mt Pleasant 2,Attorney General,,,Write-ins,1,0,,1,0
+Adams,Mt Pleasant 2,Attorney General,,,Not Assigned,1,0,,1,0
+Adams,Mt Pleasant 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Mt Pleasant 2,Attorney General,,,Under Votes,14,12,,2,0
+Adams,New Oxford,Attorney General,,DEM,EUGENE DEPASQUALE,295,205,,88,2
+Adams,New Oxford,Attorney General,,REP,DAVE SUNDAY,488,414,,70,4
+Adams,New Oxford,Attorney General,,LIB,ROBERT COWBURN,13,10,,3,0
+Adams,New Oxford,Attorney General,,GNP,RICHARD L WEISS,7,6,,1,0
+Adams,New Oxford,Attorney General,,CST,JUSTIN L MAGILL,6,5,,1,0
+Adams,New Oxford,Attorney General,,FWD,ERIC L SETTLE,7,4,,3,0
+Adams,New Oxford,Attorney General,,,Write-ins,1,1,,0,0
+Adams,New Oxford,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,New Oxford,Attorney General,,,Over Votes,0,0,,0,0
+Adams,New Oxford,Attorney General,,,Under Votes,12,9,,3,0
+Adams,Oxford 1,Attorney General,,DEM,EUGENE DEPASQUALE,524,273,,248,3
+Adams,Oxford 1,Attorney General,,REP,DAVE SUNDAY,1208,853,,350,5
+Adams,Oxford 1,Attorney General,,LIB,ROBERT COWBURN,23,19,,4,0
+Adams,Oxford 1,Attorney General,,GNP,RICHARD L WEISS,15,8,,6,1
+Adams,Oxford 1,Attorney General,,CST,JUSTIN L MAGILL,7,5,,2,0
+Adams,Oxford 1,Attorney General,,FWD,ERIC L SETTLE,3,1,,2,0
+Adams,Oxford 1,Attorney General,,,Write-ins,2,2,,0,0
+Adams,Oxford 1,Attorney General,,,Not Assigned,2,2,,0,0
+Adams,Oxford 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Oxford 1,Attorney General,,,Under Votes,46,33,,11,2
+Adams,Oxford 2,Attorney General,,DEM,EUGENE DEPASQUALE,564,199,,364,1
+Adams,Oxford 2,Attorney General,,REP,DAVE SUNDAY,1121,706,,410,5
+Adams,Oxford 2,Attorney General,,LIB,ROBERT COWBURN,11,6,,5,0
+Adams,Oxford 2,Attorney General,,GNP,RICHARD L WEISS,16,8,,7,1
+Adams,Oxford 2,Attorney General,,CST,JUSTIN L MAGILL,7,3,,4,0
+Adams,Oxford 2,Attorney General,,FWD,ERIC L SETTLE,3,1,,2,0
+Adams,Oxford 2,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Oxford 2,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Oxford 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Oxford 2,Attorney General,,,Under Votes,18,9,,9,0
+Adams,Reading 1,Attorney General,,DEM,EUGENE DEPASQUALE,241,109,,129,3
+Adams,Reading 1,Attorney General,,REP,DAVE SUNDAY,808,634,,167,7
+Adams,Reading 1,Attorney General,,LIB,ROBERT COWBURN,18,10,,8,0
+Adams,Reading 1,Attorney General,,GNP,RICHARD L WEISS,4,3,,1,0
+Adams,Reading 1,Attorney General,,CST,JUSTIN L MAGILL,3,3,,0,0
+Adams,Reading 1,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,Reading 1,Attorney General,,,Write-ins,1,1,,0,0
+Adams,Reading 1,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,Reading 1,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Reading 1,Attorney General,,,Under Votes,22,11,,11,0
+Adams,Reading 2,Attorney General,,DEM,EUGENE DEPASQUALE,300,174,,124,2
+Adams,Reading 2,Attorney General,,REP,DAVE SUNDAY,809,676,,132,1
+Adams,Reading 2,Attorney General,,LIB,ROBERT COWBURN,14,12,,1,1
+Adams,Reading 2,Attorney General,,GNP,RICHARD L WEISS,7,6,,1,0
+Adams,Reading 2,Attorney General,,CST,JUSTIN L MAGILL,5,4,,1,0
+Adams,Reading 2,Attorney General,,FWD,ERIC L SETTLE,6,6,,0,0
+Adams,Reading 2,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Reading 2,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Reading 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Reading 2,Attorney General,,,Under Votes,14,11,,3,0
+Adams,Reading 3,Attorney General,,DEM,EUGENE DEPASQUALE,385,224,,160,1
+Adams,Reading 3,Attorney General,,REP,DAVE SUNDAY,848,644,,203,1
+Adams,Reading 3,Attorney General,,LIB,ROBERT COWBURN,29,24,,5,0
+Adams,Reading 3,Attorney General,,GNP,RICHARD L WEISS,7,4,,3,0
+Adams,Reading 3,Attorney General,,CST,JUSTIN L MAGILL,5,3,,2,0
+Adams,Reading 3,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,Reading 3,Attorney General,,,Write-ins,1,1,,0,0
+Adams,Reading 3,Attorney General,,,Not Assigned,1,1,,0,0
+Adams,Reading 3,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Reading 3,Attorney General,,,Under Votes,11,7,,4,0
+Adams,Straban 1,Attorney General,,DEM,EUGENE DEPASQUALE,580,278,,302,0
+Adams,Straban 1,Attorney General,,REP,DAVE SUNDAY,781,515,,266,0
+Adams,Straban 1,Attorney General,,LIB,ROBERT COWBURN,18,10,,6,2
+Adams,Straban 1,Attorney General,,GNP,RICHARD L WEISS,13,7,,6,0
+Adams,Straban 1,Attorney General,,CST,JUSTIN L MAGILL,9,7,,2,0
+Adams,Straban 1,Attorney General,,FWD,ERIC L SETTLE,5,5,,0,0
+Adams,Straban 1,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Straban 1,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Straban 1,Attorney General,,,Over Votes,1,0,,0,1
+Adams,Straban 1,Attorney General,,,Under Votes,38,12,,25,1
+Adams,Straban 2,Attorney General,,DEM,EUGENE DEPASQUALE,690,302,,385,3
+Adams,Straban 2,Attorney General,,REP,DAVE SUNDAY,1186,740,,439,7
+Adams,Straban 2,Attorney General,,LIB,ROBERT COWBURN,18,13,,4,1
+Adams,Straban 2,Attorney General,,GNP,RICHARD L WEISS,9,7,,2,0
+Adams,Straban 2,Attorney General,,CST,JUSTIN L MAGILL,11,8,,3,0
+Adams,Straban 2,Attorney General,,FWD,ERIC L SETTLE,4,2,,1,1
+Adams,Straban 2,Attorney General,,,Write-ins,2,1,,1,0
+Adams,Straban 2,Attorney General,,,Not Assigned,2,1,,1,0
+Adams,Straban 2,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Straban 2,Attorney General,,,Under Votes,32,17,,14,1
+Adams,Tyrone,Attorney General,,DEM,EUGENE DEPASQUALE,282,182,,99,1
+Adams,Tyrone,Attorney General,,REP,DAVE SUNDAY,830,705,,123,2
+Adams,Tyrone,Attorney General,,LIB,ROBERT COWBURN,23,21,,2,0
+Adams,Tyrone,Attorney General,,GNP,RICHARD L WEISS,5,4,,1,0
+Adams,Tyrone,Attorney General,,CST,JUSTIN L MAGILL,3,3,,0,0
+Adams,Tyrone,Attorney General,,FWD,ERIC L SETTLE,4,3,,1,0
+Adams,Tyrone,Attorney General,,,Write-ins,0,0,,0,0
+Adams,Tyrone,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,Tyrone,Attorney General,,,Over Votes,0,0,,0,0
+Adams,Tyrone,Attorney General,,,Under Votes,18,17,,1,0
+Adams,Union,Attorney General,,DEM,EUGENE DEPASQUALE,418,184,,229,5
+Adams,Union,Attorney General,,REP,DAVE SUNDAY,1433,1055,,374,4
+Adams,Union,Attorney General,,LIB,ROBERT COWBURN,27,23,,4,0
+Adams,Union,Attorney General,,GNP,RICHARD L WEISS,11,10,,1,0
+Adams,Union,Attorney General,,CST,JUSTIN L MAGILL,8,5,,3,0
+Adams,Union,Attorney General,,FWD,ERIC L SETTLE,6,1,,5,0
+Adams,Union,Attorney General,,,Write-ins,1,0,,1,0
+Adams,Union,Attorney General,,,Not Assigned,1,0,,1,0
+Adams,Union,Attorney General,,,Over Votes,1,1,,0,0
+Adams,Union,Attorney General,,,Under Votes,36,25,,11,0
+Adams,York Springs,Attorney General,,DEM,EUGENE DEPASQUALE,87,64,,22,1
+Adams,York Springs,Attorney General,,REP,DAVE SUNDAY,116,101,,13,2
+Adams,York Springs,Attorney General,,LIB,ROBERT COWBURN,8,8,,0,0
+Adams,York Springs,Attorney General,,GNP,RICHARD L WEISS,1,1,,0,0
+Adams,York Springs,Attorney General,,CST,JUSTIN L MAGILL,5,5,,0,0
+Adams,York Springs,Attorney General,,FWD,ERIC L SETTLE,1,1,,0,0
+Adams,York Springs,Attorney General,,,Write-ins,0,0,,0,0
+Adams,York Springs,Attorney General,,,Not Assigned,0,0,,0,0
+Adams,York Springs,Attorney General,,,Over Votes,0,0,,0,0
+Adams,York Springs,Attorney General,,,Under Votes,5,4,,1,0
