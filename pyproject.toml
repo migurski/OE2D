@@ -21,6 +21,12 @@ dependencies = [
     "Pillow",
 ]
 
+# cmpnd powers optional LLM-call tracing (oe2d.*._instrument, active when CMPND_API_KEY is set);
+# install with `pip install -e .[tracing]`. The soft import means its absence is silent, so it is
+# an extra rather than a hard dependency.
+[project.optional-dependencies]
+tracing = ["cmpnd"]
+
 # Console-script names mirror the dotted module path (dots -> dashes).
 [project.scripts]
 oe2d-contests = "oe2d.contests:main"

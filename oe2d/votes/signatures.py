@@ -51,7 +51,7 @@ class PageSchema(pydantic.BaseModel):
 
 class CandidateRow(pydantic.BaseModel):
     '''One candidate's row in a precinct-major (candidates-as-rows) table.'''
-    source_label: str = pydantic.Field(description='the row-label cell verbatim, e.g. "DEM HARRIS and WALZ" -- used to find this row on every page (labels are identical across a document)')
+    row_index: int = pydantic.Field(description='0-based grid row of this candidate WITHIN THIS CONTEST -- scopes to the right contest when several are stacked on the page (their write-in/over/under labels repeat)')
     candidate: str = pydantic.Field(description='matched EXPECTED candidate name; or the observed label verbatim for a write-in / vote-integrity row (Write-In Totals, Overvotes, ...)')
     party: str = pydantic.Field(default='', description='matched expected party; blank if unmatched. Do NOT read party off the document')
 

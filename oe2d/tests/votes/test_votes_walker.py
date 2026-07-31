@@ -69,3 +69,22 @@ def test_split_row_joins_wrapped_label_and_collects_numbers():
 
 def test_norm_is_whitespace_and_case_insensitive():
     assert votes._norm('DEM HARRIS and  WALZ') == votes._norm('dem harris andwalz')
+
+
+def test_contiguous_label_stops_at_gap():
+    # precinct name may wrap into the adjacent cell; a far-column banner past a gap is dropped
+    assert votes._contiguous_label(['Gettysburg', '1', '', '', 'banner'], 0) == 'Gettysburg 1'
+    assert votes._contiguous_label(['110', '', '817 of', '1,056'], 0) == '110'
+
+
+def test_assign_methods_equal_count_zips_in_order():
+    rec = votes._assign_methods(['total', 'election_day', 'absentee_mail', 'provisional'],
+                                [150, 100, 48, 2])
+    assert rec == {'votes': 150, 'election_day': 100, 'absentee_mail': 48, 'provisional': 2}
+
+
+def test_assign_methods_recovers_dropped_component_via_total_checksum():
+    # a zero provisional cell was dropped -> 3 cells, 4 buckets; total (275=35+240) realigns them
+    rec = votes._assign_methods(['election_day', 'absentee_mail', 'provisional', 'total'],
+                                [35, 240, 275])
+    assert rec == {'election_day': 35, 'absentee_mail': 240, 'provisional': 0, 'votes': 275}

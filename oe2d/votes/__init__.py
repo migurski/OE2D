@@ -66,6 +66,45 @@ def _parse_number(text: str) -> int | None:
     return int(text) if re.fullmatch(r'-?\d+', text) else None
 
 
+def _assign_methods(buckets: list[str], numbers: list[int]) -> dict | None:
+    '''Map a candidate row's numeric cells onto its method buckets, robust to cell split/merge.
+
+    Table conversion is not self-consistent within a document: a zero component may be dropped, or
+    a value may split across cells, so the cell count can differ from the bucket count page to
+    page. When counts match, zip in order. When a total bucket is present and a cell equals the sum
+    of the others, that cell is the total and the rest fill the component buckets left-to-right
+    (a dropped trailing component -- usually provisional -- becomes 0). Returns None if unalignable.
+    '''
+    store = lambda bucket: 'votes' if bucket == _TOTAL_BUCKET else bucket
+    if len(numbers) == len(buckets):
+        return {store(bucket): value for bucket, value in zip(buckets, numbers)}
+    if _TOTAL_BUCKET in buckets and numbers:
+        components: list[str] = [bucket for bucket in buckets if bucket != _TOTAL_BUCKET]
+        for index, value in enumerate(numbers):
+            others: list[int] = numbers[:index] + numbers[index + 1:]
+            if value == sum(others):                      # this cell is the grand total
+                record: dict = {'votes': value}
+                for bucket, component in zip(components, others):
+                    record[bucket] = component
+                for bucket in components[len(others):]:   # dropped (zero) trailing components
+                    record[bucket] = 0
+                return record
+    return None
+
+
+def _contiguous_label(row: list[str], start: int) -> str:
+    '''Join non-empty cells from column `start` until the first gap. A precinct name can wrap into
+    the adjacent column ("Gettysburg" + "1"), while trailing junk (a registered-voters banner) sits
+    past an empty cell -- stopping at the gap keeps the name and drops the banner.'''
+    parts: list[str] = []
+    for cell in row[start:]:
+        text: str = _clean(cell)
+        if not text:
+            break
+        parts.append(text)
+    return ' '.join(parts)
+
+
 def _split_row(row: list[str]) -> tuple[str, list[int]]:
     '''A grid row's leading text label (joined across cells, since a long label can wrap into the
     next column) and its numeric cells in order. Robust to spacer columns and split labels.'''
@@ -249,29 +288,27 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
     # candidate row's actual numeric cells, so spacer columns and header noise don't matter.
     buckets: list[str] = [bucket for _index, bucket in sorted(schema.method_columns.items(),
                                                               key=lambda item: int(item[0]))]
-    label_role: dict[str, signatures.CandidateRow] = {_norm(row.source_label): row
-                                                       for row in schema.candidate_rows}
     logger.info('learned precinct schema: %d candidate rows, method order %s, precinct at (%d,%d)',
-                len(label_role), buckets, schema.precinct_row, schema.precinct_column)
+                len(schema.candidate_rows), buckets, schema.precinct_row, schema.precinct_column)
 
+    # Apply by ROW INDEX (from the sample), not by matching the row label: pages are structurally
+    # identical, indices scope to the right contest when several stack on a page (their
+    # write-in/over/under labels repeat), and it sidesteps labels that wrap mid-word across cells.
     votes: dict = {}
     for page in pages:
         grid: list[list[str]] = read_text_grid(file_path, page)
         precinct: str = ''
         if schema.precinct_row < len(grid):
-            precinct = ' '.join(_clean(cell) for cell in grid[schema.precinct_row] if _clean(cell))
-        for row in grid:
-            label, numbers = _split_row(row)      # leading text vs numeric cells (label may wrap)
-            role = label_role.get(_norm(label))
-            if role is None:
+            precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
+        for role in schema.candidate_rows:
+            if role.row_index >= len(grid):
                 continue
-            if len(numbers) != len(buckets):
-                logger.info('  %s / %s: %d numeric cells, expected %d -- skipped',
-                            precinct, role.candidate, len(numbers), len(buckets))
+            _label, numbers = _split_row(grid[role.row_index])
+            record = _assign_methods(buckets, numbers)
+            if record is None:
+                logger.info('  %s / %s row %d: %d cells unalignable to %d buckets -- skipped',
+                            precinct, role.candidate, role.row_index, len(numbers), len(buckets))
                 continue
-            record: dict = {}
-            for bucket, value in zip(buckets, numbers):
-                record['votes' if bucket == _TOTAL_BUCKET else bucket] = value
             votes[(precinct, role.candidate, role.party)] = record
     return votes
 
