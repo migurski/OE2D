@@ -66,6 +66,14 @@ def _parse_number(text: str) -> int | None:
     return int(text) if re.fullmatch(r'-?\d+', text) else None
 
 
+def _cell_count(cell: str) -> int | None:
+    '''The vote count in a cell, or None. Table conversion sometimes MERGES a count with its
+    percent into one cell ("1 100.00%"); the count is then the leading whitespace token. A
+    pure-percent cell ("86.32%") has no integer leading token, so it is correctly skipped.'''
+    token: str = _clean(cell).split(' ')[0].replace(',', '')
+    return int(token) if re.fullmatch(r'-?\d+', token) else None
+
+
 def _assign_methods(buckets: list[str], numbers: list[int]) -> dict | None:
     '''Map a candidate row's numeric cells onto its method buckets, robust to cell split/merge.
 
@@ -82,14 +90,24 @@ def _assign_methods(buckets: list[str], numbers: list[int]) -> dict | None:
         components: list[str] = [bucket for bucket in buckets if bucket != _TOTAL_BUCKET]
         for index, value in enumerate(numbers):
             others: list[int] = numbers[:index] + numbers[index + 1:]
-            if value == sum(others):                      # this cell is the grand total
-                record: dict = {'votes': value}
-                for bucket, component in zip(components, others):
-                    record[bucket] = component
-                for bucket in components[len(others):]:   # dropped (zero) trailing components
-                    record[bucket] = 0
-                return record
+            if value == sum(others):                      # a dropped (zero) trailing component
+                return _record(components, others, value)
+        # a spurious extra cell wedged in: the total still equals a leading run of components
+        for index in range(len(numbers)):
+            for take in range(min(index, len(components)), 0, -1):   # longest run first
+                if numbers[index] == sum(numbers[:take]):
+                    return _record(components, numbers[:take], numbers[index])
     return None
+
+
+def _record(components: list[str], values: list[int], total: int) -> dict:
+    '''Assemble a method record: components in order (missing trailing ones -> 0), plus votes.'''
+    record: dict = {'votes': total}
+    for bucket, value in zip(components, values):
+        record[bucket] = value
+    for bucket in components[len(values):]:
+        record[bucket] = 0
+    return record
 
 
 def _contiguous_label(row: list[str], start: int) -> str:
@@ -112,7 +130,7 @@ def _split_row(row: list[str]) -> tuple[str, list[int]]:
     numbers: list[int] = []
     hit_number: bool = False
     for cell in row:
-        value: int | None = _parse_number(cell)
+        value: int | None = _cell_count(cell)
         if value is not None:
             hit_number = True
             numbers.append(value)
@@ -309,7 +327,8 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
                 logger.info('  %s / %s row %d: %d cells unalignable to %d buckets -- skipped',
                             precinct, role.candidate, role.row_index, len(numbers), len(buckets))
                 continue
-            votes[(precinct, role.candidate, role.party)] = record
+            candidate: str = re.sub(r':+$', '', role.candidate).strip()   # drop a trailing-colon artifact
+            votes[(precinct, candidate, role.party)] = record
     return votes
 
 

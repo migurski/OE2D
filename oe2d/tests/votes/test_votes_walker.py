@@ -88,3 +88,16 @@ def test_assign_methods_recovers_dropped_component_via_total_checksum():
     rec = votes._assign_methods(['election_day', 'absentee_mail', 'provisional', 'total'],
                                 [35, 240, 275])
     assert rec == {'election_day': 35, 'absentee_mail': 240, 'provisional': 0, 'votes': 275}
+
+
+def test_cell_count_reads_merged_count_and_skips_percent():
+    assert votes._cell_count('1 100.00%') == 1        # count merged with its percent
+    assert votes._cell_count('86.32%') is None        # pure percent -> not a count
+    assert votes._cell_count('1,234') == 1234         # comma stripped
+
+
+def test_assign_methods_ignores_a_spurious_wedged_cell_via_prefix_sum():
+    # provisional 3 present, total 235 == 53+179+3; a stray 5 wedged before the total is dropped
+    rec = votes._assign_methods(['election_day', 'absentee_mail', 'provisional', 'total'],
+                                [53, 179, 3, 5, 235])
+    assert rec == {'election_day': 53, 'absentee_mail': 179, 'provisional': 3, 'votes': 235}
