@@ -69,6 +69,12 @@ class _Role:
         self.row_index = row_index
 
 
+def test_split_party_pulls_a_trailing_party_out_of_the_name():
+    assert votes._split_party('Kamala D. Harris (DEM)', '') == ('Kamala D. Harris', 'DEM')
+    assert votes._split_party('Kamala D. Harris', 'DEM') == ('Kamala D. Harris', 'DEM')  # already split
+    assert votes._split_party('Write-ins', '') == ('Write-ins', '')
+
+
 def test_count_columns_outvotes_a_stray_cell():
     # every candidate row has counts at cols 2,5,7,9; one row has a stray count at col 3 -> excluded
     grid = [

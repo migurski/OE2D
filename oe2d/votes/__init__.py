@@ -126,6 +126,17 @@ def _count_columns(grid: list[list[str]], candidate_rows: list, want: int) -> li
     return sorted(ranked[:want])
 
 
+def _split_party(candidate: str, party: str) -> tuple[str, str]:
+    '''Separate a trailing "(PARTY)" the interpreter sometimes leaves in the candidate name
+    ("Kamala D. Harris (DEM)"). Inconsistent inclusion of it otherwise breaks candidate identity
+    (grouping) and pollutes the emitted name. Uses it as the party only when none was given.'''
+    match = re.search(r'\s*\(([^)]*)\)\s*$', candidate)
+    name: str = re.sub(r'\s*\([^)]*\)\s*$', '', candidate).strip()
+    if match and not party:
+        party = match.group(1).strip()
+    return name, party
+
+
 def _contiguous_label(row: list[str], start: int) -> str:
     '''Join non-empty cells from column `start` until the first gap. A precinct name can wrap into
     the adjacent column ("Gettysburg" + "1"), while trailing junk (a registered-voters banner) sits
@@ -229,7 +240,8 @@ def _precinct_groups(pages_schema_blocks: list[tuple]) -> list[list[tuple]]:
     current: list[tuple] = []
     seen: set[str] = set()
     for schema, blocks in pages_schema_blocks:
-        names: set[str] = {c.candidate for c in schema.columns if c.role == 'candidate'}
+        names: set[str] = {_norm(_split_party(c.candidate, c.party)[0])
+                           for c in schema.columns if c.role == 'candidate'}
         if current and (seen & names):
             groups.append(current)
             current, seen = [], set()
@@ -297,13 +309,13 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
                 for column in schema.columns:
                     if column.role != 'candidate':
                         continue
+                    candidate, party = _split_party(column.candidate, column.party)
                     for bucket, row in blocks[index]['methods'].items():
                         value = _parse_number(row[column.index]) if column.index < len(row) else None
                         if value is None:
                             continue
                         store: str = 'votes' if bucket == _TOTAL_BUCKET else bucket
-                        key = (precinct, column.candidate, column.party)
-                        votes.setdefault(key, {})[store] = value
+                        votes.setdefault((precinct, candidate, party), {})[store] = value
     return votes
 
 
