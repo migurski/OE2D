@@ -19,6 +19,7 @@ Usage: oe2d-votes file.pdf --pages 7-12 --office President \
 from __future__ import annotations
 
 import argparse
+import collections
 import csv
 import functools
 import logging
@@ -110,6 +111,21 @@ def _record(components: list[str], values: list[int], total: int) -> dict:
     return record
 
 
+def _count_columns(grid: list[list[str]], candidate_rows: list, want: int) -> list[int]:
+    '''The columns that hold vote counts, by CONSENSUS across a page's candidate rows. The column
+    structure is consistent within a page even when table conversion drifts across pages, so a
+    stray cell wedged into one row (present in no other) is outvoted, while the real method columns
+    -- shared by every candidate row -- win. Returns the `want` most-common count columns in order.'''
+    frequency: dict[int, int] = collections.defaultdict(int)
+    for role in candidate_rows:
+        if role.row_index < len(grid):
+            for column, cell in enumerate(grid[role.row_index]):
+                if _cell_count(cell) is not None:
+                    frequency[column] += 1
+    ranked: list[int] = sorted(frequency, key=lambda column: (-frequency[column], column))
+    return sorted(ranked[:want])
+
+
 def _contiguous_label(row: list[str], start: int) -> str:
     '''Join non-empty cells from column `start` until the first gap. A precinct name can wrap into
     the adjacent column ("Gettysburg" + "1"), while trailing junk (a registered-voters banner) sits
@@ -121,22 +137,6 @@ def _contiguous_label(row: list[str], start: int) -> str:
             break
         parts.append(text)
     return ' '.join(parts)
-
-
-def _split_row(row: list[str]) -> tuple[str, list[int]]:
-    '''A grid row's leading text label (joined across cells, since a long label can wrap into the
-    next column) and its numeric cells in order. Robust to spacer columns and split labels.'''
-    label_parts: list[str] = []
-    numbers: list[int] = []
-    hit_number: bool = False
-    for cell in row:
-        value: int | None = _cell_count(cell)
-        if value is not None:
-            hit_number = True
-            numbers.append(value)
-        elif not hit_number and _clean(cell):
-            label_parts.append(_clean(cell))
-    return ' '.join(label_parts), numbers
 
 
 def grid_to_text(rows: list[list[str]]) -> str:
@@ -318,10 +318,13 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
         precinct: str = ''
         if schema.precinct_row < len(grid):
             precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
+        count_columns: list[int] = _count_columns(grid, schema.candidate_rows, len(buckets))
         for role in schema.candidate_rows:
             if role.row_index >= len(grid):
                 continue
-            _label, numbers = _split_row(grid[role.row_index])
+            row: list[str] = grid[role.row_index]
+            numbers: list[int] = [_cell_count(row[column]) for column in count_columns
+                                  if column < len(row) and _cell_count(row[column]) is not None]
             record = _assign_methods(buckets, numbers)
             if record is None:
                 logger.info('  %s / %s row %d: %d cells unalignable to %d buckets -- skipped',

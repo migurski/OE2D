@@ -60,15 +60,24 @@ def test_votes_to_rows_canonical_shape():
     assert rows[0]['early_voting'] == ''
 
 
-def test_split_row_joins_wrapped_label_and_collects_numbers():
-    # label wrapped mid-word across two cells; spacer columns between values (precinct-major grid)
-    label, numbers = votes._split_row(['LIB OLIVER and T', 'ER MAAT', '', '5', '', '2', '3', '0'])
-    assert votes._norm(label) == votes._norm('LIB OLIVER and TER MAAT')
-    assert numbers == [5, 2, 3, 0]
-
-
 def test_norm_is_whitespace_and_case_insensitive():
     assert votes._norm('DEM HARRIS and  WALZ') == votes._norm('dem harris andwalz')
+
+
+class _Role:
+    def __init__(self, row_index):
+        self.row_index = row_index
+
+
+def test_count_columns_outvotes_a_stray_cell():
+    # every candidate row has counts at cols 2,5,7,9; one row has a stray count at col 3 -> excluded
+    grid = [
+        ['BIDEN', 'DEM', '5', '', '9.62%', '163', '38.63%', '0', '0.00%', '168', '35.44%'],
+        ['TRUMP', 'REP', '43', '8', '2.69%', '248', '58.77%', '0', '0.00%', '291', '61.39%'],
+        ['HAWKINS', 'GRN', '1', '', '1.0%', '2', '1.0%', '0', '0.00%', '3', '1.0%'],
+    ]
+    rows = [_Role(0), _Role(1), _Role(2)]
+    assert votes._count_columns(grid, rows, 4) == [2, 5, 7, 9]
 
 
 def test_contiguous_label_stops_at_gap():
