@@ -28,6 +28,11 @@ class ColumnRole(pydantic.BaseModel):
         description='candidate role only: the party of the MATCHED expected candidate (blank if '
                     'the expected entry gave none); blank for an unmatched column. Do NOT read '
                     'party off the document header')
+    write_in: bool = pydantic.Field(
+        default=False,
+        description='true if this candidate column is any kind of write-in -- a named/qualified '
+                    'write-in candidate, an unresolved/scattered write-in, or a write-in total. '
+                    'All write-in columns are later summed into one consolidated write-in row')
 
 
 class PageSchema(pydantic.BaseModel):
@@ -54,6 +59,7 @@ class CandidateRow(pydantic.BaseModel):
     row_index: int = pydantic.Field(description='0-based grid row of this candidate WITHIN THIS CONTEST -- scopes to the right contest when several are stacked on the page (their write-in/over/under labels repeat)')
     candidate: str = pydantic.Field(description='matched EXPECTED candidate name; or the observed label verbatim for a write-in / vote-integrity row (Write-In Totals, Overvotes, ...)')
     party: str = pydantic.Field(default='', description='matched expected party; blank if unmatched. Do NOT read party off the document')
+    write_in: bool = pydantic.Field(default=False, description='true if this row is any kind of write-in (named/qualified write-in, unresolved/scattered write-in, or write-in total); all write-in rows are summed into one consolidated write-in row')
 
 
 class PrecinctPageSchema(pydantic.BaseModel):
@@ -78,8 +84,11 @@ class InterpretPrecinctPage(dspy.Signature):
     vote method; and the contest's candidate rows -- each with its row-label verbatim (so the same
     rows can be found on every page) and the matched EXPECTED candidate name and party. A row that
     matches no expected candidate (a write-in or vote-integrity line) keeps its observed label
-    verbatim with a blank party. Exclude the statistics block and grand-total rows (e.g. "Total
-    Votes Cast", "Contest Totals").
+    verbatim with a blank party. Set write_in=true on ANY write-in row (a named/qualified write-in,
+    an unresolved/scattered write-in, or a write-in total -- "Qualified Write In", "Unresolved
+    Write-In", "Write-In Totals", "Not Assigned", etc.); they are consolidated into one write-in
+    total downstream, so flag them all. Exclude the statistics block and grand-total rows (e.g.
+    "Total Votes Cast", "Contest Totals").
 
     Return ONLY structure -- never read or return a vote number.
     '''
@@ -102,7 +111,10 @@ class InterpretResultsPage(dspy.Signature):
     a running mate, party, or garbled/reversed fragments -- match on the recognizable name) and
     return that expected candidate's name and party EXACTLY as supplied. Do NOT read the party off
     the document. A candidate column that matches no expected candidate (typically a write-in line)
-    keeps its observed label verbatim with a blank party.
+    keeps its observed label verbatim with a blank party. Set write_in=true on ANY write-in column
+    (a named/qualified write-in, an unresolved/scattered write-in, or a write-in total -- "Qualified
+    Write In", "Unresolved Write-In", "Write-In Totals", "Not Assigned", etc.); they are
+    consolidated into one write-in total downstream, so flag them all.
 
     Return ONLY structure -- never read or return a vote number.
     '''

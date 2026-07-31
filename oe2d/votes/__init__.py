@@ -51,6 +51,10 @@ CANON_COLUMNS: tuple[str, ...] = (
 # A method label maps to 'total' for the grand-total column/row; we store that under 'votes'.
 _TOTAL_BUCKET: str = 'total'
 
+# All write-in columns/rows (the LLM flags them; sources split them to excruciating detail) are
+# summed into this one consolidated row. The label is our output constant, not a document term.
+WRITE_IN_LABEL: str = 'Write-ins'
+
 
 def _clean(text: str | None) -> str:
     return re.sub(r'\s+', ' ', (text or '').strip())
@@ -99,6 +103,16 @@ def _assign_methods(buckets: list[str], numbers: list[int]) -> dict | None:
                 if numbers[index] == sum(numbers[:take]):
                     return _record(components, numbers[:take], numbers[index])
     return None
+
+
+def _consolidate_write_in(values: list[int]) -> int:
+    '''Combine several write-in figures into one. If one value equals the sum of the others it is a
+    grand total (a total-plus-breakdown, e.g. "Write-In Totals" over "Not Assigned") -- use it, do
+    not double-count; otherwise the values are separate components (qualified write-ins) -- sum.'''
+    if len(values) <= 1:
+        return values[0] if values else 0
+    biggest: int = max(values)
+    return biggest if biggest == sum(values) - biggest else sum(values)
 
 
 def _record(components: list[str], values: list[int], total: int) -> dict:
@@ -293,6 +307,9 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
         logger.info('page: %d columns, %d precinct blocks', len(schema.columns), len(pages_schema_blocks[-1][1]))
 
     votes: dict = {}
+    # write-in columns are collected per (precinct, method) and consolidated once at the end, so a
+    # grand-total column is not double-counted against its breakdown.
+    write_ins: dict = collections.defaultdict(lambda: collections.defaultdict(list))
     for group in _precinct_groups(pages_schema_blocks):
         # Precinct labels by consensus across the group's candidate-group pages: a page may drop the
         # first precinct's label to None, but a sibling page carries it.
@@ -315,7 +332,13 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
                         if value is None:
                             continue
                         store: str = 'votes' if bucket == _TOTAL_BUCKET else bucket
-                        votes.setdefault((precinct, candidate, party), {})[store] = value
+                        if column.write_in:                     # gather; consolidated below
+                            write_ins[precinct][store].append(value)
+                        else:
+                            votes.setdefault((precinct, candidate, party), {})[store] = value
+    for precinct, stores in write_ins.items():
+        votes[(precinct, WRITE_IN_LABEL, '')] = {store: _consolidate_write_in(values)
+                                                 for store, values in stores.items()}
     return votes
 
 
@@ -354,6 +377,7 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
     # identical, indices scope to the right contest when several stack on a page (their
     # write-in/over/under labels repeat), and it sidesteps labels that wrap mid-word across cells.
     votes: dict = {}
+    write_ins: dict = collections.defaultdict(lambda: collections.defaultdict(list))
     for page in pages:
         grid: list[list[str]] = read_text_grid(file_path, page)
         precinct: str = ''
@@ -371,8 +395,15 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
                 logger.info('  %s / %s row %d: %d cells unalignable to %d buckets -- skipped',
                             precinct, role.candidate, role.row_index, len(numbers), len(buckets))
                 continue
-            candidate: str = re.sub(r':+$', '', role.candidate).strip()   # drop a trailing-colon artifact
-            votes[(precinct, candidate, role.party)] = record
+            if role.write_in:                                 # gather; consolidated below
+                for bucket, value in record.items():
+                    write_ins[precinct][bucket].append(value)
+            else:
+                candidate: str = re.sub(r':+$', '', role.candidate).strip()   # drop trailing-colon artifact
+                votes[(precinct, candidate, role.party)] = record
+    for precinct, stores in write_ins.items():
+        votes[(precinct, WRITE_IN_LABEL, '')] = {store: _consolidate_write_in(values)
+                                                 for store, values in stores.items()}
     return votes
 
 
