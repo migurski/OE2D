@@ -33,12 +33,14 @@ Current F1 — both plain (per-row) and vote-weighted (fresh DSPy cache):
 | calhoun us-house-4 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | calhoun us-house-5 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | gogebic president | columns | **1.000** | **scanned, borderless-read** — cheap-mode Textract + own grid reconstruction |
-| huron president | columns (flat) | **1.000** | **scanned, ruled TABLES** — flat one-row-per-precinct, cross-page row stitch |
-| huron straight-party / us-senate / us-house | — | pending | same source; fill `pages` + `read_strategy` |
+| huron president / straight-party / us-senate / us-house | columns (flat) | **1.000** | **scanned, ruled TABLES** — flat one-row-per-precinct, cross-page row stitch |
 
-Plain and vote-weighted F1 are **1.000 on all 11 vector contests and both scanned formats seen so far**
-(Gogebic borderless Hart, Huron ruled flat). Remaining: Huron's other three contests (same scan,
-`read_strategy='ruled_scan'`; fill `pages`).
+Plain and vote-weighted F1 are **1.000 on all 15 gold contests** — 11 vector, 1 borderless-Hart scan
+(Gogebic), and 4 ruled-flat scans (Huron). The whole gold set is closed. (Out-of-county 0-vote
+placeholders like Barry's "(Eaton OOC)" and Huron's "Delaware Township (Sanilac County)" -- a Sanilac
+township, web-confirmed -- are excluded by a NUMERIC all-zero-precinct drop in `votes_to_rows`, and
+the golds were corrected to match; the "is it out-of-county" language judgment lives in the gold, not
+in Python.)
 
 16 hand-built gold examples live in `oe2d-data/votes/` (`index.jsonl` + one
 `<county>__<contest>__expected.csv` each). Numbers are **copied from human-authored state-repo
@@ -323,11 +325,13 @@ truncating a wrapped label). Flat lives entirely in `extract_scanned_tables`, wh
 ONLY to map header columns → candidates and reads each precinct row's candidate columns directly.
 
 ## Next steps (in rough priority)
-1. **Huron's other three contests (scanned, ruled)** — `read_scanned_tables` + `extract_scanned_tables`
-   are built and validated (Huron president 1.000). Fill `pages` + `read_strategy='ruled_scan'` for
-   straight-party / us-senate / us-house (same source PDF; each contest's tables are scoped by
-   header-match + column-count across pages) and run. Then the `oe2d.pages` wiring (below) to replace
-   the per-source `read_strategy` with an image-VLM `ruled_table` field.
+1. **Wire `oe2d.pages` (image VLM) for dispatch** — the whole gold set now passes, but reader/content
+   dispatch is carried in the gold (`geometry.candidate_orientation`, `read_strategy`) and detected
+   ad-hoc. Replace with one PageAnalyzer pass on a sample page returning skew + `ruled_table` (→ TABLES
+   vs cheap/rotated read) + orientation. Confirm each choice with checksums (column totals vs printed
+   Total row, etc.). Remaining known Python markers to migrate to the LLM/checksums once `pages` is
+   wired: the flat-path grand-total skip (`_norm in ('total','totals')`), which the flat anchor can't
+   see on a continuation.
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
