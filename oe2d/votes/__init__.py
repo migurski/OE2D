@@ -480,6 +480,38 @@ def read_page_grid(file_path: str, page: int) -> list[list[str]]:
     return []
 
 
+def _has_text_layer(file_path: str, page: int) -> bool:
+    '''True when the page has an extractable text layer (a vector PDF page); False for a scan
+    (no words) -- the same signal read_page_grid uses to gate the Textract path.'''
+    try:
+        pdf: pdfplumber.PDF = _open_pdf(file_path)
+    except Exception:
+        return True                                  # non-PDF (spreadsheet): treat as vector/text
+    if 1 <= page <= len(pdf.pages):
+        return bool(pdf.pages[page - 1].extract_words())
+    return True
+
+
+def detect_dispatch(file_path: str, page: int) -> dict:
+    '''Choose how to read a contest from ONE sample page, via oe2d.pages (the image VLM) plus a
+    deterministic text-layer check -- so dispatch comes from the page image, not a hand-set gold
+    field. Returns {orientation, read_strategy, scanned, ruled_table}.
+
+    orientation is the VLM's candidate_orientation (columns/rows). A page with no text layer is a
+    scan. read_strategy is a PROPOSAL: a scanned page the VLM calls ruled proposes 'ruled_scan'
+    (Textract TABLES), everything else 'auto' (the reader self-detects). ruled_table alone cannot
+    settle the scanned read -- a ruled scan whose rules are faint/broken (Gogebic) makes TABLES
+    mis-segment even though huron's clean rules do not -- so the caller must CONFIRM a proposed
+    ruled_scan read with a checksum and fall back to 'auto' when it does not reconcile.'''
+    from .. import pages
+    props: dict = pages.analyze_page(file_path, page)
+    scanned: bool = not _has_text_layer(file_path, page)
+    ruled: bool = bool(props.get('ruled_table'))
+    return {'orientation': props['candidate_orientation'],
+            'read_strategy': 'ruled_scan' if (scanned and ruled) else 'auto',
+            'scanned': scanned, 'ruled_table': ruled}
+
+
 def walk_page(rows: list[list[str]], schema: signatures.PageSchema) -> list[dict]:
     '''Ordered precinct blocks on a page, driven entirely by the schema (no English here).
 

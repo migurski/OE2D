@@ -97,6 +97,38 @@ def print_report(results: list[dict]) -> None:
         print('%d contest(s) errored (see above).' % errors)
 
 
+def report_dispatch(examples: list) -> None:
+    '''Compare the oe2d.pages-driven dispatch (votes.detect_dispatch on a sample page) to each
+    contest's gold orientation/read_strategy, so we can see whether the page image alone routes the
+    read correctly before trusting it over the gold field. Prints per-contest detected-vs-gold and
+    an aggregate; a mismatch names which axis (orientation / read_strategy) diverged.'''
+    ok_orient: int = 0
+    ok_read: int = 0
+    for example in examples:
+        gold_orient: str = example.orientation
+        gold_read: str = example.read_strategy
+        try:
+            got: dict = votes.detect_dispatch(example.file_path, example.pages[0])
+        except Exception as error:
+            print('%-40s ERROR %s: %s' % (getattr(example, '_id', '?'),
+                                          type(error).__name__, str(error)[:60]))
+            continue
+        o_ok: bool = got['orientation'] == gold_orient
+        r_ok: bool = got['read_strategy'] == gold_read
+        ok_orient += o_ok
+        ok_read += r_ok
+        flags: str = ' '.join(t for t, good in
+                              (('orient', o_ok), ('read', r_ok)) if not good)
+        print('%-40s orient %s/%s  read %s/%s  scan=%-5s ruled=%-5s %s'
+              % (getattr(example, '_id', '?'), got['orientation'], gold_orient,
+                 got['read_strategy'], gold_read, got['scanned'], got['ruled_table'],
+                 '' if not flags else 'MISS:' + flags))
+    n: int = len(examples)
+    if n:
+        print('\norientation %d/%d = %.0f%%   read_strategy %d/%d = %.0f%%'
+              % (ok_orient, n, 100 * ok_orient / n, ok_read, n, 100 * ok_read / n))
+
+
 def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Score the vote extractor on the gold set (per-contest + aggregate F1).')
@@ -109,6 +141,9 @@ def main() -> None:
                         help='Score only contests whose id contains this substring')
     parser.add_argument('--val-only', action='store_true',
                         help='Score only the held-out validation split (default: all contests)')
+    parser.add_argument('--detect', action='store_true',
+                        help='Instead of scoring extraction, measure the oe2d.pages-driven dispatch '
+                             '(detect_dispatch) against each contest gold orientation/read_strategy')
     parser.add_argument('--temperature', type=float, default=0.0)
     parser.add_argument('--max-tokens', type=int, default=4096)
     parser.add_argument('--num-retries', type=int, default=10)
@@ -123,13 +158,18 @@ def main() -> None:
         logging.getLogger('oe2d').setLevel(logging.INFO)
 
     votes._instrument()          # cmpnd tracing when CMPND_API_KEY is set (tag oe2d-votes)
-    program: votes.VoteExtractor = build_target(args.student, args.model, args.temperature,
-                                                args.max_tokens, args.num_retries)
 
     examples: list = datasets.load_split()[1] if args.val_only else datasets.load_examples()
     if args.only:
         examples = [e for e in examples if args.only in getattr(e, '_id', '')]
 
+    if args.detect:
+        print('dispatch detection (oe2d.pages) vs gold over %d contest(s):\n' % len(examples))
+        report_dispatch(examples)
+        return
+
+    program: votes.VoteExtractor = build_target(args.student, args.model, args.temperature,
+                                                args.max_tokens, args.num_retries)
     label: str = args.model or args.student or 'shipped program'
     scope: str = 'validation' if args.val_only else 'all'
     print('evaluating: %s' % label)
