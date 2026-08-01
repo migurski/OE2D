@@ -13,6 +13,13 @@ import json
 import os
 import urllib.request
 
+import dspy
+
+# The forward()/metric contract: these inputs go into the extractor, .rows is the scored output.
+INPUT_FIELDS: tuple[str, ...] = (
+    'file_path', 'pages', 'office', 'candidate_context', 'county', 'district',
+    'orientation', 'read_strategy')
+
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _DATA_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'votes')
 _INDEX_PATH: str = os.path.join(_DATA_DIR, 'index.jsonl')
@@ -68,3 +75,83 @@ def fetch_source(record: dict) -> str:
     if not os.path.exists(path):
         urllib.request.urlretrieve(record['source_url'], path)
     return path
+
+
+def orientation(record: dict) -> str:
+    '''The record's CONTENT structure: 'rows' (precinct-major) or 'columns' (contest-major).'''
+    return record.get('geometry', {}).get('candidate_orientation', 'columns')
+
+
+def read_strategy(record: dict) -> str:
+    '''The record's READ MECHANICS: 'ruled_scan' (Textract TABLES) or 'auto' (one grid per page).'''
+    return record.get('read_strategy') or 'auto'
+
+
+def district(record: dict) -> str:
+    '''The record's district as a string ('' when the office has none). The gold stores a missing
+    district as null or an empty list; only a real string district is passed through.'''
+    value = record.get('district')
+    return value if isinstance(value, str) else ''
+
+
+def record_to_example(record: dict) -> dspy.Example:
+    '''Build one dspy.Example for GEPA/evaluate: the extractor inputs in, the gold rows out.
+
+    The source is fetched (cached) so file_path is a local path the reader can open. The gold rows
+    keep their canonical string form (the extractor emits ints for votes, but the metric coerces
+    both sides to trimmed strings, so they compare cleanly).'''
+    fields: dict = {
+        'file_path': fetch_source(record),
+        'pages': record['pages'],
+        'office': record['office'],
+        'candidate_context': candidate_context(record),
+        'county': record['county'],
+        'district': district(record),
+        'orientation': orientation(record),
+        'read_strategy': read_strategy(record),
+        'rows': expected_rows(record),
+    }
+    example: dspy.Example = dspy.Example(**fields).with_inputs(*INPUT_FIELDS)
+    example._id = record['id']
+    example._container = record.get('container', '')
+    return example
+
+
+def load_examples(path: str = _INDEX_PATH, fetch: bool = True) -> list[dspy.Example]:
+    '''Every gold record as a dspy.Example. fetch=False skips downloading sources (metadata-only
+    examples, e.g. to inspect the split) and leaves file_path unset.'''
+    examples: list[dspy.Example] = []
+    for record in load_index(path):
+        if fetch:
+            examples.append(record_to_example(record))
+        else:
+            fields: dict = {name: None for name in INPUT_FIELDS}
+            fields.update(office=record['office'], county=record['county'], pages=record['pages'],
+                          district=district(record), orientation=orientation(record),
+                          read_strategy=read_strategy(record), rows=expected_rows(record))
+            example: dspy.Example = dspy.Example(**fields).with_inputs(*INPUT_FIELDS)
+            example._id = record['id']
+            example._container = record.get('container', '')
+            examples.append(example)
+    return examples
+
+
+def split(examples: list[dspy.Example], val_fraction: float = 0.3) -> tuple[list[dspy.Example], list[dspy.Example]]:
+    '''Split into train/val deterministically by county, so a county's contests never straddle the
+    split (they share vendor, layout, and gold quirks -- a per-contest split would leak). Counties are
+    sorted and every round(1/val_fraction)-th one is held out for validation.'''
+    import collections
+    by_county: dict[str, list[dspy.Example]] = collections.defaultdict(list)
+    for example in examples:
+        by_county[getattr(example, 'county', '') or ''].append(example)
+    stride: int = max(2, round(1 / val_fraction))
+    trainset: list[dspy.Example] = []
+    valset: list[dspy.Example] = []
+    for index, county in enumerate(sorted(by_county)):
+        (valset if index % stride == 0 else trainset).extend(by_county[county])
+    return trainset, valset
+
+
+def load_split(path: str = _INDEX_PATH, val_fraction: float = 0.3) -> tuple[list[dspy.Example], list[dspy.Example]]:
+    '''Convenience: load examples and split them by county in one call.'''
+    return split(load_examples(path), val_fraction=val_fraction)

@@ -106,9 +106,10 @@ matching, method-label→bucket mapping, write-in flagging, and "never a number"
   applied deterministically to every structurally-identical page (one LLM call per document, not
   per page).
 
-LM: AWS Bedrock Claude Sonnet 4.5 (`LM_CLAUDE_SONNET45`), temperature 0. `build_interpreter` /
-`build_precinct_interpreter` bind it (or load a trained artifact if present) and call
-`_instrument()` for Cmpnd tracing.
+LM: AWS Bedrock Claude Sonnet 4.5 (`LM_CLAUDE_SONNET45`), temperature 0. The two interpreters are
+NAMED predictors on the composite `VoteExtractor` module (`self.interpret_columns` /
+`self.interpret_rows`); `build_extractor()` constructs the module, loads a trained artifact if present
+(else `set_lm`), and calls `_instrument()` once for Cmpnd tracing.
 
 **Signature design — optimization-ready.** All how-to-decide guidance (candidate matching, party
 "don't read it off the doc", write-in vs write-in-total, over/under-vote canonicalization, which
@@ -120,8 +121,18 @@ Field descriptions stay minimal and structural. (One consequence already paid of
 `Overvotes`/`Undervotes` canonicalization — rejoining a reader-split `"Ov | ervotes:"` — lives in the
 `InterpretPrecinctPage` docstring and closed Calaveras us-house.)
 
+The whole program is ONE composite `dspy.Module` (`VoteExtractor`, mirroring
+`oe2d.pages.PageAnalyzer` / `oe2d.contests.ContestLocator`), so Cmpnd sees a single traced
+read→interpret→stitch flow and GEPA can evolve every prompt in it. `forward(file_path, pages, office,
+candidate_context, county, district, orientation, read_strategy) → dspy.Prediction(rows, votes)`
+dispatches on READ MECHANICS (`read_strategy`) and CONTENT structure (`orientation`), kept orthogonal.
+The interpreters are named predictors on the module; everything below (readers, walk, stitch,
+consensus, `_assign_methods` / `_consolidate_write_in`, the all-zero drop) is deterministic Python
+traced OUTSIDE the GEPA objective, exactly like `PageAnalyzer`'s skew. `build_extractor()` builds it;
+`extract(...)` is a thin back-compat wrapper returning the votes mapping.
+
 ### 3. Stitch + emit (deterministic)
-- **columns** `extract_contest`: interpret each page → `walk_page` (schema-driven blocks) →
+- **columns** `VoteExtractor._extract_contest`: interpret each page → `walk_page` (schema-driven blocks) →
   **cross-page precinct stitch** → `_precinct_groups` (a repeated candidate starts a new group) →
   align candidate-pages within a group and accumulate. `votes_to_rows` → canonical CSV.
   - **Cross-page precinct stitch (vertical continuation).** We reconstruct tables *horizontally*
@@ -132,9 +143,9 @@ Field descriptions stay minimal and structural. (One consequence already paid of
     precincts would overlap). `walk_page` emits a trailing label-only block so the label survives.
     No-op for documents whose precincts never straddle (Barry, Oscoda). This was the missing piece
     Calhoun exposed and Huron will lean on.
-- **rows** `extract_precinct_contest`: learn sample schema → per page, read each candidate row's
-  numbers at the **page-consensus count columns** and align to buckets.
-- `extract(file, pages, office, context, orientation)` dispatches.
+- **rows** `VoteExtractor._extract_precinct_contest`: learn sample schema → per page, read each
+  candidate row's numbers at the **page-consensus count columns** and align to buckets.
+- `VoteExtractor.forward(...)` dispatches (and calls `votes_to_rows` to return canonical rows).
 
 ## The hard-won robustness lessons
 
@@ -325,44 +336,30 @@ truncating a wrapped label). Flat lives entirely in `extract_scanned_tables`, wh
 ONLY to map header columns → candidates and reads each precinct row's candidate columns directly.
 
 ## Next steps (in rough priority)
-1. **Wrap the whole program in ONE composite `dspy.Module` (GEPA-ready + Cmpnd-legible).** Today
-   `oe2d.votes` is loose functions (`extract`, `extract_contest`, `extract_precinct_contest`,
-   `extract_scanned_tables`) that each call `build_interpreter()` / `build_precinct_interpreter()` to
-   spin up a bare `dspy.Predict` per call. Mirror `oe2d.pages.PageAnalyzer` and
-   `oe2d.contests.ContestLocator`: a single `dspy.Module` (e.g. `VoteExtractor`) IS the program, so
-   Cmpnd sees one traced read→interpret→stitch flow and GEPA can evolve every prompt in it.
-   - **`__init__`** constructs the NAMED inner predictors that GEPA optimizes -- both interpreters:
-     `self.interpret_columns = dspy.Predict(InterpretResultsPage)` and
-     `self.interpret_rows = dspy.Predict(InterpretPrecinctPage)`. GEPA evolves each named predictor's
-     signature-docstring instruction independently (guidance already lives in the docstrings, not the
-     pydantic Field descriptions -- that groundwork is done; see the Interpret section). Naming them as
-     module attributes is what makes them discoverable/optimizable.
-   - **`forward(file_path, pages, office, candidate_context, orientation, read_strategy) ->
-     dspy.Prediction(rows=...)`** runs the current `extract` dispatch inside the module: read
-     (deterministic reader dispatch), interpret (the named predictors), walk/stitch/consensus, and
-     `votes_to_rows`. The deterministic parts (readers, `walk_page`, `_precinct_groups`, cross-page
-     stitch, `_count_columns`/`_assign_methods`/`_consolidate_write_in`, all-zero drop) stay in
-     `forward`/helpers -- traced but OUTSIDE the GEPA objective, exactly like `PageAnalyzer`'s skew and
-     `ContestLocator`'s `_locate_pages`/tools. This also fixes the current per-call `build_interpreter`
-     churn: the predictors live on the module and are shared.
-   - **`build_extractor()`** replaces `build_interpreter`/`build_precinct_interpreter`: construct the
-     module, `load(OPTIMIZED_MODEL_PATH)` when present (the artifact governs prompt AND lm -- see
-     [[lm-artifact-authority]]), else `set_lm(...)`. `_instrument()` (Cmpnd) attaches here, once.
-   - **`metrics.py` for GEPA**: adapt the existing whole-row weighted-F1 `score` to return a
-     `dspy.Prediction(score=weighted_f1, feedback=<prose>)` like `oe2d.pages.metrics.score_page` --
-     GEPA reflects on the FEEDBACK TEXT, so the prose must name what was wrong (the false-negative rows
-     it missed and the false-positive rows it invented, WITH their vote magnitudes so the reflection
-     learns the weighted priority: a wrong 600-vote row matters, a spurious 0-vote row barely). The
-     metric already returns `false_positives`/`false_negatives`; this is mostly formatting them.
-   - **`optimize.py` / `evaluate.py`** mirroring `oe2d.pages`: `build_program()` returns
-     `VoteExtractor`; `teleprompt.GEPA(metric=score, reflection_lm=..., ...).compile(program, trainset,
-     valset)`; `optimized.save(path)`. `evaluate.py` runs the program over the whole gold and reports
-     plain + weighted F1 (folds in the long-standing "score the whole gold set" item). `datasets.py`
-     (exists) yields `dspy.Example`s with inputs marked (file, pages, office, context, orientation,
-     read_strategy) and the gold rows.
-   - Watch: GEPA stringifies example inputs into the reflection prompt; our inputs are text (grids,
-     not images), so no `MultiModalInstructionProposer` needed -- but keep the reflection prompt small
-     (don't stuff whole page grids into `dspy.Example` fields the proposer will echo).
+1. **[DONE] Wrapped the whole program in ONE composite `dspy.Module` (`VoteExtractor`).** The loose
+   functions are now methods on a single `dspy.Module` (mirrors `PageAnalyzer` / `ContestLocator`):
+   `__init__` holds the two NAMED predictors `self.interpret_columns` (`InterpretResultsPage`) and
+   `self.interpret_rows` (`InterpretPrecinctPage`) — what GEPA evolves; `forward(file_path, pages,
+   office, candidate_context, county, district, orientation, read_strategy) → dspy.Prediction(rows,
+   votes)` runs read→interpret→stitch→`votes_to_rows`, with all deterministic code (readers,
+   `walk_page`, `_precinct_groups`, stitch, `_assign_methods`/`_consolidate_write_in`, all-zero drop)
+   traced but OUTSIDE the objective. `build_extractor()` replaces the two old builders (loads the
+   artifact when present, else `set_lm`, `_instrument()` once); `extract(...)` stays as a thin
+   back-compat wrapper. The whole set still scores **1.000** on all five read paths through the module.
+   - **`metrics.score_extraction(gold, pred)`** returns `dspy.Prediction(score=weighted_f1,
+     feedback=<prose>)` for GEPA: the prose names the missed and invented rows, each WITH its vote
+     magnitude, biggest-first, so the reflection learns the weighted priority. The plain `score(...)`
+     dict is unchanged (evaluate + tests use it).
+   - **`datasets.py`** now also yields `dspy.Example`s (`record_to_example`, `load_examples`, `split`
+     by county, `load_split`) with the eight forward inputs marked and `.rows` the gold. Inputs are
+     small text (the page grids are read INSIDE `forward`, never in an Example), so GEPA's default text
+     reflection is fine — no `MultiModalInstructionProposer`.
+   - **`evaluate.py`** (`oe2d-votes-evaluate`) scores the whole gold set (or `--only`/`--val-only`),
+     per-contest + macro-average plain & weighted F1 — replaces the ad-hoc `tmp/votes_eval_all.py` and
+     now covers the scanned contests too. **`optimize.py`** (`oe2d-votes-optimize`) runs GEPA over the
+     two interpreters (Sonnet task LM, Opus reflection), checkpointing to `gepa-votes-<digest>/`.
+   - Not yet run: an actual GEPA optimization pass (the harness is built and the set is already at
+     1.000, so there's little error signal to optimize until harder contests are added).
 2. **Wire `oe2d.pages` (image VLM) for dispatch** — the whole gold set now passes, but reader/content
    dispatch is carried in the gold (`geometry.candidate_orientation`, `read_strategy`) and detected
    ad-hoc. Replace with one PageAnalyzer pass on a sample page returning skew + `ruled_table` (→ TABLES
@@ -376,10 +373,4 @@ ONLY to map header columns → candidates and reads each precinct row's candidat
    is the real lever (it interprets *every* page — Barry = 15 calls): prototype interpreting from a
    header + first-block slice, and/or interpret the first page fully then reuse its schema on
    siblings, falling back to a full read only when a checksum fails.
-4. **`evaluate.py` / `optimize.py`** mirroring `pages`/`contests` — a CLI to score the whole gold set
-   (report plain + weighted F1) and a GEPA loop over the interpreters, so we measure and improve
-   systematically instead of ad-hoc runs. All interpreter guidance now lives in the signature
-   docstrings, so GEPA can evolve it (see the Interpret section).
-5. **Wire `oe2d.pages` for orientation** — currently passed in / read from gold geometry; it should
-   come from the image-based analyzer on a sample page.
-6. **Add the remaining coverage gaps** — a ballot measure (Yes/No), a State House/Senate split.
+4. **Add the remaining coverage gaps** — a ballot measure (Yes/No), a State House/Senate split.

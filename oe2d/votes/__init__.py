@@ -480,27 +480,6 @@ def read_page_grid(file_path: str, page: int) -> list[list[str]]:
     return []
 
 
-def build_interpreter() -> dspy.Module:
-    '''Construct the page interpreter. A trained artifact, when present, fully governs (its
-    saved prompt AND lm win); otherwise bind the stock inference LM (temperature 0). Turns on
-    cmpnd tracing here so every path that runs the interpreter reports its LLM calls.'''
-    _instrument()
-    interpreter: dspy.Module = dspy.Predict(signatures.InterpretResultsPage)
-    if os.path.exists(OPTIMIZED_MODEL_PATH):
-        interpreter.load(OPTIMIZED_MODEL_PATH)
-    else:
-        interpreter.set_lm(dspy.LM(LM_CLAUDE_SONNET45, temperature=0.0, max_tokens=4096))
-    return interpreter
-
-
-def interpret_page(interpreter: dspy.Module, office: str, candidate_context: str,
-                   rows: list[list[str]]) -> signatures.PageSchema:
-    '''Interpret one page's grid into a PageSchema (the LLM step; no numbers read).'''
-    prediction = interpreter(office=office, candidate_context=candidate_context,
-                             grid=grid_to_text(rows))
-    return prediction.page_schema
-
-
 def walk_page(rows: list[list[str]], schema: signatures.PageSchema) -> list[dict]:
     '''Ordered precinct blocks on a page, driven entirely by the schema (no English here).
 
@@ -561,265 +540,313 @@ def _precinct_groups(pages_schema_blocks: list[tuple]) -> list[list[tuple]]:
     return groups
 
 
-def extract_contest(file_path: str, pages: list[int], office: str, candidate_context: str,
-                    interpreter: dspy.Module | None = None) -> dict:
-    '''Read the contest's pages and stitch them into votes[(precinct, candidate, party)][bucket].
+class VoteExtractor(dspy.Module):
+    '''The full vote-extraction program: read -> interpret (LLM) -> stitch -> canonical rows.
 
-    Reads each page, interprets it (LLM), walks it into ordered precinct blocks, partitions the pages
-    into precinct-groups, then within a group concatenates candidate columns across the candidate-
-    group pages by precinct position and across groups appends the precinct lists. The interpreter
-    never touches a number; this function moves them.
+    Mirrors oe2d.pages.PageAnalyzer / oe2d.contests.ContestLocator: ONE composite dspy.Module IS
+    the program, so Cmpnd sees a single traced read->interpret->stitch flow and GEPA can evolve
+    every prompt in it. The two NAMED inner predictors are what GEPA optimizes -- their
+    signature-docstring instructions carry all the how-to-decide guidance (candidate matching,
+    write-in vs write-in-total, over/under-vote canonicalization); the pydantic Field descriptions
+    stay minimal and structural (GEPA can't reach them). Everything else -- the reader dispatch,
+    walk_page, _precinct_groups, cross-page stitch, consensus, _assign_methods /
+    _consolidate_write_in, the all-zero drop -- is deterministic Python that moves the digits, traced
+    but OUTSIDE the GEPA objective (exactly like PageAnalyzer's skew and ContestLocator's tools).
+
+    forward(file_path, pages, office, candidate_context, county, district, orientation,
+    read_strategy) dispatches on READ MECHANICS (read_strategy) and CONTENT structure (orientation)
+    -- kept orthogonal -- and returns dspy.Prediction(rows=<canonical CSV rows>, votes=<stitched
+    mapping>). The LLM never reads or returns a number.
     '''
-    interpreter = interpreter or build_interpreter()
-    page_schemas: list[tuple] = []
-    for page in pages:
-        rows: list[list[str]] = read_page_grid(file_path, page)
-        schema: signatures.PageSchema = interpret_page(interpreter, office, candidate_context, rows)
-        page_schemas.append((schema, rows))
+    def __init__(self) -> None:
+        super().__init__()
+        # columns (contest-major): precincts down rows, candidates across columns.
+        self.interpret_columns: dspy.Module = dspy.Predict(signatures.InterpretResultsPage)
+        # rows (precinct-major): one precinct per page, candidates down rows, methods across columns.
+        self.interpret_rows: dspy.Module = dspy.Predict(signatures.InterpretPrecinctPage)
 
-    # A first walk with each page's own skip labels, to learn the document's real precinct labels.
-    first_blocks: list[list[dict]] = [walk_page(rows, schema) for schema, rows in page_schemas]
-    precinct_labels: set[str] = {block['label'] for blocks in first_blocks
-                                 for block in blocks if block['label']}
+    def _columns_schema(self, office: str, candidate_context: str,
+                        rows: list[list[str]]) -> signatures.PageSchema:
+        '''Interpret one contest-major page's grid into a PageSchema (the LLM step; no numbers).'''
+        return self.interpret_columns(office=office, candidate_context=candidate_context,
+                                      grid=grid_to_text(rows)).page_schema
 
-    # Consensus skip labels: a label is a total/header only if MULTIPLE pages call it one AND it is
-    # not a fragment of any real precinct label. This drops a single page's mistake (a precinct name
-    # in skip_labels collapses that group) and a common wrap fragment ("Precinct 1") that several
-    # pages mis-skip -- while keeping a genuine total ("Barry County Michigan"), which never appears
-    # inside a precinct name.
-    skip_frequency: dict[str, int] = collections.defaultdict(int)
-    for schema, _rows in page_schemas:
-        for label in set(schema.skip_labels):
-            skip_frequency[label] += 1
-    consensus_skip: list[str] = [
-        label for label, count in skip_frequency.items()
-        if count >= 2 and not any(label in precinct for precinct in precinct_labels)]
+    def forward(self, file_path: str, pages: list[int], office: str, candidate_context: str,
+                county: str = '', district: str = '', orientation: str = 'columns',
+                read_strategy: ReadStrategy = 'auto') -> dspy.Prediction:
+        '''Read -> interpret -> stitch -> canonical rows for one contest. read_strategy is READ
+        MECHANICS ('ruled_scan' reads Textract TABLES across the pages); orientation is CONTENT
+        structure ('rows' -> precinct-major, 'columns' -> contest-major). Returns rows + the raw
+        stitched votes mapping.'''
+        if read_strategy == 'ruled_scan':
+            votes: dict = self._extract_scanned_tables(file_path, pages, office, candidate_context)
+        elif orientation == 'rows':
+            votes = self._extract_precinct_contest(file_path, pages, office, candidate_context)
+        else:
+            votes = self._extract_contest(file_path, pages, office, candidate_context)
+        rows: list[dict] = votes_to_rows(votes, county, office, district)
+        return dspy.Prediction(rows=rows, votes=votes)
 
-    pages_schema_blocks: list[tuple] = []
-    for schema, rows in page_schemas:
-        schema.skip_labels = consensus_skip
-        pages_schema_blocks.append((schema, walk_page(rows, schema)))
-        logger.info('page: %d columns, %d precinct blocks', len(schema.columns), len(pages_schema_blocks[-1][1]))
+    def _extract_contest(self, file_path: str, pages: list[int], office: str,
+                         candidate_context: str) -> dict:
+        '''Read the contest's pages and stitch them into votes[(precinct, candidate, party)][bucket].
 
-    # Cross-page precinct stitching (vertical continuation): a precinct whose rows straddle a page
-    # break leaves its label -- and any early method rows that still fit -- as the LAST block of page
-    # N, and the remaining method rows as a label-less FIRST block of page N+1. Merge the two: the
-    # tail's label and methods fold into the next page's leading block. Guard by requiring the two
-    # blocks' method buckets to be DISJOINT -- a true straddle splits the four methods across the
-    # break (Election Day here, the rest there), whereas a complete last precinct followed by a
-    # separately label-less one would overlap. Same-contest continuation means identical columns, so
-    # reading the tail's rows under the next page's schema is safe. No-op for documents (Barry,
-    # Oscoda) whose precincts never straddle a page. Then drop any partial with no continuation.
-    for index in range(len(pages_schema_blocks) - 1):
-        current: list[dict] = pages_schema_blocks[index][1]
-        following: list[dict] = pages_schema_blocks[index + 1][1]
-        if not (current and following):
-            continue
-        tail: dict = current[-1]
-        head: dict = following[0]
-        if tail['label'] and head['label'] is None and head['methods'] \
-                and not (tail['methods'].keys() & head['methods'].keys()):
-            head['label'] = tail['label']
-            for bucket, row in tail['methods'].items():
-                head['methods'].setdefault(bucket, row)
-            current.pop()
-    for _schema, blocks in pages_schema_blocks:
-        blocks[:] = [block for block in blocks if block['methods']]
+        Reads each page, interprets it (LLM), walks it into ordered precinct blocks, partitions the
+        pages into precinct-groups, then within a group concatenates candidate columns across the
+        candidate-group pages by precinct position and across groups appends the precinct lists. The
+        interpreter never touches a number; this moves them.
+        '''
+        page_schemas: list[tuple] = []
+        for page in pages:
+            rows: list[list[str]] = read_page_grid(file_path, page)
+            schema: signatures.PageSchema = self._columns_schema(office, candidate_context, rows)
+            page_schemas.append((schema, rows))
 
-    votes: dict = {}
-    # write-in columns are collected per (precinct, method), keeping the interpreter's total-vs-
-    # component split, and consolidated once at the end: a real total wins, else components sum.
-    write_ins: dict = collections.defaultdict(
-        lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
-    for group in _precinct_groups(pages_schema_blocks):
-        # Precinct labels by consensus across the group's candidate-group pages: a page may drop the
-        # first precinct's label to None (a sibling page carries it) or read a wrapped name as only a
-        # fragment ("Precinct 1" for "Ironwood Charter Township, Precinct 1"); take the MOST COMPLETE
-        # (longest) reading at each position, so the fullest page wins.
-        span: int = max(len(blocks) for _schema, blocks in group)
-        labels: list = []
-        for index in range(span):
-            seen = [blocks[index]['label'] for _schema, blocks in group
-                    if index < len(blocks) and blocks[index]['label']]
-            labels.append(max(seen, key=len) if seen else None)
-        for index, precinct in enumerate(labels):
-            for schema, blocks in group:
-                if index >= len(blocks):
-                    continue
-                for column in schema.columns:
-                    if column.role != 'candidate':
+        # A first walk with each page's own skip labels, to learn the document's real precinct labels.
+        first_blocks: list[list[dict]] = [walk_page(rows, schema) for schema, rows in page_schemas]
+        precinct_labels: set[str] = {block['label'] for blocks in first_blocks
+                                     for block in blocks if block['label']}
+
+        # Consensus skip labels: a label is a total/header only if MULTIPLE pages call it one AND it
+        # is not a fragment of any real precinct label. This drops a single page's mistake (a precinct
+        # name in skip_labels collapses that group) and a common wrap fragment ("Precinct 1") that
+        # several pages mis-skip -- while keeping a genuine total ("Barry County Michigan"), which
+        # never appears inside a precinct name.
+        skip_frequency: dict[str, int] = collections.defaultdict(int)
+        for schema, _rows in page_schemas:
+            for label in set(schema.skip_labels):
+                skip_frequency[label] += 1
+        consensus_skip: list[str] = [
+            label for label, count in skip_frequency.items()
+            if count >= 2 and not any(label in precinct for precinct in precinct_labels)]
+
+        pages_schema_blocks: list[tuple] = []
+        for schema, rows in page_schemas:
+            schema.skip_labels = consensus_skip
+            pages_schema_blocks.append((schema, walk_page(rows, schema)))
+            logger.info('page: %d columns, %d precinct blocks',
+                        len(schema.columns), len(pages_schema_blocks[-1][1]))
+
+        # Cross-page precinct stitching (vertical continuation): a precinct whose rows straddle a page
+        # break leaves its label -- and any early method rows that still fit -- as the LAST block of
+        # page N, and the remaining method rows as a label-less FIRST block of page N+1. Merge the
+        # two: the tail's label and methods fold into the next page's leading block. Guard by
+        # requiring the two blocks' method buckets to be DISJOINT -- a true straddle splits the four
+        # methods across the break (Election Day here, the rest there), whereas a complete last
+        # precinct followed by a separately label-less one would overlap. Same-contest continuation
+        # means identical columns, so reading the tail's rows under the next page's schema is safe.
+        # No-op for documents (Barry, Oscoda) whose precincts never straddle. Then drop any partial
+        # with no continuation.
+        for index in range(len(pages_schema_blocks) - 1):
+            current: list[dict] = pages_schema_blocks[index][1]
+            following: list[dict] = pages_schema_blocks[index + 1][1]
+            if not (current and following):
+                continue
+            tail: dict = current[-1]
+            head: dict = following[0]
+            if tail['label'] and head['label'] is None and head['methods'] \
+                    and not (tail['methods'].keys() & head['methods'].keys()):
+                head['label'] = tail['label']
+                for bucket, row in tail['methods'].items():
+                    head['methods'].setdefault(bucket, row)
+                current.pop()
+        for _schema, blocks in pages_schema_blocks:
+            blocks[:] = [block for block in blocks if block['methods']]
+
+        votes: dict = {}
+        # write-in columns are collected per (precinct, method), keeping the interpreter's total-vs-
+        # component split, and consolidated once at the end: a real total wins, else components sum.
+        write_ins: dict = collections.defaultdict(
+            lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
+        for group in _precinct_groups(pages_schema_blocks):
+            # Precinct labels by consensus across the group's candidate-group pages: a page may drop
+            # the first precinct's label to None (a sibling page carries it) or read a wrapped name as
+            # only a fragment ("Precinct 1" for "Ironwood Charter Township, Precinct 1"); take the
+            # MOST COMPLETE (longest) reading at each position, so the fullest page wins.
+            span: int = max(len(blocks) for _schema, blocks in group)
+            labels: list = []
+            for index in range(span):
+                seen = [blocks[index]['label'] for _schema, blocks in group
+                        if index < len(blocks) and blocks[index]['label']]
+                labels.append(max(seen, key=len) if seen else None)
+            for index, precinct in enumerate(labels):
+                for schema, blocks in group:
+                    if index >= len(blocks):
                         continue
-                    candidate, party = _split_party(column.candidate, column.party)
-                    for bucket, row in blocks[index]['methods'].items():
-                        value = _parse_number(row[column.index]) if column.index < len(row) else None
-                        if value is None:
+                    for column in schema.columns:
+                        if column.role != 'candidate':
                             continue
-                        store: str = 'votes' if bucket == _TOTAL_BUCKET else bucket
-                        if column.write_in:                     # gather; consolidated below
-                            part = 'total' if column.write_in_total else 'component'
-                            write_ins[precinct][store][part].append(value)
-                        else:
-                            votes.setdefault((precinct, candidate, party), {})[store] = value
-    for precinct, stores in write_ins.items():
-        votes[(precinct, WRITE_IN_LABEL, '')] = {
-            store: _consolidate_write_in(parts['total'], parts['component'])
-            for store, parts in stores.items()}
-    return votes
+                        candidate, party = _split_party(column.candidate, column.party)
+                        for bucket, row in blocks[index]['methods'].items():
+                            value = _parse_number(row[column.index]) if column.index < len(row) else None
+                            if value is None:
+                                continue
+                            store: str = 'votes' if bucket == _TOTAL_BUCKET else bucket
+                            if column.write_in:                     # gather; consolidated below
+                                part = 'total' if column.write_in_total else 'component'
+                                write_ins[precinct][store][part].append(value)
+                            else:
+                                votes.setdefault((precinct, candidate, party), {})[store] = value
+        for precinct, stores in write_ins.items():
+            votes[(precinct, WRITE_IN_LABEL, '')] = {
+                store: _consolidate_write_in(parts['total'], parts['component'])
+                for store, parts in stores.items()}
+        return votes
+
+    def _extract_precinct_contest(self, file_path: str, pages: list[int], office: str,
+                                  candidate_context: str) -> dict:
+        '''Extract a candidates-as-rows contest whose precincts are one-per-page (precinct in the page
+        header, methods across columns). The document's pages are structurally identical, so interpret
+        ONE sample page and apply that schema to every page -- one LLM call per document, then
+        deterministic exact-label extraction. Candidate rows are found by their verbatim row-label
+        (identical across pages); the precinct name is read from the learned header cell.'''
+        sample: list[list[str]] = read_text_grid(file_path, pages[0])
+        schema: signatures.PrecinctPageSchema = self.interpret_rows(
+            office=office, candidate_context=candidate_context, grid=grid_to_text(sample)).precinct_schema
+        # The interpreter names the method buckets in left-to-right order; trust that order, not its
+        # exact column indices (split/garbled headers throw those off). Code maps the buckets onto each
+        # candidate row's actual numeric cells, so spacer columns and header noise don't matter.
+        buckets: list[str] = [bucket for _index, bucket in sorted(schema.method_columns.items(),
+                                                                  key=lambda item: int(item[0]))]
+        logger.info('learned precinct schema: %d candidate rows, method order %s, precinct at (%d,%d)',
+                    len(schema.candidate_rows), buckets, schema.precinct_row, schema.precinct_column)
+
+        # Apply by ROW INDEX (from the sample), not by matching the row label: pages are structurally
+        # identical, indices scope to the right contest when several stack on a page (their
+        # write-in/over/under labels repeat), and it sidesteps labels that wrap mid-word across cells.
+        votes: dict = {}
+        write_ins: dict = collections.defaultdict(
+            lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
+        for page in pages:
+            grid: list[list[str]] = read_text_grid(file_path, page)
+            precinct: str = ''
+            if schema.precinct_row < len(grid):
+                precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
+            count_columns: list[int] = _count_columns(grid, schema.candidate_rows, len(buckets))
+            for role in schema.candidate_rows:
+                if role.row_index >= len(grid):
+                    continue
+                row: list[str] = grid[role.row_index]
+                numbers: list[int] = [_cell_count(row[column]) for column in count_columns
+                                      if column < len(row) and _cell_count(row[column]) is not None]
+                record = _assign_methods(buckets, numbers)
+                if record is None:
+                    logger.info('  %s / %s row %d: %d cells unalignable to %d buckets -- skipped',
+                                precinct, role.candidate, role.row_index, len(numbers), len(buckets))
+                    continue
+                if role.write_in:                                 # gather; consolidated below
+                    part = 'total' if role.write_in_total else 'component'
+                    for bucket, value in record.items():
+                        write_ins[precinct][bucket][part].append(value)
+                else:
+                    candidate: str = re.sub(r':+$', '', role.candidate).strip()   # drop colon artifact
+                    votes[(precinct, candidate, role.party)] = record
+        for precinct, stores in write_ins.items():
+            votes[(precinct, WRITE_IN_LABEL, '')] = {
+                store: _consolidate_write_in(parts['total'], parts['component'])
+                for store, parts in stores.items()}
+        return votes
+
+    def _extract_scanned_tables(self, file_path: str, pages: list[int], office: str,
+                                candidate_context: str) -> dict:
+        '''Extract a contest read from a ruled scan as tables (read_scanned_tables), scoping to the
+        contest by column structure and reading CONTENT the interpreter reports.
+
+        A scanned page holds several contests' tables plus a header-less continuation of the previous
+        page's contest, so we read EVERY table and scope by column structure: learn the candidate
+        columns ONCE from the table whose header matches the expected candidates (the anchor), then
+        take the anchor and every table sharing its column count -- the anchor and its header-less
+        continuations. The interpreter is used only to map header columns to candidates; this reads a
+        FLAT table (one row per precinct, one total per candidate, no vote-method sub-rows) directly
+        from those columns, so it is independent of method_labels and never touches the sub-row walker.
+        '''
+        tables: list[list[list[str]]] = [grid for page in pages
+                                         for grid in read_scanned_tables(file_path, page)]
+        if not tables:
+            return {}
+        wanted: set = {_norm(token) for line in candidate_context.splitlines()
+                       for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
+        header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
+        anchor: list[list[str]] = max(tables, key=header_match)
+        schema: signatures.PageSchema = self._columns_schema(office, candidate_context, anchor)
+        column_count: int = len(anchor[0])
+        label_column: int = schema.label_column
+        candidates = [column for column in schema.columns if column.role == 'candidate']
+
+        def has_data(row: list[str]) -> bool:
+            return any(column.index < len(row) and _parse_number(row[column.index]) is not None
+                       for column in candidates)
+
+        def label_of(row: list[str]) -> str:
+            return _clean(row[label_column]) if label_column < len(row) else ''
+
+        # Build the precinct list across the contest's tables in page order, stitching a precinct
+        # whose row STRADDLES a page: its data sits at the bottom of one page under a (truncated)
+        # label, and the label continues on a label-only row at the top of the next table. A
+        # label-only row that appears before any precinct of a continuation table is that
+        # continuation, so append it to the previous precinct. Precincts run down the rows, so nothing
+        # needs positional alignment.
+        entries: list[list] = []                         # [label, data_row]
+        for grid in tables:                              # anchor + its column-count-matching continuations
+            if not grid or len(grid[0]) != column_count:
+                continue
+            started: bool = False
+            for row in grid:
+                if has_data(row):
+                    entries.append([label_of(row), row])
+                    started = True
+                elif label_of(row) and not started and entries:
+                    entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
+
+        votes: dict = {}
+        write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
+        for precinct, row in entries:
+            # a grand-total row is a checksum, not a precinct; the interpreter flags it in skip_labels
+            # when the anchor table shows it, but the total can sit on a header-less continuation the
+            # anchor never saw, so also drop a bare "Total" label.
+            if not precinct or precinct in schema.skip_labels or _norm(precinct) in ('total', 'totals'):
+                continue
+            for column in candidates:
+                value = _parse_number(row[column.index]) if column.index < len(row) else None
+                if value is None:
+                    continue
+                candidate, party = _split_party(column.candidate, column.party)
+                if column.write_in:
+                    write_ins[precinct]['total' if column.write_in_total else 'component'].append(value)
+                else:
+                    votes[(precinct, candidate, party)] = {'votes': value}
+        for precinct, parts in write_ins.items():
+            votes[(precinct, WRITE_IN_LABEL, '')] = {
+                'votes': _consolidate_write_in(parts['total'], parts['component'])}
+        return votes
 
 
-def build_precinct_interpreter() -> dspy.Module:
-    '''The precinct-major (candidates-as-rows) interpreter. Instruments like build_interpreter.'''
+def build_extractor() -> VoteExtractor:
+    '''Construct the composite vote extractor. A trained artifact, when present, fully governs (its
+    saved prompts AND lm win -- see the LM-artifact-authority note); otherwise bind the stock
+    inference LM (temperature 0). Turns on cmpnd tracing here, once, so every read/interpret/stitch
+    flow reports its LLM calls under one program. Replaces the old per-call build_interpreter /
+    build_precinct_interpreter (the two interpreters now live on the shared module).'''
     _instrument()
-    interpreter: dspy.Module = dspy.Predict(signatures.InterpretPrecinctPage)
+    extractor: VoteExtractor = VoteExtractor()
     if os.path.exists(OPTIMIZED_MODEL_PATH):
-        interpreter.load(OPTIMIZED_MODEL_PATH)
+        extractor.load(OPTIMIZED_MODEL_PATH)
     else:
-        interpreter.set_lm(dspy.LM(LM_CLAUDE_SONNET45, temperature=0.0, max_tokens=4096))
-    return interpreter
-
-
-def extract_precinct_contest(file_path: str, pages: list[int], office: str, candidate_context: str,
-                             interpreter: dspy.Module | None = None) -> dict:
-    '''Extract a candidates-as-rows contest whose precincts are one-per-page (precinct in the page
-    header, methods across columns). The document's pages are structurally identical, so interpret
-    ONE sample page and apply that schema to every page -- one LLM call per document, then
-    deterministic exact-label extraction. Candidate rows are found by their verbatim row-label
-    (identical across pages); the precinct name is read from the learned header cell.'''
-    interpreter = interpreter or build_precinct_interpreter()
-    sample: list[list[str]] = read_text_grid(file_path, pages[0])
-    prediction = interpreter(office=office, candidate_context=candidate_context,
-                             grid=grid_to_text(sample))
-    schema: signatures.PrecinctPageSchema = prediction.precinct_schema
-    # The interpreter names the method buckets in left-to-right order; trust that order, not its
-    # exact column indices (split/garbled headers throw those off). Code maps the buckets onto each
-    # candidate row's actual numeric cells, so spacer columns and header noise don't matter.
-    buckets: list[str] = [bucket for _index, bucket in sorted(schema.method_columns.items(),
-                                                              key=lambda item: int(item[0]))]
-    logger.info('learned precinct schema: %d candidate rows, method order %s, precinct at (%d,%d)',
-                len(schema.candidate_rows), buckets, schema.precinct_row, schema.precinct_column)
-
-    # Apply by ROW INDEX (from the sample), not by matching the row label: pages are structurally
-    # identical, indices scope to the right contest when several stack on a page (their
-    # write-in/over/under labels repeat), and it sidesteps labels that wrap mid-word across cells.
-    votes: dict = {}
-    write_ins: dict = collections.defaultdict(
-        lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
-    for page in pages:
-        grid: list[list[str]] = read_text_grid(file_path, page)
-        precinct: str = ''
-        if schema.precinct_row < len(grid):
-            precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
-        count_columns: list[int] = _count_columns(grid, schema.candidate_rows, len(buckets))
-        for role in schema.candidate_rows:
-            if role.row_index >= len(grid):
-                continue
-            row: list[str] = grid[role.row_index]
-            numbers: list[int] = [_cell_count(row[column]) for column in count_columns
-                                  if column < len(row) and _cell_count(row[column]) is not None]
-            record = _assign_methods(buckets, numbers)
-            if record is None:
-                logger.info('  %s / %s row %d: %d cells unalignable to %d buckets -- skipped',
-                            precinct, role.candidate, role.row_index, len(numbers), len(buckets))
-                continue
-            if role.write_in:                                 # gather; consolidated below
-                part = 'total' if role.write_in_total else 'component'
-                for bucket, value in record.items():
-                    write_ins[precinct][bucket][part].append(value)
-            else:
-                candidate: str = re.sub(r':+$', '', role.candidate).strip()   # drop trailing-colon artifact
-                votes[(precinct, candidate, role.party)] = record
-    for precinct, stores in write_ins.items():
-        votes[(precinct, WRITE_IN_LABEL, '')] = {
-            store: _consolidate_write_in(parts['total'], parts['component'])
-            for store, parts in stores.items()}
-    return votes
-
-
-def extract_scanned_tables(file_path: str, pages: list[int], office: str, candidate_context: str,
-                           interpreter: dspy.Module | None = None) -> dict:
-    '''Extract a contest read from a ruled scan as tables (read_scanned_tables), scoping to the
-    contest by column structure and reading CONTENT the interpreter reports.
-
-    A scanned page holds several contests' tables plus a header-less continuation of the previous
-    page's contest, so we read EVERY table and scope by column structure: learn the candidate columns
-    ONCE from the table whose header matches the expected candidates (the anchor), then take the
-    anchor and every table sharing its column count -- the anchor and its header-less continuations.
-    The interpreter is used only to map header columns to candidates; this reads a FLAT table (one
-    row per precinct, one total per candidate, no vote-method sub-rows) directly from those columns,
-    so it is independent of method_labels and never touches the shared sub-row walker.
-    '''
-    interpreter = interpreter or build_interpreter()
-    tables: list[list[list[str]]] = [grid for page in pages
-                                     for grid in read_scanned_tables(file_path, page)]
-    if not tables:
-        return {}
-    wanted: set = {_norm(token) for line in candidate_context.splitlines()
-                   for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
-    header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
-    anchor: list[list[str]] = max(tables, key=header_match)
-    schema: signatures.PageSchema = interpret_page(interpreter, office, candidate_context, anchor)
-    column_count: int = len(anchor[0])
-    label_column: int = schema.label_column
-    candidates = [column for column in schema.columns if column.role == 'candidate']
-
-    def has_data(row: list[str]) -> bool:
-        return any(column.index < len(row) and _parse_number(row[column.index]) is not None
-                   for column in candidates)
-
-    def label_of(row: list[str]) -> str:
-        return _clean(row[label_column]) if label_column < len(row) else ''
-
-    # Build the precinct list across the contest's tables in page order, stitching a precinct whose
-    # row STRADDLES a page: its data sits at the bottom of one page under a (truncated) label, and
-    # the label continues on a label-only row at the top of the next table. A label-only row that
-    # appears before any precinct of a continuation table is that continuation, so append it to the
-    # previous precinct. Precincts run down the rows, so nothing needs positional alignment.
-    entries: list[list] = []                         # [label, data_row]
-    for grid in tables:                              # anchor + its column-count-matching continuations
-        if not grid or len(grid[0]) != column_count:
-            continue
-        started: bool = False
-        for row in grid:
-            if has_data(row):
-                entries.append([label_of(row), row])
-                started = True
-            elif label_of(row) and not started and entries:
-                entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
-
-    votes: dict = {}
-    write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
-    for precinct, row in entries:
-        # a grand-total row is a checksum, not a precinct; the interpreter flags it in skip_labels
-        # when the anchor table shows it, but the total can sit on a header-less continuation the
-        # anchor never saw, so also drop a bare "Total" label.
-        if not precinct or precinct in schema.skip_labels or _norm(precinct) in ('total', 'totals'):
-            continue
-        for column in candidates:
-            value = _parse_number(row[column.index]) if column.index < len(row) else None
-            if value is None:
-                continue
-            candidate, party = _split_party(column.candidate, column.party)
-            if column.write_in:
-                write_ins[precinct]['total' if column.write_in_total else 'component'].append(value)
-            else:
-                votes[(precinct, candidate, party)] = {'votes': value}
-    for precinct, parts in write_ins.items():
-        votes[(precinct, WRITE_IN_LABEL, '')] = {'votes': _consolidate_write_in(parts['total'], parts['component'])}
-    return votes
+        extractor.set_lm(dspy.LM(LM_CLAUDE_SONNET45, temperature=0.0, max_tokens=4096))
+    return extractor
 
 
 def extract(file_path: str, pages: list[int], office: str, candidate_context: str,
-            orientation: str = 'columns', interpreter: dspy.Module | None = None,
-            read_strategy: ReadStrategy = 'auto') -> dict:
-    '''Dispatch to an extractor. read_strategy is READ MECHANICS: 'ruled_scan' reads the pages as
-    Textract TABLES and scopes the contest across them (extract_scanned_tables); 'auto' reads one
-    grid per page and dispatches on candidate orientation (from oe2d.pages) -- 'rows' -> precinct-
-    major, 'columns' -> contest-major.'''
-    if read_strategy == 'ruled_scan':
-        return extract_scanned_tables(file_path, pages, office, candidate_context, interpreter)
-    if orientation == 'rows':
-        return extract_precinct_contest(file_path, pages, office, candidate_context, interpreter)
-    return extract_contest(file_path, pages, office, candidate_context, interpreter)
+            county: str = '', district: str = '', orientation: str = 'columns',
+            read_strategy: ReadStrategy = 'auto',
+            extractor: VoteExtractor | None = None) -> dict:
+    '''Convenience wrapper: build (or reuse) a VoteExtractor and return its stitched votes mapping
+    (not the canonical rows). Prefer the module directly -- extractor(file_path=..., ...) -- when you
+    want the traced dspy.Prediction; this keeps the historic function-style entry point for scripts.'''
+    extractor = extractor or build_extractor()
+    return extractor(file_path=file_path, pages=pages, office=office,
+                     candidate_context=candidate_context, county=county, district=district,
+                     orientation=orientation, read_strategy=read_strategy).votes
 
 
 def votes_to_rows(votes: dict, county: str, office: str, district: str = '') -> list[dict]:
@@ -894,6 +921,10 @@ def main() -> None:
     parser.add_argument('--county', required=True, help='County name (no "County" suffix)')
     parser.add_argument('--context', default='',
                         help='Expected candidates as "Name (PARTY)" lines; @path to read from a file')
+    parser.add_argument('--orientation', default='columns', choices=('columns', 'rows'),
+                        help='CONTENT structure: columns (contest-major) or rows (precinct-major)')
+    parser.add_argument('--read-strategy', default='auto', choices=('auto', 'ruled_scan'),
+                        help='READ MECHANICS: auto (one grid per page) or ruled_scan (Textract TABLES)')
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
 
@@ -901,12 +932,14 @@ def main() -> None:
         logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(message)s')
         logging.getLogger('oe2d').setLevel(logging.INFO)
 
-    votes = extract_contest(args.path, _parse_pages(args.pages), args.office,
-                            resolve_context(args.context))       # build_interpreter() instruments
-    rows = votes_to_rows(votes, args.county, args.office, args.district)
+    extractor: VoteExtractor = build_extractor()             # instruments cmpnd once
+    prediction = extractor(file_path=args.path, pages=_parse_pages(args.pages), office=args.office,
+                           candidate_context=resolve_context(args.context), county=args.county,
+                           district=args.district, orientation=args.orientation,
+                           read_strategy=args.read_strategy)
     writer = csv.DictWriter(sys.stdout, CANON_COLUMNS)
     writer.writeheader()
-    writer.writerows(rows)
+    writer.writerows(prediction.rows)
 
 
 if __name__ == '__main__':

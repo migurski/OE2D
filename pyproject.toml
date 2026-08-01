@@ -34,6 +34,8 @@ oe2d-pages = "oe2d.pages:main"
 oe2d-pages-optimize = "oe2d.pages.optimize:main"
 oe2d-pages-evaluate = "oe2d.pages.evaluate:main"
 oe2d-votes = "oe2d.votes:main"
+oe2d-votes-optimize = "oe2d.votes.optimize:main"
+oe2d-votes-evaluate = "oe2d.votes.evaluate:main"
 oe2d-rendering = "oe2d.rendering:main"
 
 [tool.setuptools]

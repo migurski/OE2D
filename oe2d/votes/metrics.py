@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import collections
 
+import dspy
+
 from . import CANON_COLUMNS
 
 
@@ -90,3 +92,62 @@ def score(got: list[dict], gold: list[dict], weight_exponent: float = 0.5) -> di
             'false_negative': false_negative,
             'false_positives': sorted(got_keys - gold_keys),
             'false_negatives': sorted(gold_keys - got_keys)}
+
+
+# Column positions within a row_key tuple, for turning a key back into readable prose.
+_KEY_PRECINCT: int = CANON_COLUMNS.index('precinct')
+_KEY_PARTY: int = CANON_COLUMNS.index('party')
+_KEY_CANDIDATE: int = CANON_COLUMNS.index('candidate')
+_KEY_VOTES: int = CANON_COLUMNS.index('votes')
+
+
+def _key_votes(key: tuple) -> int:
+    '''The vote magnitude carried in a row_key (0 when blank/non-numeric).'''
+    try:
+        return max(int((key[_KEY_VOTES] or '0').replace(',', '')), 0)
+    except (ValueError, IndexError):
+        return 0
+
+
+def _describe(key: tuple) -> str:
+    '''One readable line for a missed/spurious row: "precinct | party candidate = votes".'''
+    who: str = ' '.join(part for part in (key[_KEY_PARTY], key[_KEY_CANDIDATE]) if part)
+    return '%s | %s = %d' % (key[_KEY_PRECINCT] or '(blank)', who or '(blank)', _key_votes(key))
+
+
+def score_extraction(gold, pred, trace=None, pred_name=None, pred_trace=None):
+    '''GEPA metric over extracted precinct rows: weighted-F1 score plus prose feedback.
+
+    Returns a dspy.Prediction with .score = weighted_f1 (the vote-weighted view, so the reflection
+    optimizes toward getting the big rows right) and .feedback naming the rows that were MISSED
+    (false negatives) and INVENTED (wrong-valued or spurious -- false positives), each WITH its vote
+    magnitude and sorted biggest-first, so the reflection learns the weighted priority: a wrong
+    600-vote major-party row matters, a spurious 0-vote row barely. The interpreters decide structure
+    and language, so the prose points at STRUCTURE errors (a mis-matched candidate, a dropped/extra
+    row, a wrong write-in consolidation), never at arithmetic.
+    '''
+    got: list[dict] = list(getattr(pred, 'rows', None) or [])
+    want: list[dict] = list(getattr(gold, 'rows', None) or [])
+    result: dict = score(got, want)
+    top = lambda keys: sorted(keys, key=_key_votes, reverse=True)[:8]
+    misses: list[str] = [_describe(key) for key in top(result['false_negatives'])]
+    spurious: list[str] = [_describe(key) for key in top(result['false_positives'])]
+
+    lines: list[str] = ['Weighted F1 %.3f (plain F1 %.3f); %d matched, %d missed, %d spurious.'
+                        % (result['weighted_f1'], result['f1'], result['true_positive'],
+                           result['false_negative'], result['false_positive'])]
+    if misses:
+        lines.append('Missed rows (present in gold, not produced) -- biggest first:')
+        lines += ['  - ' + line for line in misses]
+    if spurious:
+        lines.append('Invented rows (produced, wrong or absent in gold) -- biggest first:')
+        lines += ['  - ' + line for line in spurious]
+    if not misses and not spurious:
+        lines.append('Every row exact. Keep this reading of candidate columns, method labels, '
+                      'write-in vs write-in-total, and which rows to skip.')
+    else:
+        lines.append('A row is wrong if ANY of precinct / party / candidate / votes differs. '
+                     'Common structural causes: a candidate column matched to the wrong expected '
+                     'name, a total/header row not skipped (or a precinct wrongly skipped), a '
+                     'write-in total double-counted with its components (or components dropped).')
+    return dspy.Prediction(score=result['weighted_f1'], feedback='\n'.join(lines))
