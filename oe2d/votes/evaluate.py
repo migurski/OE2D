@@ -49,10 +49,12 @@ def build_target(student: str | None, model: str | None,
     return votes.build_extractor()            # shipped program (committed artifact or stock LM)
 
 
-def score_examples(program: votes.VoteExtractor, examples: list) -> list[dict]:
+def score_examples(program: votes.VoteExtractor, examples: list, detected: bool = False) -> list[dict]:
     '''Run the program on each example and score its rows against the gold. Returns one result dict
     per example (id, container, the metric dict, and got/gold counts). A failed extraction is
-    recorded with error text rather than aborting the whole sweep.'''
+    recorded with error text rather than aborting the whole sweep. With detected=True the gold
+    orientation/read_strategy are withheld so forward DETECTS them from the page (checksum-confirmed),
+    exercising the end-to-end image-driven dispatch instead of the gold field.'''
     results: list[dict] = []
     started: float = time.monotonic()
     for index, example in enumerate(examples, 1):
@@ -60,8 +62,12 @@ def score_examples(program: votes.VoteExtractor, examples: list) -> list[dict]:
         record: dict = {'id': getattr(example, '_id', '?'),
                         'container': getattr(example, '_container', ''),
                         'orientation': example.orientation}
+        inputs: dict = dict(example.inputs())
+        if detected:
+            inputs['orientation'] = None
+            inputs['read_strategy'] = None
         try:
-            prediction = program(**example.inputs())
+            prediction = program(**inputs)
             metric: dict = metrics.score(prediction.rows, example.rows)
             record.update(metric=metric, got=len(prediction.rows), gold=len(example.rows))
         except Exception as error:            # keep sweeping; a scanned/LM outage shouldn't hide the rest
@@ -144,6 +150,9 @@ def main() -> None:
     parser.add_argument('--detect', action='store_true',
                         help='Instead of scoring extraction, measure the oe2d.pages-driven dispatch '
                              '(detect_dispatch) against each contest gold orientation/read_strategy')
+    parser.add_argument('--detected', action='store_true',
+                        help='Score extraction using DETECTED dispatch (withhold the gold '
+                             'orientation/read_strategy so forward detects them, checksum-confirmed)')
     parser.add_argument('--temperature', type=float, default=0.0)
     parser.add_argument('--max-tokens', type=int, default=4096)
     parser.add_argument('--num-retries', type=int, default=10)
@@ -172,9 +181,10 @@ def main() -> None:
                                                 args.max_tokens, args.num_retries)
     label: str = args.model or args.student or 'shipped program'
     scope: str = 'validation' if args.val_only else 'all'
-    print('evaluating: %s' % label)
+    dispatch: str = 'detected (image-driven)' if args.detected else 'gold'
+    print('evaluating: %s  [dispatch: %s]' % (label, dispatch))
     print('over %d %s contest(s):\n' % (len(examples), scope))
-    print_report(score_examples(program, examples))
+    print_report(score_examples(program, examples, detected=args.detected))
 
 
 if __name__ == '__main__':

@@ -130,6 +130,30 @@ def _consolidate_write_in(totals: list[int], components: list[int]) -> int:
     return sum(components)
 
 
+def _reconciles(votes: dict, totals: dict) -> bool:
+    '''True when the extracted precinct rows sum to the printed county totals per candidate column.
+
+    The confirm for a proposed ruled_scan (Textract TABLES) read: for each candidate column, add up
+    that column across every extracted precinct row and compare to the printed county-total row. A
+    clean segmentation includes each precinct once with columns aligned, so the sums match. The
+    failure modes all break it by a large margin -- dropped precincts (sum too low), duplicated rows
+    (too high), split columns (both wrong), or method-sub-row content mis-read as flat (every column
+    roughly doubles). We require a MAJORITY of the candidate columns to match exactly, so one OCR
+    digit slip in a single cell doesn't veto an otherwise-clean read, while a structural failure --
+    which throws off every column at once -- still fails. No printed totals to check against (they can
+    sit on a page outside the contest range) -> cannot confirm -> False, and the caller then prefers
+    the cheap read rather than gambling on TABLES.'''
+    if not totals:
+        return False
+    sums: dict = collections.defaultdict(int)
+    for (precinct, candidate, party), buckets in votes.items():
+        if candidate == WRITE_IN_LABEL:
+            continue
+        sums[(candidate, party)] += buckets.get('votes') or 0
+    matched: int = sum(1 for key, printed in totals.items() if sums.get(key, 0) == printed)
+    return matched * 2 > len(totals)
+
+
 def _record(components: list[str], values: list[int], total: int) -> dict:
     '''Assemble a method record: components in order (missing trailing ones -> 0), plus votes.'''
     record: dict = {'votes': total}
@@ -604,20 +628,40 @@ class VoteExtractor(dspy.Module):
                                       grid=grid_to_text(rows)).page_schema
 
     def forward(self, file_path: str, pages: list[int], office: str, candidate_context: str,
-                county: str = '', district: str = '', orientation: str = 'columns',
-                read_strategy: ReadStrategy = 'auto') -> dspy.Prediction:
-        '''Read -> interpret -> stitch -> canonical rows for one contest. read_strategy is READ
-        MECHANICS ('ruled_scan' reads Textract TABLES across the pages); orientation is CONTENT
-        structure ('rows' -> precinct-major, 'columns' -> contest-major). Returns rows + the raw
+                county: str = '', district: str = '', orientation: str | None = None,
+                read_strategy: ReadStrategy | None = None) -> dspy.Prediction:
+        '''Read -> interpret -> stitch -> canonical rows for one contest. orientation is CONTENT
+        structure ('rows' -> precinct-major, 'columns' -> contest-major); read_strategy is READ
+        MECHANICS ('ruled_scan' reads Textract TABLES across the pages, 'auto' self-detects). Either
+        left None is DETECTED from a sample page via oe2d.pages (detect_dispatch), so dispatch comes
+        from the image, not a caller-set field; pass a value to override. Returns rows + the raw
         stitched votes mapping.'''
-        if read_strategy == 'ruled_scan':
-            votes: dict = self._extract_scanned_tables(file_path, pages, office, candidate_context)
-        elif orientation == 'rows':
-            votes = self._extract_precinct_contest(file_path, pages, office, candidate_context)
-        else:
-            votes = self._extract_contest(file_path, pages, office, candidate_context)
+        if orientation is None or read_strategy is None:
+            detected: dict = detect_dispatch(file_path, pages[0])
+            orientation = orientation or detected['orientation']
+            read_strategy = read_strategy or detected['read_strategy']
+        votes: dict = self._read_votes(file_path, pages, office, candidate_context,
+                                       orientation, read_strategy)
         rows: list[dict] = votes_to_rows(votes, county, office, district)
         return dspy.Prediction(rows=rows, votes=votes)
+
+    def _read_votes(self, file_path: str, pages: list[int], office: str, candidate_context: str,
+                    orientation: str, read_strategy: ReadStrategy) -> dict:
+        '''Run the chosen read, CONFIRMING a ruled_scan with the printed-total checksum and falling
+        back to the auto read when it does not reconcile. A ruled scan whose rules are faint/broken
+        (Gogebic) makes Textract TABLES mis-segment -- and a ruled scan that is really method-sub-row
+        content, not flat, doubles every column -- so the flat read's per-candidate sums will not
+        equal the county-total row; that mismatch drops us to the cheap auto read (which the reader
+        self-detects for a scan). huron's clean flat table reconciles and stays on TABLES.'''
+        if read_strategy == 'ruled_scan':
+            votes, totals = self._extract_scanned_tables(file_path, pages, office, candidate_context)
+            if _reconciles(votes, totals):
+                return votes
+            logger.info('ruled_scan read did not reconcile with printed county totals '
+                        '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
+        if orientation == 'rows':
+            return self._extract_precinct_contest(file_path, pages, office, candidate_context)
+        return self._extract_contest(file_path, pages, office, candidate_context)
 
     def _extract_contest(self, file_path: str, pages: list[int], office: str,
                          candidate_context: str) -> dict:
@@ -780,7 +824,7 @@ class VoteExtractor(dspy.Module):
         return votes
 
     def _extract_scanned_tables(self, file_path: str, pages: list[int], office: str,
-                                candidate_context: str) -> dict:
+                                candidate_context: str) -> tuple[dict, dict]:
         '''Extract a contest read from a ruled scan as tables (read_scanned_tables), scoping to the
         contest by column structure and reading CONTENT the interpreter reports.
 
@@ -791,11 +835,15 @@ class VoteExtractor(dspy.Module):
         continuations. The interpreter is used only to map header columns to candidates; this reads a
         FLAT table (one row per precinct, one total per candidate, no vote-method sub-rows) directly
         from those columns, so it is independent of method_labels and never touches the sub-row walker.
+
+        Returns (votes, totals): votes as elsewhere, and totals mapping each non-write-in candidate
+        column to the printed COUNTY-TOTAL row's value for that column -- the checksum target _read_votes
+        reconciles the ruled_scan read against (Sigma precincts == printed total per candidate).
         '''
         tables: list[list[list[str]]] = [grid for page in pages
                                          for grid in read_scanned_tables(file_path, page)]
         if not tables:
-            return {}
+            return {}, {}
         wanted: set = {_norm(token) for line in candidate_context.splitlines()
                        for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
         header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
@@ -831,26 +879,31 @@ class VoteExtractor(dspy.Module):
                     entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
 
         votes: dict = {}
+        totals: dict = {}                                # (candidate, party) -> printed county total
         write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
         for precinct, row in entries:
-            # a grand-total row is a checksum, not a precinct; the interpreter flags it in skip_labels
+            # a grand-total row is a CHECKSUM, not a precinct; the interpreter flags it in skip_labels
             # when the anchor table shows it, but the total can sit on a header-less continuation the
-            # anchor never saw, so also drop a bare "Total" label.
-            if not precinct or precinct in schema.skip_labels or _norm(precinct) in ('total', 'totals'):
-                continue
+            # anchor never saw, so also treat a bare "Total" label as one. Capture its non-write-in
+            # candidate values (the largest wins if several total-like rows appear) for reconciliation.
+            is_total: bool = (not precinct or precinct in schema.skip_labels
+                              or _norm(precinct) in ('total', 'totals'))
             for column in candidates:
                 value = _parse_number(row[column.index]) if column.index < len(row) else None
                 if value is None:
                     continue
                 candidate, party = _split_party(column.candidate, column.party)
-                if column.write_in:
+                if is_total:
+                    if not column.write_in:
+                        totals[(candidate, party)] = max(value, totals.get((candidate, party), 0))
+                elif column.write_in:
                     write_ins[precinct]['total' if column.write_in_total else 'component'].append(value)
                 else:
                     votes[(precinct, candidate, party)] = {'votes': value}
         for precinct, parts in write_ins.items():
             votes[(precinct, WRITE_IN_LABEL, '')] = {
                 'votes': _consolidate_write_in(parts['total'], parts['component'])}
-        return votes
+        return votes, totals
 
 
 def build_extractor() -> VoteExtractor:
@@ -869,12 +922,13 @@ def build_extractor() -> VoteExtractor:
 
 
 def extract(file_path: str, pages: list[int], office: str, candidate_context: str,
-            county: str = '', district: str = '', orientation: str = 'columns',
-            read_strategy: ReadStrategy = 'auto',
+            county: str = '', district: str = '', orientation: str | None = None,
+            read_strategy: ReadStrategy | None = None,
             extractor: VoteExtractor | None = None) -> dict:
     '''Convenience wrapper: build (or reuse) a VoteExtractor and return its stitched votes mapping
-    (not the canonical rows). Prefer the module directly -- extractor(file_path=..., ...) -- when you
-    want the traced dspy.Prediction; this keeps the historic function-style entry point for scripts.'''
+    (not the canonical rows). orientation/read_strategy left None are detected from the image (see
+    forward). Prefer the module directly -- extractor(file_path=..., ...) -- when you want the traced
+    dspy.Prediction; this keeps the historic function-style entry point for scripts.'''
     extractor = extractor or build_extractor()
     return extractor(file_path=file_path, pages=pages, office=office,
                      candidate_context=candidate_context, county=county, district=district,
@@ -953,10 +1007,10 @@ def main() -> None:
     parser.add_argument('--county', required=True, help='County name (no "County" suffix)')
     parser.add_argument('--context', default='',
                         help='Expected candidates as "Name (PARTY)" lines; @path to read from a file')
-    parser.add_argument('--orientation', default='columns', choices=('columns', 'rows'),
-                        help='CONTENT structure: columns (contest-major) or rows (precinct-major)')
-    parser.add_argument('--read-strategy', default='auto', choices=('auto', 'ruled_scan'),
-                        help='READ MECHANICS: auto (one grid per page) or ruled_scan (Textract TABLES)')
+    parser.add_argument('--orientation', default=None, choices=('columns', 'rows'),
+                        help='CONTENT structure override; default: detected from the page via oe2d.pages')
+    parser.add_argument('--read-strategy', default=None, choices=('auto', 'ruled_scan'),
+                        help='READ MECHANICS override; default: detected from the page (checksum-confirmed)')
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
 

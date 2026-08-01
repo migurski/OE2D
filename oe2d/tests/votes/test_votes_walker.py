@@ -78,6 +78,26 @@ def test_consolidate_write_in_prefers_a_flagged_total_else_sums_components():
     assert votes._consolidate_write_in([], []) == 0
 
 
+def test_reconciles_confirms_a_ruled_scan_read_against_printed_totals():
+    # precinct rows that sum to the printed county totals per candidate reconcile
+    votes_map = {('P1', 'Harris', 'DEM'): {'votes': 10}, ('P2', 'Harris', 'DEM'): {'votes': 20},
+                 ('P1', 'Trump', 'REP'): {'votes': 5}, ('P2', 'Trump', 'REP'): {'votes': 7}}
+    assert votes._reconciles(votes_map, {('Harris', 'DEM'): 30, ('Trump', 'REP'): 12}) is True
+    # method-sub-row content mis-read as flat doubles every column -> fails (the Gogebic case)
+    assert votes._reconciles(votes_map, {('Harris', 'DEM'): 15, ('Trump', 'REP'): 6}) is False
+    # no printed totals captured -> cannot confirm -> False (caller prefers the cheap read)
+    assert votes._reconciles(votes_map, {}) is False
+    # a single OCR digit slip in one of several columns is outvoted by the majority that match
+    many = {('P1', c, 'X'): {'votes': 10} for c in 'ABCDE'}
+    totals = {(c, 'X'): 10 for c in 'ABCD'}
+    totals[('E', 'X')] = 999                       # one column off
+    assert votes._reconciles(many, totals) is True
+    # write-in rows are excluded from the per-candidate sums
+    with_wi = dict(votes_map)
+    with_wi[('P1', votes.WRITE_IN_LABEL, '')] = {'votes': 3}
+    assert votes._reconciles(with_wi, {('Harris', 'DEM'): 30, ('Trump', 'REP'): 12}) is True
+
+
 def test_split_party_pulls_a_trailing_party_out_of_the_name():
     assert votes._split_party('Kamala D. Harris (DEM)', '') == ('Kamala D. Harris', 'DEM')
     assert votes._split_party('Kamala D. Harris', 'DEM') == ('Kamala D. Harris', 'DEM')  # already split

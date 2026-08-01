@@ -360,13 +360,28 @@ ONLY to map header columns → candidates and reads each precinct row's candidat
      two interpreters (Sonnet task LM, Opus reflection), checkpointing to `gepa-votes-<digest>/`.
    - Not yet run: an actual GEPA optimization pass (the harness is built and the set is already at
      1.000, so there's little error signal to optimize until harder contests are added).
-2. **Wire `oe2d.pages` (image VLM) for dispatch** — the whole gold set now passes, but reader/content
-   dispatch is carried in the gold (`geometry.candidate_orientation`, `read_strategy`) and detected
-   ad-hoc. Replace with one PageAnalyzer pass on a sample page returning skew + `ruled_table` (→ TABLES
-   vs cheap/rotated read) + orientation. Confirm each choice with checksums (column totals vs printed
-   Total row, etc.). Remaining known Python markers to migrate to the LLM/checksums once `pages` is
-   wired: the flat-path grand-total skip (`_norm in ('total','totals')`), which the flat anchor can't
-   see on a continuation.
+2. **[DONE] Wire `oe2d.pages` (image VLM) for dispatch.** Dispatch now comes from the page image, not
+   the gold. `oe2d.pages.PageAnalyzer` gained a `ruled_table` VLM field (grid vs whitespace/shaded
+   columns; guidance in the signature docstring so GEPA can evolve it; all 89 page-gold images
+   labeled). `oe2d.votes.detect_dispatch(file, page)` runs one PageAnalyzer pass plus a text-layer
+   check and returns `{orientation, read_strategy}`: orientation is the VLM `candidate_orientation`;
+   a page with no text layer is a scan; a scanned+ruled page proposes `ruled_scan`, else `auto`.
+   `VoteExtractor.forward` now DEFAULTS to detection (pass orientation/read_strategy to override).
+   - **Checksum-confirmed fallback (the key robustness piece).** `ruled_table` gates *trying* TABLES
+     but can't settle it -- huron and gogebic are BOTH ruled scans, yet huron reads cleanly via
+     TABLES while gogebic's faint/broken scan rules make TABLES mis-segment (and gogebic is really
+     method-sub-row content, not flat). So `_read_votes` runs the proposed `ruled_scan`, then
+     `_reconciles` checks the flat read's per-candidate precinct sums against the printed COUNTY-TOTAL
+     row (`extract_scanned_tables` now captures that row instead of only skipping it): a MAJORITY of
+     candidate columns must match (one OCR slip is outvoted; a structural failure throws every column
+     and fails). On failure it falls back to the `auto`/cheap read. Result: gogebic detects
+     `ruled_scan` → checksum fails on all 6 columns → falls back to cheap; huron reconciles and stays
+     on TABLES. **The whole 16-contest gold set scores 1.000 end-to-end with detected dispatch**
+     (`oe2d-votes-evaluate --detected`), matching the gold-dispatch score.
+   - Measurement: `oe2d-votes-evaluate --detect` reports detected-vs-gold dispatch (orientation
+     16/16, read_strategy 15/16 -- the lone raw miss is gogebic, which the checksum then corrects).
+   - The flat-path grand-total skip (`_norm in ('total','totals')`) is no longer a bare skip -- that
+     row is now the checksum target.
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
