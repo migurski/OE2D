@@ -86,7 +86,8 @@ def test_subsample_spreads_across_fixtures_deterministically():
 
 
 def test_record_to_example_normalizes_precinct_orientation():
-    any_image = sorted(os.listdir(_IMAGES))[0]
+    # first actual PNG, skipping OS junk (a stray .DS_Store must not be picked as the "image")
+    any_image = next(name for name in sorted(os.listdir(_IMAGES)) if name.lower().endswith('.png'))
     record = {
         'image': f'images/{any_image}',
         'candidate_orientation': 'rows', 'contest_name_present': True,
