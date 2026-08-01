@@ -26,6 +26,7 @@ import logging
 import os
 import re
 import sys
+import typing
 
 import dotenv
 import dspy
@@ -35,6 +36,14 @@ from .. import source_table
 from . import signatures
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+# How to turn a contest's pages into grids -- READ MECHANICS ONLY. 'auto' picks the reader from what
+# each page offers (ruled vector, rotated text-aligned, or a scan with no text layer, one grid per
+# page). 'ruled_scan' reads a scanned page's ruled tables with Textract TABLES (borders segment
+# cells reliably) and returns ALL tables on the page. This is orthogonal to CONTENT structure --
+# candidate orientation, and whether a table is flat (one row per precinct) or has vote-method
+# sub-rows, are decided from the interpreted content, not from how the pixels were read.
+ReadStrategy = typing.Literal['auto', 'ruled_scan']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -309,12 +318,11 @@ def _cluster_1d(values: list[float], gap: float) -> list[float]:
     return centers
 
 
-def _textract_words(file_path: str, page: int) -> list[dict]:
-    '''Cheap-mode Textract (DetectDocumentText) words for a scanned page, each with text and a
-    normalized center (cx, cy). Renders the page, deskews it, and calls Textract once; the raw
-    Blocks are cached under oe2d-data/votes/.cache/textract/ so re-runs do not re-pay. No S3 (inline
-    PNG bytes) and no TABLES feature -- we reconstruct columns ourselves, which sidesteps Textract's
-    unreliable table-splitting and is several times cheaper.'''
+def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[dict]:
+    '''Textract Blocks for a scanned page, cached under oe2d-data/votes/.cache/textract/ so re-runs
+    do not re-pay. Renders the page and deskews it (deskew helps Textract's cell assignment), then
+    calls DetectDocumentText (features empty -- cheap, words only) or AnalyzeDocument (features, e.g.
+    TABLES). Inline PNG bytes, no S3.'''
     import io
     import hashlib
     import json
@@ -322,24 +330,32 @@ def _textract_words(file_path: str, page: int) -> list[dict]:
     from PIL import Image
     from .. import rendering
     from ..pages import deskew
-    key: str = hashlib.sha1(('%s\0%d' % (os.path.abspath(file_path), page)).encode()).hexdigest()
+    tag: str = '+'.join(features) if features else 'text'
+    key: str = hashlib.sha1(('%s\0%d\0%s' % (os.path.abspath(file_path), page, tag)).encode()).hexdigest()
     cache_dir: str = os.path.join('oe2d-data', 'votes', '.cache', 'textract')
     cache: str = os.path.join(cache_dir, '%s.json' % key)
     if os.path.exists(cache):
-        blocks = json.load(open(cache))
+        return json.load(open(cache))
+    image = Image.open(rendering.render_page(file_path, page, resolution=300)).convert('RGB')
+    angle: float = deskew.detect_skew_pil(image)
+    if abs(angle) > 0.05:
+        image = image.rotate(-angle, resample=Image.BICUBIC, expand=True, fillcolor='white')
+    buffer = io.BytesIO()
+    image.save(buffer, format='PNG')
+    client = boto3.Session(region_name=os.environ.get('AWS_REGION_NAME', 'us-west-2')).client('textract')
+    if features:
+        blocks = client.analyze_document(Document={'Bytes': buffer.getvalue()}, FeatureTypes=list(features))['Blocks']
     else:
-        image = Image.open(rendering.render_page(file_path, page, resolution=300)).convert('RGB')
-        angle: float = deskew.detect_skew_pil(image)
-        if abs(angle) > 0.05:
-            image = image.rotate(-angle, resample=Image.BICUBIC, expand=True, fillcolor='white')
-        buffer = io.BytesIO()
-        image.save(buffer, format='PNG')
-        client = boto3.Session(region_name=os.environ.get('AWS_REGION_NAME', 'us-west-2')).client('textract')
         blocks = client.detect_document_text(Document={'Bytes': buffer.getvalue()})['Blocks']
-        os.makedirs(cache_dir, exist_ok=True)
-        json.dump(blocks, open(cache, 'w'))
+    os.makedirs(cache_dir, exist_ok=True)
+    json.dump(blocks, open(cache, 'w'))
+    return blocks
+
+
+def _textract_words(file_path: str, page: int) -> list[dict]:
+    '''Cheap-mode Textract words (DetectDocumentText), each with text and a normalized center.'''
     words: list[dict] = []
-    for block in blocks:
+    for block in _textract_blocks(file_path, page):
         if block['BlockType'] != 'WORD':
             continue
         geometry = block['Geometry']['BoundingBox']
@@ -347,6 +363,37 @@ def _textract_words(file_path: str, page: int) -> list[dict]:
                       'cx': geometry['Left'] + geometry['Width'] / 2,
                       'cy': geometry['Top'] + geometry['Height'] / 2})
     return words
+
+
+def read_scanned_tables(file_path: str, page: int) -> list[list[list[str]]]:
+    '''EVERY ruled table on a scanned page, each a grid, in top-to-bottom order (like
+    source_table.page_tables, but for a scan via Textract TABLES). A scanned page routinely holds
+    several contests' tables plus a header-less continuation of the previous page's contest, so the
+    reader returns them all and the caller decides which belong to the target contest -- picking a
+    single table here loses the header-less continuation. TABLES uses the drawn borders to segment
+    cells reliably, including multi-line cells (a precinct name wrapped over several lines is ONE
+    cell) and rotated headers, which our word-only reconstruction cannot group without borders.'''
+    blocks = _textract_blocks(file_path, page, features=('TABLES',))
+    by_id: dict[str, dict] = {b['Id']: b for b in blocks}
+
+    def children(block: dict) -> list[dict]:
+        return [by_id[i] for rel in block.get('Relationships', []) if rel['Type'] == 'CHILD'
+                for i in rel['Ids']]
+
+    def cell_text(cell: dict) -> str:
+        return ' '.join(w.get('Text', '') for w in children(cell) if w['BlockType'] == 'WORD')
+
+    found: list[tuple] = []
+    for table in (b for b in blocks if b['BlockType'] == 'TABLE'):
+        cells: list[dict] = [c for c in children(table) if c['BlockType'] == 'CELL']
+        if not cells:
+            continue
+        grid: list[list[str]] = [[''] * max(c['ColumnIndex'] for c in cells)
+                                 for _ in range(max(c['RowIndex'] for c in cells))]
+        for cell in cells:
+            grid[cell['RowIndex'] - 1][cell['ColumnIndex'] - 1] = _clean(cell_text(cell))
+        found.append((table['Geometry']['BoundingBox']['Top'], grid))
+    return [grid for _top, grid in sorted(found, key=lambda item: item[0])]
 
 
 def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap: float = 0.02,
@@ -518,10 +565,10 @@ def extract_contest(file_path: str, pages: list[int], office: str, candidate_con
                     interpreter: dspy.Module | None = None) -> dict:
     '''Read the contest's pages and stitch them into votes[(precinct, candidate, party)][bucket].
 
-    Reads each page (source_table), interprets it (LLM), walks it into ordered precinct blocks,
-    partitions the pages into precinct-groups, then within a group concatenates candidate columns
-    across the candidate-group pages by precinct position and across groups appends the precinct
-    lists. The interpreter never touches a number; this function moves them.
+    Reads each page, interprets it (LLM), walks it into ordered precinct blocks, partitions the pages
+    into precinct-groups, then within a group concatenates candidate columns across the candidate-
+    group pages by precinct position and across groups appends the precinct lists. The interpreter
+    never touches a number; this function moves them.
     '''
     interpreter = interpreter or build_interpreter()
     page_schemas: list[tuple] = []
@@ -688,10 +735,88 @@ def extract_precinct_contest(file_path: str, pages: list[int], office: str, cand
     return votes
 
 
+def extract_scanned_tables(file_path: str, pages: list[int], office: str, candidate_context: str,
+                           interpreter: dspy.Module | None = None) -> dict:
+    '''Extract a contest read from a ruled scan as tables (read_scanned_tables), scoping to the
+    contest by column structure and reading CONTENT the interpreter reports.
+
+    A scanned page holds several contests' tables plus a header-less continuation of the previous
+    page's contest, so we read EVERY table and scope by column structure: learn the candidate columns
+    ONCE from the table whose header matches the expected candidates (the anchor), then take the
+    anchor and every table sharing its column count -- the anchor and its header-less continuations.
+    The interpreter is used only to map header columns to candidates; this reads a FLAT table (one
+    row per precinct, one total per candidate, no vote-method sub-rows) directly from those columns,
+    so it is independent of method_labels and never touches the shared sub-row walker.
+    '''
+    interpreter = interpreter or build_interpreter()
+    tables: list[list[list[str]]] = [grid for page in pages
+                                     for grid in read_scanned_tables(file_path, page)]
+    if not tables:
+        return {}
+    wanted: set = {_norm(token) for line in candidate_context.splitlines()
+                   for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
+    header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
+    anchor: list[list[str]] = max(tables, key=header_match)
+    schema: signatures.PageSchema = interpret_page(interpreter, office, candidate_context, anchor)
+    column_count: int = len(anchor[0])
+    label_column: int = schema.label_column
+    candidates = [column for column in schema.columns if column.role == 'candidate']
+
+    def has_data(row: list[str]) -> bool:
+        return any(column.index < len(row) and _parse_number(row[column.index]) is not None
+                   for column in candidates)
+
+    def label_of(row: list[str]) -> str:
+        return _clean(row[label_column]) if label_column < len(row) else ''
+
+    # Build the precinct list across the contest's tables in page order, stitching a precinct whose
+    # row STRADDLES a page: its data sits at the bottom of one page under a (truncated) label, and
+    # the label continues on a label-only row at the top of the next table. A label-only row that
+    # appears before any precinct of a continuation table is that continuation, so append it to the
+    # previous precinct. Precincts run down the rows, so nothing needs positional alignment.
+    entries: list[list] = []                         # [label, data_row]
+    for grid in tables:                              # anchor + its column-count-matching continuations
+        if not grid or len(grid[0]) != column_count:
+            continue
+        started: bool = False
+        for row in grid:
+            if has_data(row):
+                entries.append([label_of(row), row])
+                started = True
+            elif label_of(row) and not started and entries:
+                entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
+
+    votes: dict = {}
+    write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
+    for precinct, row in entries:
+        # a grand-total row is a checksum, not a precinct; the interpreter flags it in skip_labels
+        # when the anchor table shows it, but the total can sit on a header-less continuation the
+        # anchor never saw, so also drop a bare "Total" label.
+        if not precinct or precinct in schema.skip_labels or _norm(precinct) in ('total', 'totals'):
+            continue
+        for column in candidates:
+            value = _parse_number(row[column.index]) if column.index < len(row) else None
+            if value is None:
+                continue
+            candidate, party = _split_party(column.candidate, column.party)
+            if column.write_in:
+                write_ins[precinct]['total' if column.write_in_total else 'component'].append(value)
+            else:
+                votes[(precinct, candidate, party)] = {'votes': value}
+    for precinct, parts in write_ins.items():
+        votes[(precinct, WRITE_IN_LABEL, '')] = {'votes': _consolidate_write_in(parts['total'], parts['component'])}
+    return votes
+
+
 def extract(file_path: str, pages: list[int], office: str, candidate_context: str,
-            orientation: str = 'columns', interpreter: dspy.Module | None = None) -> dict:
-    '''Dispatch on candidate orientation (from oe2d.pages): 'rows' -> precinct-major path,
-    'columns' -> contest-major path.'''
+            orientation: str = 'columns', interpreter: dspy.Module | None = None,
+            read_strategy: ReadStrategy = 'auto') -> dict:
+    '''Dispatch to an extractor. read_strategy is READ MECHANICS: 'ruled_scan' reads the pages as
+    Textract TABLES and scopes the contest across them (extract_scanned_tables); 'auto' reads one
+    grid per page and dispatches on candidate orientation (from oe2d.pages) -- 'rows' -> precinct-
+    major, 'columns' -> contest-major.'''
+    if read_strategy == 'ruled_scan':
+        return extract_scanned_tables(file_path, pages, office, candidate_context, interpreter)
     if orientation == 'rows':
         return extract_precinct_contest(file_path, pages, office, candidate_context, interpreter)
     return extract_contest(file_path, pages, office, candidate_context, interpreter)

@@ -32,12 +32,13 @@ Current F1 — both plain (per-row) and vote-weighted (fresh DSPy cache):
 | calhoun president | columns | **1.000** | rotated-header read + cross-page stitch; 4 write-in gold rows rebuilt from source |
 | calhoun us-house-4 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
 | calhoun us-house-5 | columns | **1.000** | district; rotated-header read + cross-page precinct stitch |
-| gogebic president | columns | **1.000** | **scanned** — cheap-mode Textract + own grid reconstruction |
-| huron ×4 | — | pending | scanned; `pages`/orientation still to fill (president 2–3) |
+| gogebic president | columns | **1.000** | **scanned, borderless-read** — cheap-mode Textract + own grid reconstruction |
+| huron president | columns (flat) | **1.000** | **scanned, ruled TABLES** — flat one-row-per-precinct, cross-page row stitch |
+| huron straight-party / us-senate / us-house | — | pending | same source; fill `pages` + `read_strategy` |
 
-Plain and vote-weighted F1 are **1.000 on all 11 vector contests and the first scanned contest**
-(Gogebic). Remaining: the four Huron scanned contests (fill `pages`, run — Huron exercises the
-cross-page precinct stitch on scanned input).
+Plain and vote-weighted F1 are **1.000 on all 11 vector contests and both scanned formats seen so far**
+(Gogebic borderless Hart, Huron ruled flat). Remaining: Huron's other three contests (same scan,
+`read_strategy='ruled_scan'`; fill `pages`).
 
 16 hand-built gold examples live in `oe2d-data/votes/` (`index.jsonl` + one
 `<county>__<contest>__expected.csv` each). Numbers are **copied from human-authored state-repo
@@ -65,7 +66,19 @@ Three stages, one narrow LLM judgment, chosen by candidate orientation (from `oe
   No OCR — the text layer is present, just mirrored. `extract_contest` dispatches here when
   `page_table` returns nothing. The bigram reversal is a deterministic text-orientation call; the
   candidate/terminology matching still happens in the LLM.
-- **Scanned (no text layer)** → `oe2d.votes.read_scanned_grid` via **cheap-mode Textract**
+- **Scanned, RULED (drawn cell borders)** → `oe2d.votes.read_scanned_tables` via **Textract TABLES**
+  (`AnalyzeDocument`). Borders let Textract segment cells reliably, including multi-line cells (a
+  precinct name wrapped over several lines is ONE cell) and rotated headers — which our word-only
+  reconstruction can't group without borders. Returns **every** table on the page (like
+  `source_table.page_tables`), because a scanned page holds several contests' tables plus a
+  header-less continuation of the previous page's; `extract_scanned_tables` scopes to the target
+  contest by header-match (the anchor) + column-count (its header-less continuations), and stitches a
+  precinct whose row straddles a page (data at one page's bottom, label continued at the next's top).
+  Chosen by `read_strategy='ruled_scan'` (READ MECHANICS — orthogonal to content). Empirically:
+  Textract TABLES nails a ruled table but SPLITS a borderless multi-panel Hart page into per-panel
+  tables, which is why Gogebic uses the cheap reconstruction below and Huron uses TABLES. The
+  ruled-vs-borderless call belongs to `oe2d.pages` (an image VLM field, not yet wired).
+- **Scanned, BORDERLESS (no text layer, text-aligned)** → `oe2d.votes.read_scanned_grid` via **cheap-mode Textract**
   (`DetectDocumentText`, words + boxes, inline PNG bytes — NOT `AnalyzeDocument TABLES`). Renders
   with `oe2d.rendering`, deskews (`oe2d.pages.deskew`), then reconstructs the grid ourselves: cluster
   words into rows by y-center; take column x-centers from the counts on real data rows only (≥4
@@ -295,13 +308,26 @@ These compose: the LLM reads the perimeter to *name* columns/rows (terminology);
 row-consensus + checksums *fill and validate* the interior (numbers) — the "model decides structure,
 code moves digits" principle lifted to the page-grid level.
 
+## Read mechanics vs content structure (orthogonal — keep them apart)
+
+A hard-won lesson from Huron. Two independent axes:
+- **Read mechanics** (how pixels become cells): ruled vector → `source_table`; rotated text-aligned →
+  `read_rotated_grid`; ruled scan → `read_scanned_tables` (TABLES); borderless scan → `read_scanned_grid`
+  (cheap words). Selected by `ReadStrategy` (a `typing.Literal`, not a bare string) and page detection.
+- **Content structure** (what the table means): candidate orientation (columns/rows); flat (one row per
+  precinct, one total per candidate) vs vote-method sub-rows. Decided from the interpreted content.
+
+Do NOT infer content from the reader or teach the *shared* sub-row interpreter/`walk_page` about flat —
+that destabilized Barry (the interpreter occasionally dropped `method_labels`, firing a flat branch and
+truncating a wrapped label). Flat lives entirely in `extract_scanned_tables`, which uses the interpreter
+ONLY to map header columns → candidates and reads each precinct row's candidate columns directly.
+
 ## Next steps (in rough priority)
-1. **Huron (scanned, ×4)** — `read_scanned_grid` is built and validated (Gogebic 1.000). Fill Huron's
-   `pages`/orientation (president is 2–3) and run president + straight-party + us-senate + us-house.
-   Huron's contests cross page to page, so it's the first test of the cross-page precinct stitch on
-   scanned input, and the first check of whether the MI-SOVC-tuned reader thresholds and the pinned
-   robustness (row-consensus columns) hold on another scan. The lightweight reconstruction carried
-   Gogebic without the heavy Topic-1 machinery — watch whether Huron changes that.
+1. **Huron's other three contests (scanned, ruled)** — `read_scanned_tables` + `extract_scanned_tables`
+   are built and validated (Huron president 1.000). Fill `pages` + `read_strategy='ruled_scan'` for
+   straight-party / us-senate / us-house (same source PDF; each contest's tables are scoped by
+   header-match + column-count across pages) and run. Then the `oe2d.pages` wiring (below) to replace
+   the per-source `read_strategy` with an image-VLM `ruled_table` field.
 3. **Header-slice interpretation (LLM cost)** — today we send every cell of every page to the
    interpreter, numbers included, though it only needs structure. Rows path already interprets one
    sample page; trimming its prompt to the header region + one precinct block is safe. Columns path
