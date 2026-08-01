@@ -3,7 +3,8 @@
 GEPA improves a program from the *text* its metric returns, so score_page yields
 a dspy.Prediction carrying both a weighted scalar and prose naming which fields
 were wrong. candidate_orientation is weighted heaviest (it most changes how a
-page is read), precinct_scope next; the presence flags and axis are lighter.
+page is read); ruled_table and precinct_scope next (they route the read path);
+the presence flags and axis are lighter.
 
 Skew is not scored here — it is not a program output. A VLM cannot estimate fine
 page rotation, so skew is detected separately and deterministically in
@@ -16,6 +17,7 @@ import dspy
 # Weights need not sum to 1; the score normalizes by the total scored weight.
 FIELD_WEIGHTS: dict[str, float] = {
     'candidate_orientation': 3.0,
+    'ruled_table': 2.0,
     'precinct_scope': 2.0,
     'contest_name_present': 1.0,
     'candidate_names_present': 1.0,
@@ -50,7 +52,8 @@ def score_page(gold, pred, trace=None, pred_name=None, pred_trace=None):
             f'Score {score:.2f}. Wrong fields:\n  - ' + '\n  - '.join(misses)
             + '\nLook only at what is visible on THIS page: whether candidates are '
             'columns or rows, whether a contest title / candidate names / headers '
-            'appear here (a continuation page may lack them), and the precinct scope.'
+            'appear here (a continuation page may lack them), the precinct scope, and '
+            'whether the table is a drawn grid of ruling lines or just aligned columns.'
         )
     else:
         feedback = f'Score {score:.2f}. All scored fields correct: {", ".join(hits)}.'

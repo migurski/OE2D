@@ -67,6 +67,10 @@ class PageProperties(pydantic.BaseModel):
     headers_present: bool
     precinct_scope: signatures.PrecinctScope
     precinct_orientation: signatures.PrecinctAxis
+    # Is the results table a drawn grid of ruling lines (True) vs whitespace/shaded-header
+    # columns (False)? A VLM content field: it routes the scanned read (ruled -> Textract
+    # TABLES, borderless -> cheap reconstruction) and describes vector pages.
+    ruled_table: bool
     # Detector-sourced (deskew), positive = counter-clockwise; NOT a VLM output.
     skew_degrees: float
 
@@ -153,6 +157,7 @@ class PageAnalyzer(dspy.Module):
             headers_present=content.headers_present,
             precinct_scope=content.precinct_scope,
             precinct_orientation=content.precinct_orientation,
+            ruled_table=content.ruled_table,
             skew_degrees=skew,
         )
 
@@ -189,6 +194,7 @@ def analyze_image(image_path: str) -> dict:
         headers_present=prediction.headers_present,
         precinct_scope=prediction.precinct_scope,
         precinct_orientation=prediction.precinct_orientation,
+        ruled_table=prediction.ruled_table,
         skew_degrees=float(prediction.skew_degrees),
     )
     return properties.model_dump(mode='json')

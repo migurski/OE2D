@@ -27,6 +27,7 @@ class _StubPredictor:
             headers_present=True,
             precinct_scope='multi_precinct',
             precinct_orientation='rows',
+            ruled_table=True,
         )
 
 
@@ -42,6 +43,7 @@ def test_forward_combines_stub_content_with_real_skew():
     assert prediction.contest_name_present is True
     assert prediction.precinct_scope == 'multi_precinct'
     assert prediction.precinct_orientation == 'rows'
+    assert prediction.ruled_table is True
 
     # Skew is the real detector run on the real image, matching detect_skew.
     assert prediction.skew_degrees == deskew.detect_skew(_IMAGE)

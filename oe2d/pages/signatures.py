@@ -32,6 +32,14 @@ class PageAnalysis(dspy.Signature):
     You are shown a single page image, not a whole document. Describe only what is
     visible on THIS page; do not infer contests or precincts that would be on other
     pages.
+
+    ruled_table: report whether the results table is drawn as a GRID of ruling lines
+    that box the cells -- vertical rules separating the number columns AND horizontal
+    rules between rows. Answer True only for a full drawn grid, one a line-based table
+    reader could segment cells from by following the borders. Answer False when the
+    columns are held by whitespace/alignment or by only a shaded header band, even if
+    a few horizontal separators appear between rows -- horizontal lines alone are not a
+    grid and do not make it ruled.
     '''
     image: dspy.Image = dspy.InputField(desc='A single rendered election-results page')
     candidate_orientation: CandidateOrientation = dspy.OutputField(
@@ -54,3 +62,6 @@ class PageAnalysis(dspy.Signature):
     precinct_orientation: PrecinctAxis = dspy.OutputField(
         desc="For a multi_precinct page, whether precincts are 'rows' or 'columns'; "
              "otherwise 'none'")
+    ruled_table: bool = dspy.OutputField(
+        desc='Whether the results table is drawn as a full grid of ruling lines '
+             '(see the instructions for how to decide)')

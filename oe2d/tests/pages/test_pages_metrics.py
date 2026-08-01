@@ -7,6 +7,7 @@ _FIELDS = dict(
     candidate_orientation='columns', contest_name_present=True,
     candidate_names_present=True, headers_present=True,
     precinct_scope='multi_precinct', precinct_orientation='rows',
+    ruled_table=True,
 )
 
 
@@ -25,10 +26,16 @@ def test_all_correct_scores_one():
 
 
 def test_orientation_is_weighted_heaviest():
-    # orientation weight 3 of total weight 9 -> missing it gives 6/9
+    # orientation weight 3 of total weight 11 -> missing it gives 8/11
     result = metrics.score_page(_gold(), _pred(candidate_orientation='rows'))
-    assert abs(result.score - (6 / 9)) < 1e-9
+    assert abs(result.score - (8 / 11)) < 1e-9
     assert 'candidate_orientation' in result.feedback
+
+
+def test_ruled_table_mismatch_reported():
+    result = metrics.score_page(_gold(), _pred(ruled_table=False))
+    assert result.score < 1.0
+    assert 'ruled_table' in result.feedback
 
 
 def test_precinct_scope_mismatch_reported():
