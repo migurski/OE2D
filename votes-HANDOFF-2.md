@@ -325,7 +325,45 @@ truncating a wrapped label). Flat lives entirely in `extract_scanned_tables`, wh
 ONLY to map header columns → candidates and reads each precinct row's candidate columns directly.
 
 ## Next steps (in rough priority)
-1. **Wire `oe2d.pages` (image VLM) for dispatch** — the whole gold set now passes, but reader/content
+1. **Wrap the whole program in ONE composite `dspy.Module` (GEPA-ready + Cmpnd-legible).** Today
+   `oe2d.votes` is loose functions (`extract`, `extract_contest`, `extract_precinct_contest`,
+   `extract_scanned_tables`) that each call `build_interpreter()` / `build_precinct_interpreter()` to
+   spin up a bare `dspy.Predict` per call. Mirror `oe2d.pages.PageAnalyzer` and
+   `oe2d.contests.ContestLocator`: a single `dspy.Module` (e.g. `VoteExtractor`) IS the program, so
+   Cmpnd sees one traced read→interpret→stitch flow and GEPA can evolve every prompt in it.
+   - **`__init__`** constructs the NAMED inner predictors that GEPA optimizes -- both interpreters:
+     `self.interpret_columns = dspy.Predict(InterpretResultsPage)` and
+     `self.interpret_rows = dspy.Predict(InterpretPrecinctPage)`. GEPA evolves each named predictor's
+     signature-docstring instruction independently (guidance already lives in the docstrings, not the
+     pydantic Field descriptions -- that groundwork is done; see the Interpret section). Naming them as
+     module attributes is what makes them discoverable/optimizable.
+   - **`forward(file_path, pages, office, candidate_context, orientation, read_strategy) ->
+     dspy.Prediction(rows=...)`** runs the current `extract` dispatch inside the module: read
+     (deterministic reader dispatch), interpret (the named predictors), walk/stitch/consensus, and
+     `votes_to_rows`. The deterministic parts (readers, `walk_page`, `_precinct_groups`, cross-page
+     stitch, `_count_columns`/`_assign_methods`/`_consolidate_write_in`, all-zero drop) stay in
+     `forward`/helpers -- traced but OUTSIDE the GEPA objective, exactly like `PageAnalyzer`'s skew and
+     `ContestLocator`'s `_locate_pages`/tools. This also fixes the current per-call `build_interpreter`
+     churn: the predictors live on the module and are shared.
+   - **`build_extractor()`** replaces `build_interpreter`/`build_precinct_interpreter`: construct the
+     module, `load(OPTIMIZED_MODEL_PATH)` when present (the artifact governs prompt AND lm -- see
+     [[lm-artifact-authority]]), else `set_lm(...)`. `_instrument()` (Cmpnd) attaches here, once.
+   - **`metrics.py` for GEPA**: adapt the existing whole-row weighted-F1 `score` to return a
+     `dspy.Prediction(score=weighted_f1, feedback=<prose>)` like `oe2d.pages.metrics.score_page` --
+     GEPA reflects on the FEEDBACK TEXT, so the prose must name what was wrong (the false-negative rows
+     it missed and the false-positive rows it invented, WITH their vote magnitudes so the reflection
+     learns the weighted priority: a wrong 600-vote row matters, a spurious 0-vote row barely). The
+     metric already returns `false_positives`/`false_negatives`; this is mostly formatting them.
+   - **`optimize.py` / `evaluate.py`** mirroring `oe2d.pages`: `build_program()` returns
+     `VoteExtractor`; `teleprompt.GEPA(metric=score, reflection_lm=..., ...).compile(program, trainset,
+     valset)`; `optimized.save(path)`. `evaluate.py` runs the program over the whole gold and reports
+     plain + weighted F1 (folds in the long-standing "score the whole gold set" item). `datasets.py`
+     (exists) yields `dspy.Example`s with inputs marked (file, pages, office, context, orientation,
+     read_strategy) and the gold rows.
+   - Watch: GEPA stringifies example inputs into the reflection prompt; our inputs are text (grids,
+     not images), so no `MultiModalInstructionProposer` needed -- but keep the reflection prompt small
+     (don't stuff whole page grids into `dspy.Example` fields the proposer will echo).
+2. **Wire `oe2d.pages` (image VLM) for dispatch** — the whole gold set now passes, but reader/content
    dispatch is carried in the gold (`geometry.candidate_orientation`, `read_strategy`) and detected
    ad-hoc. Replace with one PageAnalyzer pass on a sample page returning skew + `ruled_table` (→ TABLES
    vs cheap/rotated read) + orientation. Confirm each choice with checksums (column totals vs printed
