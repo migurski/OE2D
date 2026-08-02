@@ -8,5 +8,5 @@ build/
 *.egg-info/
 .aws/
 contests-review/
-oe2d-data/votes/.cache/
 tmp/
+.cache/

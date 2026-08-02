@@ -362,7 +362,7 @@ def textract_usage() -> dict:
 
 
 def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[dict]:
-    '''Textract Blocks for a page, cached under oe2d-data/votes/.cache/textract/ so re-runs do not
+    '''Textract Blocks for a page, cached under ./.cache/textract/ (the caller's cwd) so re-runs do not
     re-pay. Renders the page and deskews it (deskew helps Textract's cell assignment), then calls
     DetectDocumentText (features empty -- cheap, words only) or AnalyzeDocument (features, e.g.
     TABLES, ~10x). Inline PNG bytes, no S3. A cache MISS is a real (paid) call: it is counted in
@@ -378,7 +378,7 @@ def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[di
     from ..pages import deskew
     tag: str = '+'.join(features) if features else 'text'
     key: str = hashlib.sha1(('%s\0%d\0%s' % (os.path.abspath(file_path), page, tag)).encode()).hexdigest()
-    cache_dir: str = os.path.join('oe2d-data', 'votes', '.cache', 'textract')
+    cache_dir: str = os.path.join('.cache', 'textract')     # ./.cache relative to the caller's cwd
     cache: str = os.path.join(cache_dir, '%s.json' % key)
     if os.path.exists(cache):
         return json.load(open(cache))
