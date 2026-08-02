@@ -886,23 +886,60 @@ def _has_text_layer(file_path: str, page: int) -> bool:
     return True
 
 
+def _propose_read_strategy(orientation: str, scope: str, scanned: bool, ruled: bool,
+                           contests_across: str, precinct_rows: str, value_columns: str) -> ReadStrategy:
+    '''Map the page VLM's read-shape observations to a read_strategy PROPOSAL.
+
+    The flat family (flat_multi / flat_tables / ruled_scan / flat_grouped) is reconcile-CONFIRMED
+    in _read_votes -- a wrong proposal there re-reads via the cheap auto path when the per-precinct
+    sums miss the printed county total -- so those are proposed freely: a scanned mega-grid, a
+    method-sub-row scan, and a faint-ruled scan (Gogebic) all fall back to auto on a mismatch, so
+    proposing ruled_scan for them cannot read wrong, only cost a Textract call. The rows-family
+    report reads (report_lines_*) have NO county-total confirm, so they are proposed only from
+    value_columns, which separates the three per-precinct report grammars with no cross-family
+    collision (a lone Total -> report_lines_total; count+percent per method -> report_lines_methods;
+    plain method counts -> the Electionware auto tabular).'''
+    # A stacked per-precinct report (choices down the rows). value_columns names the grammar.
+    if orientation == 'rows' and scope == 'per_precinct':
+        if value_columns == 'total_only':
+            return 'report_lines_total'
+        if value_columns == 'methods_with_percent':
+            return 'report_lines_methods'
+        return 'auto'
+    # A precinct-rows table (candidates across the columns).
+    if orientation == 'columns' and scope == 'multi_precinct':
+        if contests_across == 'multiple':               # a mega-grid: several contests, shared rows
+            return 'ruled_scan' if scanned else 'flat_multi'
+        if scanned:                                     # flat scan, method-sub-row scan, or grouped
+            return 'ruled_scan'                         # confirm sorts flat vs sub-row vs faint-rule
+        if precinct_rows == 'single':                   # a vector one-row-per-precinct flat table
+            return 'flat_tables'
+        return 'auto'                                   # vector vote-method sub-rows: cheap word grid
+    # County summaries, columns-per-precinct, rows-county: keep the coarse default.
+    return 'ruled_scan' if (scanned and ruled) else 'auto'
+
+
 def detect_dispatch(file_path: str, page: int) -> dict:
     '''Choose how to read a contest from ONE sample page, via oe2d.pages (the image VLM) plus a
     deterministic text-layer check -- so dispatch comes from the page image, not a hand-set gold
     field. Returns {orientation, read_strategy, scanned, ruled_table}.
 
     orientation is the VLM's candidate_orientation (columns/rows). A page with no text layer is a
-    scan. read_strategy is a PROPOSAL: a scanned page the VLM calls ruled proposes 'ruled_scan'
-    (Textract TABLES), everything else 'auto' (the reader self-detects). ruled_table alone cannot
-    settle the scanned read -- a ruled scan whose rules are faint/broken (Gogebic) makes TABLES
-    mis-segment even though huron's clean rules do not -- so the caller must CONFIRM a proposed
-    ruled_scan read with a checksum and fall back to 'auto' when it does not reconcile.'''
+    scan. read_strategy is a PROPOSAL from the VLM's read-shape fields (contests_across /
+    precinct_rows / value_columns) plus scanned; see _propose_read_strategy for the mapping. Every
+    flat-family proposal is checksum-CONFIRMED in _read_votes and falls back to the cheap auto read
+    when the per-precinct sums miss the printed county total, so a VLM slip on the columns family
+    self-corrects; the rows-family report proposals ride value_columns, which has no cross-family
+    collision.'''
     from .. import pages
     props: dict = pages.analyze_page(file_path, page)
     scanned: bool = not _has_text_layer(file_path, page)
     ruled: bool = bool(props.get('ruled_table'))
+    read_strategy: ReadStrategy = _propose_read_strategy(
+        props['candidate_orientation'], props['precinct_scope'], scanned, ruled,
+        props['contests_across'], props['precinct_rows'], props['value_columns'])
     return {'orientation': props['candidate_orientation'],
-            'read_strategy': 'ruled_scan' if (scanned and ruled) else 'auto',
+            'read_strategy': read_strategy,
             'scanned': scanned, 'ruled_table': ruled}
 
 
@@ -1397,7 +1434,16 @@ class VoteExtractor(dspy.Module):
         if read_strategy == 'ruled_columns':
             return self._extract_contest(file_path, pages, office, candidate_context, via_tables=True)
         if read_strategy in ('report_lines_methods', 'report_lines_total'):
-            return self._extract_report_contest(file_path, pages, office, candidate_context, read_strategy)
+            votes = self._extract_report_contest(file_path, pages, office, candidate_context, read_strategy)
+            if votes:
+                return votes
+            # The geometry report reader recognized no blocks -- the page is a per-precinct report
+            # in some OTHER layout (a green-banded Electionware "Precinct Results Report" like
+            # Calaveras looks like the Dominion one but grids cleanly), so a value_columns-driven
+            # report_lines PROPOSAL that misses reads empty. Confirm-and-fall-back like the flat
+            # family: an empty report read means the cheap auto per-precinct read is the right one.
+            logger.info('report-lines read found no report blocks; falling back to the auto '
+                        'per-precinct read')
         if orientation == 'rows':
             return self._extract_precinct_contest(file_path, pages, office, candidate_context)
         return self._extract_contest(file_path, pages, office, candidate_context)
@@ -1797,9 +1843,9 @@ def main() -> None:
                         help='CONTENT structure override; default: detected from the page via oe2d.pages')
     parser.add_argument('--read-strategy', default=None, choices=typing.get_args(ReadStrategy),
                         help='READ MECHANICS override (any read strategy); default: detected from the '
-                             'page (checksum-confirmed). detect_dispatch only proposes auto/ruled_scan '
-                             'today, so a newer shape (flat_*/ruled_columns/report_lines_*) needs this '
-                             'until the page VLM learns to pick it')
+                             'page via oe2d.pages (checksum-confirmed). detect_dispatch now proposes the '
+                             'full set from the page read-shape fields; a single-page-undetectable shape '
+                             '(flat_grouped, or ruled_columns where it looks like auto) still needs this')
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
 

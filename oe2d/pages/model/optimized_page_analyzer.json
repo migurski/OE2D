@@ -1,0 +1,74 @@
+{
+  "analyze": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "Report factual, in-page observations about ONE election-results page image.\n\nYou are shown a single page image, not a whole document. Describe only what is\nvisible on THIS page; do not infer contests or precincts that would be on other\npages.\n\nruled_table: report whether the results table is drawn as a GRID of ruling lines\nthat box the cells -- vertical rules separating the number columns AND horizontal\nrules between rows. Answer True only for a full drawn grid, one a line-based table\nreader could segment cells from by following the borders. Answer False when the\ncolumns are held by whitespace/alignment or by only a shaded header band, even if\na few horizontal separators appear between rows -- horizontal lines alone are not a\ngrid and do not make it ruled.\n\ncontests_across: answer 'multiple' when TWO OR MORE different contests (different\noffices -- e.g. a US House race AND a state senate race, each with its own candidate\ncolumns and its own Total-Votes header) sit SIDE BY SIDE across the page, all sharing\nONE column of precinct labels down the left, so each precinct is a single row that\nruns left-to-right through every contest (a mega-grid). Answer 'single' when only one\ncontest's candidates span the page (however many candidate columns it has), or when a\nsecond contest appears only STACKED BELOW the first (a separate block further down the\npage, not beside it). A turnout / registered-voters block beside one contest is not a\nsecond contest.\n\nprecinct_rows: on a multi_precinct page, answer 'single' when each precinct is ONE\nrow of numbers, 'multiple' when each precinct is a stack of vote-method sub-rows\n(e.g. an Election Day row, an Absentee/AV row, a Total row -- one group per\nprecinct). Answer 'none' when the page is not laid out as many precincts (a single\nper-precinct page, or a county-summary page).\n\nvalue_columns: look at ONE candidate/choice and count the kinds of number that\nfollow it. Answer 'total_only' for a single vote figure. Answer 'methods' for\nseveral plain vote counts broken out by method (Election Day, Absentee, Total ...)\nwith NO percentages. Answer 'methods_with_percent' when each method figure is a\ncount paired with a percent (e.g. \"1,234  57.3%\") -- the tell is a % sign beside\nthe counts.",
+      "fields": [
+        {
+          "prefix": "Image:",
+          "description": "A single rendered election-results page"
+        },
+        {
+          "prefix": "Candidate Orientation:",
+          "description": "'columns' when each candidate/party is a column (and precincts run down the rows); 'rows' when each candidate/party is a row"
+        },
+        {
+          "prefix": "Contest Name Present:",
+          "description": "Is a contest/office title visible on this page? A continuation page that just carries more candidate columns or more precinct rows often has none"
+        },
+        {
+          "prefix": "Candidate Names Present:",
+          "description": "Are candidate or party names visible on this page? False on a bare data-only continuation page"
+        },
+        {
+          "prefix": "Headers Present:",
+          "description": "Are column/row headers labeling the numbers present on this page?"
+        },
+        {
+          "prefix": "Precinct Scope:",
+          "description": "'multi_precinct' when the page lays out many precincts along an axis; 'per_precinct' when the page is a single precinct named in a heading with its results below; 'county' when the page shows county-wide aggregates with no precinct dimension"
+        },
+        {
+          "prefix": "Precinct Orientation:",
+          "description": "For a multi_precinct page, whether precincts are 'rows' or 'columns'; otherwise 'none'"
+        },
+        {
+          "prefix": "Ruled Table:",
+          "description": "Whether the results table is drawn as a full grid of ruling lines (see the instructions for how to decide)"
+        },
+        {
+          "prefix": "Contests Across:",
+          "description": "'multiple' when several different contests sit side-by-side across the columns (a mega-grid, one precinct row spanning them all); 'single' for one contest across the page (a second contest STACKED below still counts as single)"
+        },
+        {
+          "prefix": "Precinct Rows:",
+          "description": "For a multi_precinct page, whether each precinct is 'single' (one data row) or 'multiple' (a stack of vote-method sub-rows); 'none' when the page is not multi_precinct"
+        },
+        {
+          "prefix": "Value Columns:",
+          "description": "Per candidate/choice, the number columns: 'total_only' (a lone total), 'methods' (several method counts, no percentages), or 'methods_with_percent' (each method a count+percent pair)"
+        }
+      ]
+    },
+    "lm": {
+      "model": "bedrock/qwen.qwen3-vl-235b-a22b",
+      "model_type": "chat",
+      "cache": true,
+      "num_retries": 3,
+      "finetuning_model": null,
+      "launch_kwargs": {},
+      "train_kwargs": {},
+      "temperature": 0.0,
+      "max_tokens": 8192
+    }
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.2.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}
