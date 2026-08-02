@@ -1449,22 +1449,37 @@ class VoteExtractor(dspy.Module):
                                         if any(token in _norm(row[0]) for row in grid[2:]))
             return max(blocks, key=lambda block: names_in(block[1]))[1]
 
-        return self._extract_precinct_contest(file_path, pages, office, candidate_context, read_grid)
+        return self._extract_precinct_contest(file_path, pages, office, candidate_context, read_grid,
+                                              choices_only=True)
 
     def _extract_precinct_contest(self, file_path: str, pages: list[int], office: str,
-                                  candidate_context: str, read_grid=None) -> dict:
+                                  candidate_context: str, read_grid=None,
+                                  choices_only: bool = False) -> dict:
         '''Extract a candidates-as-rows contest whose precincts are one-per-page (precinct in the page
         header, methods across columns). The document's pages are structurally identical, so interpret
         ONE sample page and apply that schema to every page -- one LLM call per document, then
         deterministic exact-label extraction. Candidate rows are found by their verbatim row-label
         (identical across pages); the precinct name is read from the learned header cell. read_grid
         (page -> grid) supplies the per-page grid; the default text-alignment reader (read_text_grid)
-        serves Electionware/summary pages, while a report-block reader serves Dominion reports.'''
+        serves Electionware/summary pages, while a report-block reader serves Dominion reports.
+
+        choices_only says the read_grid already isolated the contest -- EVERY data row is a choice
+        (the report readers exclude statistics/total rows). Then the interpreter need not enumerate
+        rows: any count-bearing grid row it omitted is backfilled as a write-in, so a flaky
+        drop of the write-in block does not silently lose votes.'''
         if read_grid is None:
             read_grid = lambda page: read_text_grid(file_path, page)
         sample: StringGrid = read_grid(pages[0])
         schema: signatures.PrecinctPageSchema = self.interpret_rows(
             office=office, candidate_context=candidate_context, grid=grid_to_text(sample)).precinct_schema
+        if choices_only:                                  # backfill any choice row the interpreter dropped
+            covered: set = {role.row_index for role in schema.candidate_rows}
+            for index in range(len(sample)):
+                if index in covered or index == schema.precinct_row:
+                    continue
+                if any(_cell_count(cell) is not None for cell in sample[index][1:]):
+                    schema.candidate_rows.append(signatures.CandidateRow(
+                        row_index=index, candidate=sample[index][0], party='', write_in=True))
         # The interpreter names the method buckets in left-to-right order; trust that order, not its
         # exact column indices (split/garbled headers throw those off). Code maps the buckets onto each
         # candidate row's actual numeric cells, so spacer columns and header noise don't matter.
