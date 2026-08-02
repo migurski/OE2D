@@ -7,9 +7,11 @@ mega-grid column-scoping**, which is written up in enough detail to implement co
 
 ## Status snapshot (current)
 
-- **Gold: 46 contests, macro wF1=1.000 (F1=1.000), ALL cold-cache robust.** One pre-existing
+- **Gold: 50 contests, macro wF1=1.000 (F1=1.000), ALL cold-cache robust.** One pre-existing
   non-1.000: `columbia-us-house` F1=0.996 (a single zero-vote write-in row; wF1=1.000).
-- **Tests: `oe2d/tests/votes/` 63 pass.** Score everything with `oe2d-votes-evaluate`.
+- **Tests: `oe2d/tests/votes/` 67 pass.** Score everything with `oe2d-votes-evaluate`.
+- **The Missaukee mega-grid task below is now DONE** (all 5 Missaukee contests in gold). Kept below as
+  the design record; the remaining open work is the Tier-2 breadth fills.
 - Counties/offices now covered (see `datasets.load_index()`): Adams(2) Barry(2) Bay(4) Branch(4)
   Calaveras(2) Calhoun(3) Columbia(3) Gogebic(1) Huron(4) Missaukee(1) Mono(3) Montmorency(4)
   Nevada(5) Ontonagon(4) Oscoda(2) Plumas(2).
@@ -55,7 +57,14 @@ mega-grid column-scoping**, which is written up in enough detail to implement co
    `votes.configure_cache()` points DSPy there at import (DSPY_CACHEDIR still overrides);
    `votes.TEXTRACT_CACHE_DIR = oe2d-cache/textract`. HANDOFF-4's "`.cache/textract`" is now stale.
 
-## THE TASK: Missaukee mega-grid column-scoping (the one hard problem left)
+## ~~THE TASK~~ DONE: Missaukee mega-grid column-scoping
+
+**Solved** (commit "Read the Missaukee mega-grid…"): `segment_multi_grid` cuts the wide table into one
+flat sub-table per contest (party-header `Dem`-restart marks each block; the block before the first
+`Dem` is Straight Party), `_extract_multi_grid` / read_strategy `flat_multi` picks the block by
+candidate name (name hit weighted ×100 over party-abbrev so Straight Party doesn't shadow a 2-candidate
+contest) and feeds one sub-table to `scope_flat_tables`. Cold-deterministic. All 5 Missaukee contests
+at 1.000. Hermetic tests in `test_votes_multi_grid.py`. The analysis below is the design record.
 
 Source: `tmp/new-kinds/vector--missaukee-mi.pdf` (7 pp vector, 18 precincts, MI votes-only). Results:
 `.../2024/counties/20241105__mi__general__missaukee__precinct.csv` — Straight Party (126 rows),
