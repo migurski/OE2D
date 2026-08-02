@@ -418,7 +418,7 @@ _TEXTRACT_PRICE_USD: dict[str, float] = {'text': 0.0015, 'TABLES': 0.015}
 # is NOT a free global knob (400 fixes a dense-ClearBallot "5" misread as "$" but regressed
 # Columbia/Plumas gold built at 300). A per-contest override is the way to raise it for a specific
 # hard scan without rebuilding the rest -- future work if a ClearBallot county is added.
-TEXTRACT_DPI: int = 300
+TEXTRACT_DPI: int = 400
 
 # Paid Textract calls this process, by mode ('text' | 'TABLES'). Cache hits are excluded, so this
 # is the real spend; read it with textract_usage().
