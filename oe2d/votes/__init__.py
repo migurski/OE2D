@@ -42,10 +42,14 @@ logger: logging.Logger = logging.getLogger(__name__)
 # page). 'flat_tables' reads a page as a set of flat candidate-column tables and scopes the contest
 # across them by header-match -- the content structure Huron and Branch share; the table reader is
 # picked by the page (Textract TABLES for a scan, pdfplumber text-strategy for a borderless vector
-# page). 'ruled_scan' is the scan-only spelling of the same flat path (kept for existing gold). This
-# is orthogonal to CONTENT structure -- candidate orientation, and whether a table is flat (one row
-# per precinct) or has vote-method sub-rows, are decided from the interpreted content.
-ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables']
+# page). 'ruled_scan' is the scan-only spelling of the same flat path (kept for existing gold).
+# 'flat_grouped' is for a flat contest whose candidate columns are SPLIT across pages that repeat the
+# same precincts (a Hart SOVC too wide for one page): it reads each page flat and joins them by
+# precinct, unioning candidate columns -- unlike the continuation semantics above, where same-width
+# tables are more PRECINCTS, not more CANDIDATES. This is orthogonal to CONTENT structure -- candidate
+# orientation, and whether a table is flat (one row per precinct) or has vote-method sub-rows, are
+# decided from the interpreted content.
+ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -75,6 +79,13 @@ def _norm(text: str) -> str:
     '''Whitespace-and-case-insensitive key: a wrapped label can split mid-word across cells
     ("...and T" + "ER MAAT"), so match on the spaces removed entirely.'''
     return re.sub(r'\s+', '', (text or '')).lower()
+
+
+def _precinct_key(precinct: str) -> str:
+    '''Punctuation- and space-insensitive precinct key, for matching the SAME precinct across pages
+    whose scan rendered its label inconsistently ("01 - Chilcoot" vs "01 Chilcoot"). Stronger than
+    _norm, which keeps a stray "-" -- exactly the Hart SOVC separator the join must ignore.'''
+    return re.sub(r'[^a-z0-9]', '', (precinct or '').lower())
 
 
 def _parse_number(text: str) -> int | None:
@@ -777,6 +788,45 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
     return votes, totals
 
 
+def join_flat_table_pages(pages_tables: list[list[list[list[str]]]], candidate_context: str,
+                          schema_for: typing.Callable[[list[list[str]]], signatures.PageSchema],
+                          ) -> tuple[dict, dict]:
+    '''Read a candidate-GROUP flat contest -- one whose candidate columns are split across pages that
+    all repeat the SAME precincts (a Hart SOVC too wide for one page: page N holds some candidates,
+    page N+1 the rest, both listing every precinct down the rows). scope_flat_tables reads ONE page's
+    flat tables; this runs it per page and JOINS the pages by precinct, unioning each precinct's
+    disjoint candidate columns and SUMMING its write-in rows (each page consolidates its own write-in
+    columns, so cross-page write-ins add). Distinct from the ruled_scan/flat_tables continuation
+    semantics, where same-width tables are MORE PRECINCTS of one candidate set; here they are more
+    CANDIDATES of one precinct set, so they must not be concatenated as continuations.
+
+    pages_tables is one entry per page (the grids read_flat_tables returned for it). Precincts are
+    matched across pages by a whitespace/punctuation-insensitive key -- the scan renders the same
+    precinct label inconsistently page to page ("01 - Chilcoot" vs "01 Chilcoot") -- and the label
+    from the FIRST page a precinct appears on is kept (source-faithful, one canonical spelling).
+    Returns (votes, totals) like scope_flat_tables.'''
+    label: dict[str, str] = {}                       # normalized precinct -> canonical label (first wins)
+    by_key: dict[tuple, dict] = {}                   # (normprecinct, candidate, party) -> buckets
+    totals: dict = {}
+    for tables in pages_tables:
+        page_votes, page_totals = scope_flat_tables(tables, candidate_context, schema_for)
+        for (precinct, candidate, party), buckets in page_votes.items():
+            key: str = _precinct_key(precinct)
+            label.setdefault(key, precinct)
+            vkey: tuple = (key, candidate, party)
+            if candidate == WRITE_IN_LABEL:          # each page gives one consolidated write-in row; add them
+                merged: dict = by_key.setdefault(vkey, {})
+                for bucket, value in buckets.items():
+                    merged[bucket] = merged.get(bucket, 0) + value
+            else:                                    # candidate columns are disjoint across pages
+                by_key[vkey] = buckets
+        for tkey, value in page_totals.items():
+            totals[tkey] = max(value, totals.get(tkey, 0))
+    votes: dict = {(label[key], candidate, party): buckets
+                   for (key, candidate, party), buckets in by_key.items()}
+    return votes, totals
+
+
 class VoteExtractor(dspy.Module):
     '''The full vote-extraction program: read -> interpret (LLM) -> stitch -> canonical rows.
 
@@ -834,6 +884,12 @@ class VoteExtractor(dspy.Module):
         content, not flat, doubles every column -- so the flat read's per-candidate sums will not
         equal the county-total row; that mismatch drops us to the cheap auto read (which the reader
         self-detects for a scan). huron's clean flat table reconciles and stays on TABLES.'''
+        if read_strategy == 'flat_grouped':
+            votes, totals = self._extract_grouped_tables(file_path, pages, office, candidate_context)
+            if _reconciles(votes, totals):
+                return votes
+            logger.info('flat-grouped read did not reconcile with printed county totals '
+                        '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy in ('ruled_scan', 'flat_tables'):
             votes, totals = self._extract_scanned_tables(file_path, pages, office, candidate_context)
             if _reconciles(votes, totals):
@@ -1014,6 +1070,17 @@ class VoteExtractor(dspy.Module):
                                          for grid in read_flat_tables(file_path, page)]
         return scope_flat_tables(
             tables, candidate_context,
+            lambda anchor: self._columns_schema(office, candidate_context, anchor))
+
+    def _extract_grouped_tables(self, file_path: str, pages: list[int], office: str,
+                                candidate_context: str) -> tuple[dict, dict]:
+        '''Read a candidate-GROUP flat contest (candidate columns split across pages that repeat the
+        same precincts) via join_flat_table_pages: one read_flat_tables per page, joined by precinct.
+        Like _extract_scanned_tables, this only supplies the Textract read and the LLM schema; the
+        join and digit-moving live in the standalone function so they can be tested on captured grids.'''
+        pages_tables: list[list[list[list[str]]]] = [read_flat_tables(file_path, page) for page in pages]
+        return join_flat_table_pages(
+            pages_tables, candidate_context,
             lambda anchor: self._columns_schema(office, candidate_context, anchor))
 
 
