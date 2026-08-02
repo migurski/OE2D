@@ -53,7 +53,7 @@ CA file must use its **2020** source+results (Plumas/Mono/Nevada are all 2020).
 | `vector--branch-mi.pdf` | borderless vector, flat multi-contest | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) |
 | `scanned--columbia-pa.pdf` | scanned, count+% columns | US House, US Senate, President | **DONE, 1.000** (committed) -- fixed by the normalize repair below |
 | `scanned--plumas-ca.pdf` (2020) | scanned Hart SOV | President, US House | **DONE, 1.000** (committed) -- president drove the new flat_grouped strategy below |
-| `scanned--montmorency-mi.pdf` | scanned, degraded, ClearBallot sub-rows + rotated | Straight Party, US Senate, US House, President | not started (hardest) |
+| `scanned--montmorency-mi.pdf` | scanned, ClearBallot method sub-rows + rotated | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) -- drove the `ruled_columns` read strategy (TABLES-fed _extract_contest) |
 | `vector--missaukee-mi.pdf` | vector multi-contest mega-grid | all four races on p1 | not started |
 | `robustness--nevada-ca.pdf` | ClearBallot outside MI — **use 2020 source** | (completeness) | not started |
 | `robustness--bay-mi.pdf` | Electionware outside PA | (completeness) | not started |
@@ -176,18 +176,22 @@ write-in county total 133). A gold test set must not demand a known-wrong value.
 
 ## Status snapshot
 
-- **Gold: 29 contests, all 1.000** (16 original + Branch 4 + Columbia 3 + Plumas 2 + Ontonagon 4).
-  `oe2d-votes-evaluate` (no args) scores the whole set; caching makes re-runs free. **Rendered at 400 DPI.**
+- **Gold: 33 contests, all 1.000** (16 original + Branch 4 + Columbia 3 + Plumas 2 + Ontonagon 4 +
+  Montmorency 4). `oe2d-votes-evaluate` (no args) scores the whole set. **Rendered at 400 DPI.**
 - Tests: `oe2d/tests/votes/` 53 pass (`scope_flat_tables`, `_normalize_table_columns`,
   `join_flat_table_pages`, `_align_columns` incl. geometry + snap suites); `oe2d/tests/pages/` pass.
-- Columbia, Plumas, Ontonagon are DONE. The other 4 batch files (Montmorency, Missaukee, Nevada, Bay,
+- Read strategies now: `auto`, `ruled_scan`/`flat_tables` (flat continuation), `flat_grouped` (flat
+  candidate-group), `ruled_columns` (columns WITH vote-method sub-rows via TABLES -- Montmorency).
+  Cheap `DetectDocumentText` and TABLES `AnalyzeDocument` OCR the SAME words on one image; TABLES wins
+  only on cell ASSIGNMENT via the drawn grid (so `ruled_columns` reads method sub-rows the cheap
+  word-clustering mis-groups). Type aliases: `StringRow`/`StringGrid`, `ColumnMap`, `ColumnX`.
+- Columbia, Plumas, Ontonagon, Montmorency are DONE. The other 3 batch files (Missaukee, Nevada, Bay,
   Mono) are not started.
 
 ## Next steps (priority)
 
-1. **Work the batch** in order of read-path novelty: Montmorency (degraded scan — real stress test),
-   Missaukee (mega-grid), then robustness (Nevada, Bay) and Mono (ballot measures, #4 coverage gap).
-   Follow the validated build process; verify each 1.000.
+1. **Work the batch**: Missaukee (vector mega-grid), then robustness (Nevada, Bay) and Mono (ballot
+   measures, #4 coverage gap). Follow the validated build process; verify each 1.000.
 2. **Then** the deferred items from HANDOFF-2 #3-4: header-slice interpretation (LLM cost), teaching
    `detect_dispatch` to pick `flat_tables` for vector, GEPA optimization once there's error signal.
 3. Cheap→TABLES **escalation** (cost): try the cheap read, checksum, escalate to TABLES only on
