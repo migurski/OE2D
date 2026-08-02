@@ -52,7 +52,7 @@ CA file must use its **2020** source+results (Plumas/Mono/Nevada are all 2020).
 |---|---|---|---|
 | `vector--branch-mi.pdf` | borderless vector, flat multi-contest | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) |
 | `scanned--columbia-pa.pdf` | scanned, count+% columns | US House, US Senate, President | **DONE, 1.000** (committed) -- fixed by the normalize repair below |
-| `scanned--plumas-ca.pdf` (2020) | scanned Hart SOV | President, US House | not started |
+| `scanned--plumas-ca.pdf` (2020) | scanned Hart SOV | President, US House | **DONE, 1.000** (committed) -- president drove the new flat_grouped strategy below |
 | `scanned--montmorency-mi.pdf` | scanned, degraded, ClearBallot sub-rows + rotated | Straight Party, US Senate, US House, President | not started (hardest) |
 | `vector--missaukee-mi.pdf` | vector multi-contest mega-grid | all four races on p1 | not started |
 | `robustness--nevada-ca.pdf` | ClearBallot outside MI — **use 2020 source** | (completeness) | not started |
@@ -103,7 +103,24 @@ precincts, canonical offices) + index entry; 5) verify 1.000 with `oe2d-votes-ev
    candidate's percent column (pure-percent cells) and all-empty spacer columns from every flat table;
    the flat extractor reads values with `_cell_count` (leading token) so a merged `"122 21.55%"` → 122.
    This is a **general, important** pattern (user-flagged, not unique to Columbia). Got Columbia
-   president to 42/42.
+   president to 42/42. (Later short-page-slip repair: `d5817a9`.)
+3. **`flat_grouped` read strategy + `join_flat_table_pages`** (`ef0af2a`): a flat contest whose
+   candidate columns are SPLIT across pages that repeat the same precincts (Plumas president: candidates
+   on p3, more on p4/p5). The continuation semantics of `flat_tables`/`ruled_scan` would misread a later
+   page as MORE PRECINCTS under the first page's schema; instead `join_flat_table_pages` runs
+   `scope_flat_tables` per page and joins by precinct (union candidate columns, SUM write-in rows,
+   match precincts by `_precinct_key` which strips punctuation so "01 - Chilcoot" == "01 Chilcoot").
+   Gold carries `read_strategy=flat_grouped`. Unit-tested like `scope_flat_tables`.
+4. **`scope_flat_tables` extracted** (`cb8831f`) as the pure, injectable core of `_extract_scanned_tables`
+   (Textract read + LLM schema resolver passed in), with a full unit-test suite; `_normalize_table_columns`
+   likewise characterized + repaired (`c4e1114`, `d5817a9`).
+
+## Determinism / DSPy cache (READ before trusting a re-run)
+
+DSPy caches every LM response by prompt, so **re-running the extractor replays cached schemas** -- a
+repeated-run "determinism" check proves nothing. To test a read is genuinely stable, build the LM with
+`cache=False` (`dspy.LM(..., cache=False)`) and run several times. Plumas president was verified this
+way (4 uncached runs identical). The committed gold's 1.000 holds on both cached and cold-cache runs.
 
 ## THE OPEN PROBLEM — RESOLVED (root-caused upstream of scope)
 
@@ -132,18 +149,18 @@ write-in county total 133). A gold test set must not demand a known-wrong value.
 
 ## Status snapshot
 
-- **Gold: 23 contests, all 1.000** (16 original + Branch 4 + Columbia 3). `oe2d-votes-evaluate` (no
-  args) scores the whole set; caching makes re-runs free.
-- Tests: `oe2d/tests/votes/` 35 pass (added `scope_flat_tables` and `_normalize_table_columns` suites);
-  `oe2d/tests/pages/` pass.
-- Columbia is DONE. The other 6 batch files (Plumas, Montmorency, Missaukee, Nevada, Bay, Ontonagon,
+- **Gold: 25 contests, all 1.000** (16 original + Branch 4 + Columbia 3 + Plumas 2). `oe2d-votes-evaluate`
+  (no args) scores the whole set; caching makes re-runs free.
+- Tests: `oe2d/tests/votes/` 39 pass (`scope_flat_tables`, `_normalize_table_columns`,
+  `join_flat_table_pages` suites); `oe2d/tests/pages/` pass.
+- Columbia and Plumas are DONE. The other 5 batch files (Montmorency, Missaukee, Nevada, Bay, Ontonagon,
   Mono) are not started.
 
 ## Next steps (priority)
 
-1. **Work the batch** in order of read-path novelty: Plumas (scan Hart), Ontonagon (scan flat),
-   Montmorency (degraded scan — real stress test), Missaukee (mega-grid), then robustness (Nevada, Bay)
-   and Mono (ballot measures, #4 coverage gap). Follow the validated build process; verify each 1.000.
+1. **Work the batch** in order of read-path novelty: Ontonagon (scan flat), Montmorency (degraded scan —
+   real stress test), Missaukee (mega-grid), then robustness (Nevada, Bay) and Mono (ballot measures, #4
+   coverage gap). Follow the validated build process; verify each 1.000.
 2. **Then** the deferred items from HANDOFF-2 #3-4: header-slice interpretation (LLM cost), teaching
    `detect_dispatch` to pick `flat_tables` for vector, GEPA optimization once there's error signal.
 3. Cheap→TABLES **escalation** (cost): try the cheap read, checksum, escalate to TABLES only on
