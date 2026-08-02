@@ -706,7 +706,7 @@ def _precinct_groups(pages_schema_blocks: list[tuple]) -> list[list[tuple]]:
 
 def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
                       schema_for: typing.Callable[[list[list[str]]], signatures.PageSchema],
-                      ) -> tuple[dict, dict]:
+                      drop_foreign_tables: bool = False) -> tuple[dict, dict]:
     '''Scope a scan's flat tables to one contest by column structure and read their CONTENT.
 
     The pure core of _extract_scanned_tables, with the two impure dependencies injected: `tables`
@@ -745,6 +745,12 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
     def label_of(row: list[str]) -> str:
         return _clean(row[label_column]) if label_column < len(row) else ''
 
+    def is_header_text(row: list[str]) -> bool:
+        '''True when a row carries TEXT labels in the candidate columns (a header), not numbers (a
+        data row) or blanks (a straddle-continuation label-only row).'''
+        return any(column.index < len(row) and _clean(row[column.index])
+                   and _cell_count(row[column.index]) is None for column in candidates)
+
     # Build the precinct list across the contest's tables in page order, stitching a precinct
     # whose row STRADDLES a page: its data sits at the bottom of one page under a (truncated)
     # label, and the label continues on a label-only row at the top of the next table. A
@@ -753,6 +759,18 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
     entries: list[list] = []                         # [label, data_row]
     for grid in tables:                              # anchor + its column-count-matching continuations
         if not grid or len(grid[0]) != column_count:
+            continue
+        # A same-width NEIGHBOUR table whose header names none of the candidates is not part of this
+        # contest -- a ClearBallot page (flat_grouped) sets the candidate block beside a turnout block
+        # ("Times Cast", "Registered Voters") of the same width, and reading its columns as votes
+        # would corrupt the precincts. Only drop_foreign_tables enables this (the flat_grouped path,
+        # whose candidate names sit in grid[0]); the continuation path leaves it off, because there a
+        # contest's candidate names can ride a row BELOW a title row (Columbia's "PRESIDENTIAL
+        # ELECTORS"), making header_match on grid[0] an unreliable 0. Exclude only a real header row
+        # (text in the candidate columns) matching no candidate; the anchor, a header-less
+        # continuation (first row is data), and a straddle continuation (label-only row) all pass.
+        if drop_foreign_tables and grid is not anchor and is_header_text(grid[0]) \
+                and header_match(grid) < 1:
             continue
         started: bool = False
         for row in grid:
@@ -809,7 +827,10 @@ def join_flat_table_pages(pages_tables: list[list[list[list[str]]]], candidate_c
     by_key: dict[tuple, dict] = {}                   # (normprecinct, candidate, party) -> buckets
     totals: dict = {}
     for tables in pages_tables:
-        page_votes, page_totals = scope_flat_tables(tables, candidate_context, schema_for)
+        # drop_foreign_tables: a candidate-group page can carry a same-width turnout block beside the
+        # candidate table (ClearBallot); exclude it so its columns are not read as votes.
+        page_votes, page_totals = scope_flat_tables(
+            tables, candidate_context, schema_for, drop_foreign_tables=True)
         for (precinct, candidate, party), buckets in page_votes.items():
             key: str = _precinct_key(precinct)
             label.setdefault(key, precinct)
