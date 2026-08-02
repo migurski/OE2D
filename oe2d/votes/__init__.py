@@ -216,6 +216,16 @@ def _open_pdf(path: str) -> 'pdfplumber.PDF':
     return pdfplumber.open(path)
 
 
+@functools.lru_cache(maxsize=None)
+def _file_digest(path: str) -> str:
+    '''sha1 of a file's BYTES (memoized by path). A content address for the Textract cache, so the
+    same source shared across several paths -- datasets.fetch_source keeps one copy per contest id,
+    and a working copy may sit elsewhere -- hits one cache entry instead of re-paying per path.'''
+    import hashlib
+    with open(path, 'rb') as handle:
+        return hashlib.sha1(handle.read()).hexdigest()
+
+
 def read_text_grid(path: str, page: int, text_tolerance: int = 3) -> list[list[str]]:
     '''Vendor-adaptive read for precinct-major (Electionware-style) pages: text-alignment table
     reconstruction. source_table.page_table is tuned for the ruled Hart SOVCs and mis-reads these
@@ -376,13 +386,17 @@ def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[di
     from PIL import Image
     from .. import rendering
     from ..pages import deskew
+    resolution: int = 300                                   # render DPI; part of the key (it changes the image Textract sees)
     tag: str = '+'.join(features) if features else 'text'
-    key: str = hashlib.sha1(('%s\0%d\0%s' % (os.path.abspath(file_path), page, tag)).encode()).hexdigest()
+    # Content-addressed: key on the file's BYTES (+ page, mode, render DPI) -- what actually determines
+    # the Textract result -- NOT the file path, so the same source at several paths shares one entry.
+    key: str = hashlib.sha1(
+        ('%s\0%d\0%s\0%d' % (_file_digest(file_path), page, tag, resolution)).encode()).hexdigest()
     cache_dir: str = os.path.join('.cache', 'textract')     # ./.cache relative to the caller's cwd
     cache: str = os.path.join(cache_dir, '%s.json' % key)
     if os.path.exists(cache):
         return json.load(open(cache))
-    image = Image.open(rendering.render_page(file_path, page, resolution=300)).convert('RGB')
+    image = Image.open(rendering.render_page(file_path, page, resolution=resolution)).convert('RGB')
     angle: float = deskew.detect_skew_pil(image)
     if abs(angle) > 0.05:
         image = image.rotate(-angle, resample=Image.BICUBIC, expand=True, fillcolor='white')

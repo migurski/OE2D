@@ -68,9 +68,14 @@ def candidate_context(record: dict) -> str:
 
 
 def fetch_source(record: dict) -> str:
-    '''Download the record's source file to a local cache (once) and return its path.'''
+    '''Download the record's source file to a local cache (once) and return its path. Named by a hash
+    of the SOURCE URL, not the contest id, so the several contests that share one source file (e.g.
+    Branch's four races) download and store ONE copy -- which also lets them share the content-keyed
+    Textract cache.'''
+    import hashlib
     os.makedirs(_CACHE_DIR, exist_ok=True)
-    name: str = record['id'] + os.path.splitext(record['source_url'])[1]
+    digest: str = hashlib.sha1(record['source_url'].encode()).hexdigest()[:16]
+    name: str = digest + os.path.splitext(record['source_url'])[1]
     path: str = os.path.join(_CACHE_DIR, name)
     if not os.path.exists(path):
         urllib.request.urlretrieve(record['source_url'], path)
