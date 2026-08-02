@@ -65,7 +65,8 @@ ColumnX: typing.TypeAlias = list[float]
 # (_extract_contest) reading each page's candidate grid via Textract TABLES -- for a ruled SCAN whose
 # candidates carry Election Day / AV / Early Voting / Total sub-rows (Montmorency), where the drawn
 # grid places cells the cheap-words reader would mis-cluster.
-ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'ruled_columns']
+ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'ruled_columns',
+                              'report_lines']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -308,6 +309,160 @@ def _match_header_line(fragments: str, lines: 'typing.Sequence[str]') -> str:
 def _clean_header_label(path: str, page: int, fragments: str) -> str:
     '''`_match_header_line` against the page's raw text lines (the impure read).'''
     return _match_header_line(fragments, _page_text_lines(path, page))
+
+
+_REPORT_PRECINCT = re.compile(r'^(\S+)\s+\d[\d,]* of [\d,]+ registered voters')
+_REPORT_TITLE = re.compile(r'\(Vote for', re.IGNORECASE)
+_REPORT_END = re.compile(r'^(Cast Votes|Undervotes|Overvotes|Total Votes)\b', re.IGNORECASE)
+_REPORT_INT = re.compile(r'^-?[\d,]+$')
+
+
+def _word_lines(words: list, y_tol: float = 3) -> list:
+    '''Cluster pdfplumber words into visual lines by their top-y, each sorted left-to-right.'''
+    rows: list = []
+    for word in sorted(words, key=lambda w: (round(w['top']), w['x0'])):
+        if rows and abs(word['top'] - rows[-1][0]) <= y_tol:
+            rows[-1][1].append(word)
+        else:
+            rows.append([word['top'], [word]])
+    return [sorted(ws, key=lambda w: w['x0']) for _top, ws in rows]
+
+
+def read_report_blocks(path: str, page: int) -> 'list[tuple[str, StringGrid]]':
+    '''Read a per-precinct report page into one clean grid per contest block, dispatching on the
+    Dominion report kind: a "Precinct Results Report" (Nevada CA -- method count+percent columns) or an
+    "Election Summary Report" (Mono CA -- a single Total per choice, names wrapped around a floating
+    party+value line). Both return (title, grid) with grid = [precinct-row, header, choice rows...] for
+    the same precinct-page schema-learn/apply path.'''
+    header_text: str = '\n'.join(_page_text_lines(path, page)[:6])
+    if 'Election Summary Report' in header_text:
+        return _summary_report_blocks(path, page)
+    return _precinct_results_blocks(path, page)
+
+
+def _precinct_results_blocks(path: str, page: int) -> 'list[tuple[str, StringGrid]]':
+    '''Read a Dominion "Precinct Results Report" page into one clean grid per contest block.
+
+    These vector reports (Nevada CA) print one precinct's contests stacked down the page; each choice
+    is one line -- candidate (+ running mate, which can wrap to a bare continuation line) then a
+    count+percent PAIR per vote method (Absentee/Early/Election Day/Provisional/Total). read_text_grid
+    over-fragments them (a running mate wraps, a name column straddles), so reconstruct geometrically:
+    the count columns' x-centres come from a data row's integer tokens (percents carry %/. so they are
+    excluded), the header labels are the "Choice Party <method>..." line binned to those columns, and
+    each choice's counts bin to the nearest column while its name is the words left of the first count.
+    Returns (title, grid) per block; grid is [precinct-row, method-header, choice rows...] ready for
+    interpret_rows -- the same schema-learn/apply path as the text-grid precinct reader.'''
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return []
+    word_lines: list = _word_lines(pdf.pages[page - 1].extract_words())
+    text_lines: list[str] = [' '.join(word['text'] for word in line) for line in word_lines]
+    precinct: str = next((match.group(1) for line in text_lines
+                          for match in [_REPORT_PRECINCT.match(line)] if match), '')
+    centre = lambda word: (word['x0'] + word['x1']) / 2
+    title_indices: list[int] = [index for index, line in enumerate(text_lines)
+                                if _REPORT_TITLE.search(line)]
+    blocks: list[tuple[str, StringGrid]] = []
+    for order, start in enumerate(title_indices):
+        stop: int = title_indices[order + 1] if order + 1 < len(title_indices) else len(word_lines)
+        body: range = range(start + 1, stop)
+        centres: list[float] | None = None                # count-column x-centres for THIS block
+        for index in body:
+            integers: list = [word for word in word_lines[index] if _REPORT_INT.match(word['text'])]
+            if len(integers) >= 4:
+                centres = [centre(word) for word in integers]
+                break
+        if not centres:
+            continue
+        width, first_x = len(centres), min(centres)
+        column_of = lambda x: min(range(width), key=lambda c: abs(centres[c] - x))
+        header: StringRow = [''] * width                  # method labels from the "Choice Party ..." line
+        for word in word_lines[start + 1]:
+            if word['x1'] > first_x - 1:
+                header[column_of(centre(word))] = (header[column_of(centre(word))] + ' '
+                                                   + word['text']).strip()
+        grid: StringGrid = [[precinct] + [''] * width, ['choice'] + header]
+        for index in body:
+            line: list = word_lines[index]
+            if _REPORT_END.match(text_lines[index].strip()):
+                break
+            counts: list = [word for word in line if _REPORT_INT.match(word['text'])]
+            name: str = ' '.join(word['text'] for word in line if word['x1'] <= first_x - 1).strip()
+            if not counts:                                # a bare line -> tail of the previous name
+                if len(grid) > 2 and name:
+                    grid[-1][0] = (grid[-1][0] + ' ' + name).strip()
+                continue
+            row: StringRow = [name] + [''] * width
+            for word in counts:
+                row[column_of(centre(word)) + 1] = word['text']
+            grid.append(row)
+        blocks.append((text_lines[start], grid))
+    return blocks
+
+
+_SUMMARY_PRECINCT = re.compile(r'^PRECINCT #\s*(.+)')
+_SUMMARY_SKIP = ('Times Cast', 'Total Votes', 'Unresolved', 'Precincts', 'Registered', 'Ballots',
+                 'Candidate', 'Vote For', 'Contest', 'Cumulative')
+
+
+def _summary_report_blocks(path: str, page: int) -> 'list[tuple[str, StringGrid]]':
+    '''Read a Dominion "Election Summary Report" page (Mono CA) into one clean grid per contest block.
+
+    Here each choice is a narrow column: the candidate NAME wraps across two label-column lines with
+    its "PARTY  Total" printed on a line vertically BETWEEN them ("JOSEPH BIDEN/KAMALA" / "DEM 210" /
+    "HARRIS"), so read_text_grid interleaves the fragments. Reconstruct geometrically: a value line is
+    an integer near the Total column; its party is the token in the party column on that line; the name
+    is the label-column lines nearest it by y. Emits grid rows [name, party, total] under a single
+    Total method, ready for the same schema path.'''
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return []
+    lines: list = _word_lines(pdf.pages[page - 1].extract_words())
+    texts: list[str] = [' '.join(word['text'] for word in words) for words in lines]
+    tops: list[float] = [min(word['top'] for word in words) for words in lines]
+    precinct: str = next((match.group(1).strip() for line in texts
+                          for match in [_SUMMARY_PRECINCT.match(line)] if match), '')
+    centre = lambda word: (word['x0'] + word['x1']) / 2
+    # the "Candidate Party Total" header fixes the party and Total column x-centres
+    head_index: int = next((i for i, line in enumerate(texts) if 'Candidate' in line and 'Total' in line), -1)
+    if head_index < 0:
+        return []
+    head_words: dict = {word['text']: centre(word) for word in lines[head_index]}
+    party_x: float = head_words.get('Party', 162.0)
+    total_x: float = head_words.get('Total', 261.0)
+    label_max: float = party_x - 15                   # the name column sits left of Party
+    title_indices: list[int] = [i for i, line in enumerate(texts) if _REPORT_TITLE.search(line)]
+    blocks: list[tuple[str, StringGrid]] = []
+    for order, start in enumerate(title_indices):
+        stop: int = title_indices[order + 1] if order + 1 < len(title_indices) else len(lines)
+        body: list[int] = [i for i in range(start + 1, stop)]
+        values: list[dict] = []                       # one per choice: its y, party, total
+        for i in body:
+            if texts[i].startswith(_SUMMARY_SKIP):
+                continue
+            total = [word for word in lines[i] if _REPORT_INT.match(word['text'])
+                     and abs(centre(word) - total_x) < 20]
+            if not total:
+                continue
+            party = [word for word in lines[i] if abs(centre(word) - party_x) < 25
+                     and not _REPORT_INT.match(word['text'])]
+            values.append({'y': tops[i], 'party': party[0]['text'] if party else '',
+                           'total': total[0]['text'], 'name': []})
+        if not values:
+            continue
+        for i in body:                                # attach each name fragment to its nearest value
+            fragment: str = ' '.join(word['text'] for word in lines[i] if word['x1'] < label_max).strip()
+            if not fragment or texts[i].startswith(_SUMMARY_SKIP):
+                continue
+            nearest = min(values, key=lambda value: abs(value['y'] - tops[i]))
+            if abs(nearest['y'] - tops[i]) <= 12:
+                nearest['name'].append((tops[i], fragment))
+        grid: StringGrid = [[precinct, '', ''], ['choice', 'Party', 'Total']]
+        for value in values:
+            name: str = ' '.join(text for _y, text in sorted(value['name']))
+            grid.append([name.strip(), value['party'], value['total']])
+        blocks.append((texts[start], grid))
+    return blocks
 
 
 def grid_to_text(rows: StringGrid) -> str:
@@ -1114,11 +1269,14 @@ class VoteExtractor(dspy.Module):
             read_strategy = read_strategy or detected['read_strategy']
         votes: dict = self._read_votes(file_path, pages, office, candidate_context,
                                        orientation, read_strategy)
-        # A per-precinct ROWS report is the document's own precinct roster: a precinct present in it
-        # participated in the contest even at zero votes, so keep an all-zero precinct there. The
-        # all-zero drop (foreign placeholder rows) applies only to the flat/columns reads.
+        # Keep an all-zero precinct only where it is a genuine roster member that cast ballots but no
+        # votes in THIS contest (an Electionware per-precinct report: Bay's Midland P2 straight party).
+        # Drop it for flat/columns (an out-of-county placeholder ROW in a contest table) and for a
+        # Dominion "Precinct Results Report", whose phantom precincts (0 registered / 0 ballots cast)
+        # print an all-zero block the reference excludes (Nevada CP100 etc.).
+        keep_all_zero: bool = orientation == 'rows' and read_strategy != 'report_lines'
         rows: list[dict] = votes_to_rows(votes, county, office, district,
-                                         drop_all_zero=(orientation != 'rows'))
+                                         drop_all_zero=not keep_all_zero)
         return dspy.Prediction(rows=rows, votes=votes)
 
     def _read_votes(self, file_path: str, pages: list[int], office: str, candidate_context: str,
@@ -1143,6 +1301,8 @@ class VoteExtractor(dspy.Module):
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy == 'ruled_columns':
             return self._extract_contest(file_path, pages, office, candidate_context, via_tables=True)
+        if read_strategy == 'report_lines':
+            return self._extract_report_contest(file_path, pages, office, candidate_context)
         if orientation == 'rows':
             return self._extract_precinct_contest(file_path, pages, office, candidate_context)
         return self._extract_contest(file_path, pages, office, candidate_context)
@@ -1272,14 +1432,37 @@ class VoteExtractor(dspy.Module):
                 for store, parts in stores.items()}
         return votes
 
+    def _extract_report_contest(self, file_path: str, pages: list[int], office: str,
+                                candidate_context: str) -> dict:
+        '''Extract a Dominion "Precinct Results Report" contest (read_report_blocks). A report page
+        stacks several contests, so on each page pick the block whose choice rows name the most
+        expected candidates, then run the same precinct-page schema-learn/apply as the text-grid
+        reader over those picked grids.'''
+        wanted: set = {_norm(token) for line in candidate_context.splitlines()
+                       for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
+
+        def read_grid(page: int) -> StringGrid:
+            blocks: list = read_report_blocks(file_path, page)
+            if not blocks:
+                return []
+            names_in = lambda grid: sum(1 for token in wanted
+                                        if any(token in _norm(row[0]) for row in grid[2:]))
+            return max(blocks, key=lambda block: names_in(block[1]))[1]
+
+        return self._extract_precinct_contest(file_path, pages, office, candidate_context, read_grid)
+
     def _extract_precinct_contest(self, file_path: str, pages: list[int], office: str,
-                                  candidate_context: str) -> dict:
+                                  candidate_context: str, read_grid=None) -> dict:
         '''Extract a candidates-as-rows contest whose precincts are one-per-page (precinct in the page
         header, methods across columns). The document's pages are structurally identical, so interpret
         ONE sample page and apply that schema to every page -- one LLM call per document, then
         deterministic exact-label extraction. Candidate rows are found by their verbatim row-label
-        (identical across pages); the precinct name is read from the learned header cell.'''
-        sample: StringGrid = read_text_grid(file_path, pages[0])
+        (identical across pages); the precinct name is read from the learned header cell. read_grid
+        (page -> grid) supplies the per-page grid; the default text-alignment reader (read_text_grid)
+        serves Electionware/summary pages, while a report-block reader serves Dominion reports.'''
+        if read_grid is None:
+            read_grid = lambda page: read_text_grid(file_path, page)
+        sample: StringGrid = read_grid(pages[0])
         schema: signatures.PrecinctPageSchema = self.interpret_rows(
             office=office, candidate_context=candidate_context, grid=grid_to_text(sample)).precinct_schema
         # The interpreter names the method buckets in left-to-right order; trust that order, not its
@@ -1297,7 +1480,7 @@ class VoteExtractor(dspy.Module):
         write_ins: dict = collections.defaultdict(
             lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
         for page in pages:
-            grid: StringGrid = read_text_grid(file_path, page)
+            grid: StringGrid = read_grid(page)
             precinct: str = ''
             if schema.precinct_row < len(grid):
                 precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
