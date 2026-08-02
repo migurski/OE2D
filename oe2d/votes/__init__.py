@@ -1795,8 +1795,11 @@ def main() -> None:
                         help='Expected candidates as "Name (PARTY)" lines; @path to read from a file')
     parser.add_argument('--orientation', default=None, choices=('columns', 'rows'),
                         help='CONTENT structure override; default: detected from the page via oe2d.pages')
-    parser.add_argument('--read-strategy', default=None, choices=('auto', 'ruled_scan'),
-                        help='READ MECHANICS override; default: detected from the page (checksum-confirmed)')
+    parser.add_argument('--read-strategy', default=None, choices=typing.get_args(ReadStrategy),
+                        help='READ MECHANICS override (any read strategy); default: detected from the '
+                             'page (checksum-confirmed). detect_dispatch only proposes auto/ruled_scan '
+                             'today, so a newer shape (flat_*/ruled_columns/report_lines_*) needs this '
+                             'until the page VLM learns to pick it')
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
 
