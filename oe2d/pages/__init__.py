@@ -162,23 +162,27 @@ class PageAnalyzer(dspy.Module):
         )
 
 
-# The task LM: Fireworks' Kimi K2 (multimodal). The model this program reads pages with
-# AND the one oe2d.pages.optimize trains -- kept here beside the program, not in a shared
-# config module, so the LM lives next to what uses it. litellm reads FIREWORKS_AI_API_KEY.
+# The task LMs (multimodal), kept here beside the program, not in a shared config module, so the
+# LM lives next to what uses it. LM_LLAMA4_MAVERICK is the stock INFERENCE model build_analyzer
+# reads pages with -- a Bedrock vision model (litellm reads AWS creds from the environment); it
+# baselines best of the Bedrock options tried (~99% orientation). LM_KIMI_K2P7 is Fireworks' Kimi
+# K2 (litellm reads FIREWORKS_AI_API_KEY), kept as the oe2d.pages.optimize training default.
+LM_LLAMA4_MAVERICK: str = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
 LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 
 def build_analyzer() -> PageAnalyzer:
     '''Construct the composite page analyzer. A trained artifact, when present, fully
-    governs (its saved prompt AND lm win); otherwise bind the stock inference LM.'''
+    governs (its saved prompt AND lm win); otherwise bind the stock inference LM
+    (LM_LLAMA4_MAVERICK, a Bedrock vision model).'''
     analyzer: PageAnalyzer = PageAnalyzer()
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         analyzer.load(OPTIMIZED_MODEL_PATH)
     else:
         # Inference settings: temperature 0 for a settled classifier (not GEPA-style
         # exploration), and a large max_tokens so a page reasoned about at length doesn't
-        # truncate mid-answer (the Kimi 'code' model can repeat itself up to the cap).
-        analyzer.set_lm(dspy.LM(LM_KIMI_K2P7, temperature=0.0, max_tokens=8192))
+        # truncate mid-answer.
+        analyzer.set_lm(dspy.LM(LM_LLAMA4_MAVERICK, temperature=0.0, max_tokens=8192))
     return analyzer
 
 
