@@ -51,7 +51,7 @@ CA file must use its **2020** source+results (Plumas/Mono/Nevada are all 2020).
 | File (`tmp/new-kinds/`) | kind | contests | status |
 |---|---|---|---|
 | `vector--branch-mi.pdf` | borderless vector, flat multi-contest | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) |
-| `scanned--columbia-pa.pdf` | scanned, ruled, count+% columns | US House, US Senate, President | **President works (42/42)**; Senate/House blocked (see below) |
+| `scanned--columbia-pa.pdf` | scanned, count+% columns | US House, US Senate, President | **DONE, 1.000** (committed) -- fixed by the normalize repair below |
 | `scanned--plumas-ca.pdf` (2020) | scanned Hart SOV | President, US House | not started |
 | `scanned--montmorency-mi.pdf` | scanned, degraded, ClearBallot sub-rows + rotated | Straight Party, US Senate, US House, President | not started (hardest) |
 | `vector--missaukee-mi.pdf` | vector multi-contest mega-grid | all four races on p1 | not started |
@@ -105,44 +105,46 @@ precincts, canonical offices) + index entry; 5) verify 1.000 with `oe2d-votes-ev
    This is a **general, important** pattern (user-flagged, not unique to Columbia). Got Columbia
    president to 42/42.
 
-## THE OPEN PROBLEM (do this next, carefully)
+## THE OPEN PROBLEM — RESOLVED (root-caused upstream of scope)
 
-**Columbia US Senate / US House don't read**, and it's the crux of the count+% family. Textract
-segments the SAME contest with **different column counts page to page** (Senate p3 = 9 cols, p4 = 12
-cols — p4 has extra split candidate cells + spacer columns that column-normalization doesn't fully
-reconcile). The current **single-anchor + column-count scoping** (`_extract_scanned_tables`) learns
-one schema from the best-header-match table and reads only tables of that exact column count, so it
-**drops the mismatched page** — losing that page's precincts AND the county-total row it needs to
-reconcile, so the (partial) read then fails the checksum and falls back to the cheap reader → 0.
+The Columbia count+% failure was NOT a scope problem, so the risky per-table-interpretation rewrite
+of `_extract_scanned_tables` was never needed. What actually happened:
 
-- The **right fix** is to **interpret each header-bearing table independently** (a header-less
-  continuation reuses the prior schema by column-count match). A prototype of this got ALL THREE
-  Columbia contests to 42/42 — **but it regressed Huron president and Branch president/US Senate to 0
-  and was REVERTED** (`_extract_scanned_tables` is back to single-anchor). Before reintroducing it:
-  understand WHY it broke them — almost certainly the `header_match(grid) >= 2` gate (it only looked
-  at `grid[0]`; Columbia president's candidate names are on row 1 under a `PRESIDENTIAL ELECTORS` title
-  row, so I widened it to scan `grid[:3]` — that same widening or the gate likely excluded Huron/Branch
-  tables whose header is shaped differently). Redo it with a Huron+Branch+Columbia regression harness
-  in the loop, not after.
-- Also pending: **Columbia president write-in total is off by 4** (extractor 133 vs results 129) —
-  reconcile per precinct before writing president gold (is it a source write-in the results dropped, à
-  la Barry, or an over-read?).
+1. **`scope_flat_tables` extracted** as a pure, injectable function (the scoping/digit-moving core of
+   `_extract_scanned_tables`, with the Textract read and the LLM schema resolver passed in). Unit-
+   tested on tiny grids in `test_votes_scope_flat_tables.py` (anchor discrimination, column-count
+   scoping, straddle stitch, write-in consolidation, the three total-detection paths, empty input).
+2. **Root cause found in `_normalize_table_columns`**, one hop upstream (it runs in `read_flat_tables`
+   before scope). Textract segments each candidate's count+percent pair inconsistently — fused in one
+   cell (`428 76.16%`) or split into a standalone percent column (`22.24%`). Normalization strips the
+   standalone percent columns so every page comes back the same width; its `>= 3`-row floor let a
+   percent column slip through on a two-data-row continuation page (US Senate p4: one precinct + the
+   county Total), so p4 stayed 12 wide while p3 normalized to 9 — and single-anchor scoping dropped p4.
+3. **Repair**: drop a column whenever every non-empty cell is a pure percent, at any height (a vote
+   count never carries a %). p3 and p4 now both normalize to 9, scope keeps both, US Senate reads
+   42/42. Pinned by realistic Columbia-shaped fixtures in `test_votes_normalize_columns.py`. The
+   `scope_flat_tables` width-divergence xfail was then dropped (the real pipeline no longer reaches it).
+
+**Columbia president write-in +4: RESOLVED.** The whole discrepancy was MOUNT PLEASANT TWP — the
+source prints write-in 4 (and 252+717+6+0+4 = 979 = printed Total Votes), the results CSV dropped it
+to 0. A real source write-in the reference dropped (à la Barry); the gold records 4 (president
+write-in county total 133). A gold test set must not demand a known-wrong value.
 
 ## Status snapshot
 
-- **Gold: 20 contests, all 1.000** (16 original + Branch 4). `oe2d-votes-evaluate` (no args) scores the
-  whole set; caching makes re-runs free.
-- Tests: `oe2d/tests/votes/` 20 pass; `oe2d/tests/pages/` pass (after the `.DS_Store`/PNG-pick fix).
-- Columbia is the only partial file; the other 7 batch files are not started.
+- **Gold: 23 contests, all 1.000** (16 original + Branch 4 + Columbia 3). `oe2d-votes-evaluate` (no
+  args) scores the whole set; caching makes re-runs free.
+- Tests: `oe2d/tests/votes/` 35 pass (added `scope_flat_tables` and `_normalize_table_columns` suites);
+  `oe2d/tests/pages/` pass.
+- Columbia is DONE. The other 6 batch files (Plumas, Montmorency, Missaukee, Nevada, Bay, Ontonagon,
+  Mono) are not started.
 
 ## Next steps (priority)
 
-1. **Fix the multi-page column-count-inconsistency** (per-table interpretation, regression-tested) →
-   finish Columbia (Senate/House), reconcile president write-ins, build+commit Columbia gold.
-2. **Work the batch** in order of read-path novelty: Plumas (scan Hart), Ontonagon (scan flat),
+1. **Work the batch** in order of read-path novelty: Plumas (scan Hart), Ontonagon (scan flat),
    Montmorency (degraded scan — real stress test), Missaukee (mega-grid), then robustness (Nevada, Bay)
    and Mono (ballot measures, #4 coverage gap). Follow the validated build process; verify each 1.000.
-3. **Then** the deferred items from HANDOFF-2 #3-4: header-slice interpretation (LLM cost), teaching
+2. **Then** the deferred items from HANDOFF-2 #3-4: header-slice interpretation (LLM cost), teaching
    `detect_dispatch` to pick `flat_tables` for vector, GEPA optimization once there's error signal.
-4. Cheap→TABLES **escalation** (cost): try the cheap read, checksum, escalate to TABLES only on
+3. Cheap→TABLES **escalation** (cost): try the cheap read, checksum, escalate to TABLES only on
    reconcile failure — pays the 10x only when needed. Bounded for now by the content-addressed cache.
