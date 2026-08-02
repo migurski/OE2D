@@ -43,6 +43,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 StringRow: typing.TypeAlias = list[str]
 StringGrid: typing.TypeAlias = list[StringRow]
 
+# A candidate (by its position in the schema's candidate list) mapped to the grid column that holds
+# its count. Produced by the alignment (_align_columns / _snap_to_counts) and walked to read votes.
+ColumnMap: typing.TypeAlias = dict[int, int]
+# A grid's per-column x-centres (normalized 0-1), parallel to its StringGrid -- the geometry that
+# aligns a candidate's column across pages. read_flat_tables returns (StringGrid, ColumnX) per table.
+ColumnX: typing.TypeAlias = list[float]
+
 # How to turn a contest's pages into grids -- READ MECHANICS ONLY. 'auto' picks the reader from what
 # each page offers (ruled vector, rotated text-aligned, or a scan with no text layer, one grid per
 # page). 'flat_tables' reads a page as a set of flat candidate-column tables and scopes the contest
@@ -495,7 +502,7 @@ def _textract_words(file_path: str, page: int) -> list[dict]:
     return words
 
 
-def read_scanned_tables(file_path: str, page: int) -> list[tuple[StringGrid, list[float]]]:
+def read_scanned_tables(file_path: str, page: int) -> list[tuple[StringGrid, ColumnX]]:
     '''EVERY ruled table on a scanned page as (grid, column_x), in top-to-bottom order (like
     source_table.page_tables, but for a scan via Textract TABLES). A scanned page routinely holds
     several contests' tables plus a header-less continuation of the previous page's contest, so the
@@ -530,13 +537,13 @@ def read_scanned_tables(file_path: str, page: int) -> list[tuple[StringGrid, lis
             grid[cell['RowIndex'] - 1][cell['ColumnIndex'] - 1] = _clean(cell_text(cell))
             box = cell['Geometry']['BoundingBox']
             centres[cell['ColumnIndex'] - 1].append(box['Left'] + box['Width'] / 2)
-        column_x: list[float] = [sum(centres[c]) / len(centres[c]) if centres[c] else 0.0
+        column_x: ColumnX = [sum(centres[c]) / len(centres[c]) if centres[c] else 0.0
                                  for c in range(width)]
         found.append((table['Geometry']['BoundingBox']['Top'], grid, column_x))
     return [(grid, column_x) for _top, grid, column_x in sorted(found, key=lambda item: item[0])]
 
 
-def read_flat_tables(file_path: str, page: int) -> list[tuple[StringGrid, list[float]]]:
+def read_flat_tables(file_path: str, page: int) -> list[tuple[StringGrid, ColumnX]]:
     '''Flat candidate-column tables on a page as (grid, column_x), read with Textract TABLES (render
     the page, then AnalyzeDocument) -- for BOTH scanned and vector pages. Textract's table detection
     segments stacked contests into separate clean tables and reads full candidate headers even on a
@@ -547,12 +554,12 @@ def read_flat_tables(file_path: str, page: int) -> list[tuple[StringGrid, list[f
     serve the 'auto' path. This is READ MECHANICS -- the flat CONTENT handling downstream is the same.
     A candidate's percent column is stripped from BOTH the grid and its column_x, keeping the two
     aligned.'''
-    out: list[tuple[StringGrid, list[float]]] = []
+    out: list[tuple[StringGrid, ColumnX]] = []
     for grid, column_x in read_scanned_tables(file_path, page):
         keep: list[int] = _kept_columns(grid)
         normalized: StringGrid = [[row[col] if col < len(row) else '' for col in keep]
                                        for row in grid]
-        kept_x: list[float] = [column_x[col] if col < len(column_x) else 0.0 for col in keep]
+        kept_x: ColumnX = [column_x[col] if col < len(column_x) else 0.0 for col in keep]
         out.append((normalized, kept_x))
     return out
 
@@ -745,7 +752,7 @@ def _name_tokens(name: str) -> set[str]:
     return {_norm(token) for token in re.split(r'\s*\(', name)[0].split() if len(token) > 3}
 
 
-def _snap_to_counts(grid: StringGrid, columns: list[int]) -> dict[int, int]:
+def _snap_to_counts(grid: StringGrid, columns: list[int]) -> ColumnMap:
     '''Repair the anchor's schema column indices that landed on a NON-count column: the interpreter
     sometimes maps a candidate to a split-off party cell ("(REP)") that holds no votes while the count
     sits in the adjacent name cell. A candidate whose assigned column already bears counts is kept;
@@ -754,7 +761,7 @@ def _snap_to_counts(grid: StringGrid, columns: list[int]) -> dict[int, int]:
     width: int = max((len(row) for row in grid), default=0)
     def has_count(col: int) -> bool:
         return any(col < len(row) and _cell_count(row[col]) is not None for row in grid)
-    mapping: dict[int, int] = {}
+    mapping: ColumnMap = {}
     claimed: set[int] = set()
     for index, col in enumerate(columns):           # keep candidates already on a count column
         if col < width and has_count(col):
@@ -776,8 +783,8 @@ _X_TOLERANCE: float = 0.04                            # a column x-centre may dr
 
 def _align_columns(grid: StringGrid, candidate_names: list[str], anchor_columns: list[int],
                    label_column: int = 0, anchor_width: int | None = None,
-                   column_x: list[float] | None = None,
-                   anchor_x: list[float | None] | None = None) -> dict[int, int]:
+                   column_x: ColumnX | None = None,
+                   anchor_x: list[float | None] | None = None) -> ColumnMap:
     '''Map each candidate (by position) to ITS count column in `grid`, aligning a continuation to the
     anchor's candidates. Two questions, two signals:
 
@@ -807,10 +814,10 @@ def _align_columns(grid: StringGrid, candidate_names: list[str], anchor_columns:
     def has_count(col: int) -> bool:
         return any(col < len(row) and _cell_count(row[col]) is not None for row in data)
 
-    def positions(indices: typing.Iterable[int]) -> dict[int, int]:
+    def positions(indices: typing.Iterable[int]) -> ColumnMap:
         '''Column for each given candidate: nearest count column to its anchor x (geometry), else the
         candidate's anchor column index.'''
-        chosen: dict[int, int] = {}
+        chosen: ColumnMap = {}
         if column_x is not None and anchor_x is not None:
             claimed: set[int] = set()
             for index in indices:
@@ -854,7 +861,7 @@ def _align_columns(grid: StringGrid, candidate_names: list[str], anchor_columns:
     # would wrongly pick, but its count keeps the anchor x).
     if column_x is not None and anchor_x is not None:
         return positions(range(count))
-    mapping: dict[int, int] = {}
+    mapping: ColumnMap = {}
     claimed_cols: set[int] = set()
     for index in named:
         tokens = _name_tokens(candidate_names[index])
@@ -873,7 +880,7 @@ def _align_columns(grid: StringGrid, candidate_names: list[str], anchor_columns:
 
 def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
                       schema_for: typing.Callable[[StringGrid], signatures.PageSchema],
-                      column_x: list[list[float]] | None = None) -> tuple[dict, dict]:
+                      column_x: list[ColumnX] | None = None) -> tuple[dict, dict]:
     '''Scope a scan's flat tables to one contest and read them, aligning each table's columns to the
     anchor's candidates.
 
@@ -913,12 +920,12 @@ def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
     candidate_names: list[str] = [column.candidate for column in candidates]
     # The anchor's own columns, repaired: an interpreter mapping that landed on an empty split-off
     # party cell is snapped to the adjacent count column. These are the reference for the rest.
-    anchor_map: dict[int, int] = _snap_to_counts(anchor, anchor_columns)
+    anchor_map: ColumnMap = _snap_to_counts(anchor, anchor_columns)
 
     # The x-centre of each candidate's (repaired) column in the anchor, when geometry is available.
     anchor_x: list[float | None] | None = None
     if column_x is not None:
-        anchor_column_x: list[float] = column_x[anchor_index]
+        anchor_column_x: ColumnX = column_x[anchor_index]
         anchor_x = [anchor_column_x[anchor_map[index]]
                     if index in anchor_map and anchor_map[index] < len(anchor_column_x) else None
                     for index in range(len(candidates))]
@@ -937,9 +944,9 @@ def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
         if not grid:
             continue
         if table_index == anchor_index:
-            column_map: dict[int, int] = anchor_map
+            column_map: ColumnMap = anchor_map
         else:
-            grid_x: list[float] | None = column_x[table_index] if column_x is not None else None
+            grid_x: ColumnX | None = column_x[table_index] if column_x is not None else None
             column_map = _align_columns(grid, candidate_names, anchor_columns, label_column,
                                         anchor_width, column_x=grid_x, anchor_x=anchor_x)
         if not column_map:
@@ -982,7 +989,7 @@ def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
 
 def join_flat_table_pages(pages_tables: list[list[StringGrid]], candidate_context: str,
                           schema_for: typing.Callable[[StringGrid], signatures.PageSchema],
-                          pages_column_x: list[list[list[float]]] | None = None) -> tuple[dict, dict]:
+                          pages_column_x: list[list[ColumnX]] | None = None) -> tuple[dict, dict]:
     '''Read a candidate-GROUP flat contest -- one whose candidate columns are split across pages that
     all repeat the SAME precincts (a Hart SOVC too wide for one page: page N holds some candidates,
     page N+1 the rest, both listing every precinct down the rows). scope_flat_tables reads ONE page's
@@ -1265,7 +1272,7 @@ class VoteExtractor(dspy.Module):
         dependencies -- the Textract read (grids + geometry) and the LLM schema.'''
         read: list[tuple] = [pair for page in pages for pair in read_flat_tables(file_path, page)]
         tables: list[StringGrid] = [grid for grid, _x in read]
-        column_x: list[list[float]] = [x for _grid, x in read]
+        column_x: list[ColumnX] = [x for _grid, x in read]
         return scope_flat_tables(
             tables, candidate_context,
             lambda anchor: self._columns_schema(office, candidate_context, anchor), column_x=column_x)
@@ -1278,7 +1285,7 @@ class VoteExtractor(dspy.Module):
         and the LLM schema; the join and digit-moving live in the standalone function.'''
         read: list[list[tuple]] = [read_flat_tables(file_path, page) for page in pages]
         pages_tables: list[list[StringGrid]] = [[grid for grid, _x in page] for page in read]
-        pages_column_x: list[list[list[float]]] = [[x for _grid, x in page] for page in read]
+        pages_column_x: list[list[ColumnX]] = [[x for _grid, x in page] for page in read]
         return join_flat_table_pages(
             pages_tables, candidate_context,
             lambda anchor: self._columns_schema(office, candidate_context, anchor),
