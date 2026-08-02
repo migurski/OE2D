@@ -185,6 +185,10 @@ def main() -> None:
     print('evaluating: %s  [dispatch: %s]' % (label, dispatch))
     print('over %d %s contest(s):\n' % (len(examples), scope))
     print_report(score_examples(program, examples, detected=args.detected))
+    usage: dict = votes.textract_usage()
+    if usage['calls']:
+        print('\ntextract this run (paid calls only, cache hits free): %s ~$%.4f'
+              % (usage['calls'], usage['usd']))
 
 
 if __name__ == '__main__':

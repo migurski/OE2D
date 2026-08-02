@@ -344,11 +344,31 @@ def _cluster_1d(values: list[float], gap: float) -> list[float]:
     return centers
 
 
+# Textract price per PAGE by mode (us-west-2 list price, USD): the cheap words-only
+# DetectDocumentText vs the ~10x AnalyzeDocument TABLES. Used only to estimate spend for the
+# call accounting below -- cache hits cost nothing, so only real API calls are counted.
+_TEXTRACT_PRICE_USD: dict[str, float] = {'text': 0.0015, 'TABLES': 0.015}
+
+# Paid Textract calls this process, by mode ('text' | 'TABLES'). Cache hits are excluded, so this
+# is the real spend; read it with textract_usage().
+_textract_calls: collections.Counter = collections.Counter()
+
+
+def textract_usage() -> dict:
+    '''Paid Textract calls this process (cache hits excluded) and their estimated USD by mode.'''
+    return {'calls': dict(_textract_calls),
+            'usd': round(sum(_TEXTRACT_PRICE_USD.get(mode, 0) * n
+                             for mode, n in _textract_calls.items()), 4)}
+
+
 def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[dict]:
-    '''Textract Blocks for a scanned page, cached under oe2d-data/votes/.cache/textract/ so re-runs
-    do not re-pay. Renders the page and deskews it (deskew helps Textract's cell assignment), then
-    calls DetectDocumentText (features empty -- cheap, words only) or AnalyzeDocument (features, e.g.
-    TABLES). Inline PNG bytes, no S3.'''
+    '''Textract Blocks for a page, cached under oe2d-data/votes/.cache/textract/ so re-runs do not
+    re-pay. Renders the page and deskews it (deskew helps Textract's cell assignment), then calls
+    DetectDocumentText (features empty -- cheap, words only) or AnalyzeDocument (features, e.g.
+    TABLES, ~10x). Inline PNG bytes, no S3. A cache MISS is a real (paid) call: it is counted in
+    _textract_calls and logged with the running estimated spend. The Textract client takes AWS creds
+    from the ambient environment (AWS_PROFILE), same as the Bedrock LMs -- keep AWS_PROFILE set to
+    the intended account.'''
     import io
     import hashlib
     import json
@@ -368,6 +388,9 @@ def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[di
         image = image.rotate(-angle, resample=Image.BICUBIC, expand=True, fillcolor='white')
     buffer = io.BytesIO()
     image.save(buffer, format='PNG')
+    _textract_calls[tag] += 1                        # a real, paid call (cache miss)
+    logger.info('textract %s p%d (%s) -- paid calls so far: %s ~$%.4f',
+                tag, page, os.path.basename(file_path), dict(_textract_calls), textract_usage()['usd'])
     client = boto3.Session(region_name=os.environ.get('AWS_REGION_NAME', 'us-west-2')).client('textract')
     if features:
         blocks = client.analyze_document(Document={'Bytes': buffer.getvalue()}, FeatureTypes=list(features))['Blocks']
