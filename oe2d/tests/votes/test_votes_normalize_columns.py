@@ -11,8 +11,6 @@ count+percent cell in place (its count is recovered downstream from the leading 
 column slips through, the contest's width diverges page to page and scope_flat_tables drops the odd
 page -- so this is worth pinning tightly, with grids shaped like the real Columbia US Senate scan.
 '''
-import pytest
-
 from ... import votes
 
 
@@ -61,10 +59,6 @@ def test_empty_grid_is_returned_as_is():
     assert votes._normalize_table_columns([]) == []
 
 
-@pytest.mark.xfail(strict=True, reason='short-page percent columns slip through: the >= 3-row floor '
-                   'in drop() leaves a standalone percent column on a page with only two data rows '
-                   '(Columbia US Senate page 4), so that page stays wider than its sibling and '
-                   'scope_flat_tables drops it. Remove this marker when the floor is repaired.')
 def test_drops_a_standalone_percent_column_on_a_short_page():
     # Columbia page-4 shape: the same split-percent layout, but only two data rows (one precinct plus
     # the county Total). The standalone percent column must still be stripped so the page matches its

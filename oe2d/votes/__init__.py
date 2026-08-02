@@ -192,7 +192,14 @@ def _normalize_table_columns(grid: list[list[str]]) -> list[list[str]]:
         values: list[str] = cells(col)
         if not values:
             return True                                  # all-empty spacer column
-        return len(values) >= 3 and sum(bool(_PERCENT_CELL.match(v)) for v in values) >= 0.6 * len(values)
+        percents: int = sum(bool(_PERCENT_CELL.match(v)) for v in values)
+        # A column whose every non-empty cell is a pure percent is unambiguously a percent column (a
+        # vote count never carries a %), so strip it at any height -- including the two-row continuation
+        # pages where a >= 3-row floor used to let it slip through and diverge the contest's width. The
+        # 0.6-with-floor path still catches a taller percent column carrying a little OCR noise.
+        if percents == len(values):
+            return True
+        return len(values) >= 3 and percents >= 0.6 * len(values)
 
     keep: list[int] = [col for col in range(width) if not drop(col)]
     return [[row[col] if col < len(row) else '' for col in keep] for row in grid]
