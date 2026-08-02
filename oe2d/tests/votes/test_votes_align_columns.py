@@ -84,6 +84,19 @@ def test_geometry_still_rejects_a_neighbouring_contest_by_name():
     assert votes._align_columns(grid, NAMES, ANCHOR, column_x=column_x, anchor_x=ANCHOR_X) == {}
 
 
+def test_snap_to_counts_keeps_columns_that_already_bear_counts():
+    grid = [['', 'HARRIS', 'TRUMP'], ['P1', '10', '20'], ['P2', '30', '40']]
+    assert votes._snap_to_counts(grid, [1, 2]) == {0: 1, 1: 2}
+
+
+def test_snap_to_counts_moves_a_candidate_off_an_empty_party_cell():
+    # Ontonagon president p4: the interpreter put Trump on the empty "(REP)" column (index 3); the
+    # count sits in the adjacent index 2. Snap Trump to the nearest unclaimed count column
+    grid = [['Precinct', 'Kamala D. Harris', '(DEM) Donald J.', '(REP)'],
+            ['Bergland', '102', '215', ''], ['Bohemia', '19', '27', '']]
+    assert votes._snap_to_counts(grid, [1, 3]) == {0: 1, 1: 2}    # Harris col 1, Trump snapped 3 -> 2
+
+
 def test_geometry_header_less_continuation_maps_by_x():
     # a header-less continuation (first row is data) with geometry maps each candidate to the count
     # column nearest its anchor x

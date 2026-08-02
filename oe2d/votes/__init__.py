@@ -739,6 +739,32 @@ def _name_tokens(name: str) -> set[str]:
     return {_norm(token) for token in re.split(r'\s*\(', name)[0].split() if len(token) > 3}
 
 
+def _snap_to_counts(grid: list[list[str]], columns: list[int]) -> dict[int, int]:
+    '''Repair the anchor's schema column indices that landed on a NON-count column: the interpreter
+    sometimes maps a candidate to a split-off party cell ("(REP)") that holds no votes while the count
+    sits in the adjacent name cell. A candidate whose assigned column already bears counts is kept;
+    one whose column is empty is snapped to the nearest unclaimed count-bearing column. Returns
+    {candidate position: column}.'''
+    width: int = max((len(row) for row in grid), default=0)
+    def has_count(col: int) -> bool:
+        return any(col < len(row) and _cell_count(row[col]) is not None for row in grid)
+    mapping: dict[int, int] = {}
+    claimed: set[int] = set()
+    for index, col in enumerate(columns):           # keep candidates already on a count column
+        if col < width and has_count(col):
+            mapping[index] = col
+            claimed.add(col)
+    for index, col in enumerate(columns):           # snap the rest to the nearest unclaimed count column
+        if index in mapping:
+            continue
+        options: list[int] = [c for c in range(width) if c not in claimed and has_count(c)]
+        if options:
+            best: int = min(options, key=lambda candidate: abs(candidate - col))
+            mapping[index] = best
+            claimed.add(best)
+    return mapping
+
+
 _X_TOLERANCE: float = 0.04                            # a column x-centre may drift this far (page fraction)
 
 
@@ -879,13 +905,17 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
     candidates = [column for column in schema.columns if column.role == 'candidate']
     anchor_columns: list[int] = [column.index for column in candidates]
     candidate_names: list[str] = [column.candidate for column in candidates]
+    # The anchor's own columns, repaired: an interpreter mapping that landed on an empty split-off
+    # party cell is snapped to the adjacent count column. These are the reference for the rest.
+    anchor_map: dict[int, int] = _snap_to_counts(anchor, anchor_columns)
 
-    # The x-centre of each candidate's column in the anchor, when geometry is available.
+    # The x-centre of each candidate's (repaired) column in the anchor, when geometry is available.
     anchor_x: list[float | None] | None = None
     if column_x is not None:
         anchor_column_x: list[float] = column_x[anchor_index]
-        anchor_x = [anchor_column_x[index] if index < len(anchor_column_x) else None
-                    for index in anchor_columns]
+        anchor_x = [anchor_column_x[anchor_map[index]]
+                    if index in anchor_map and anchor_map[index] < len(anchor_column_x) else None
+                    for index in range(len(candidates))]
 
     def label_of(row: list[str]) -> str:
         return _clean(row[label_column]) if label_column < len(row) else ''
@@ -901,7 +931,7 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
         if not grid:
             continue
         if table_index == anchor_index:
-            column_map: dict[int, int] = {index: anchor_columns[index] for index in range(len(candidates))}
+            column_map: dict[int, int] = anchor_map
         else:
             grid_x: list[float] | None = column_x[table_index] if column_x is not None else None
             column_map = _align_columns(grid, candidate_names, anchor_columns, label_column,
