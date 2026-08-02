@@ -82,8 +82,8 @@ ColumnX: typing.TypeAlias = list[float]
 # (_extract_contest) reading each page's candidate grid via Textract TABLES -- for a ruled SCAN whose
 # candidates carry Election Day / AV / Early Voting / Total sub-rows (Montmorency), where the drawn
 # grid places cells the cheap-words reader would mis-cluster.
-ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'ruled_columns',
-                              'report_lines_methods', 'report_lines_total']
+ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'flat_multi',
+                              'ruled_columns', 'report_lines_methods', 'report_lines_total']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -1251,6 +1251,67 @@ def join_flat_table_pages(pages_tables: list[list[StringGrid]], candidate_contex
     return votes, totals
 
 
+# The first-party labels that begin each partisan contest's column run in a mega-grid (see below);
+# a MEGA-GRID is one physical table whose several contests SHARE the precinct rows and partition the
+# COLUMNS (one row per precinct spans every contest), unlike a flat table (one table = one contest) or
+# a stacked report (contests stacked vertically). The party-header row repeats its first label at each
+# contest block's start, which -- with the leading label column -- deterministically cuts the columns.
+_PARTY_LABELS: frozenset = frozenset(
+    ('dem', 'rep', 'lib', 'ustx', 'ust', 'grn', 'nl', 'nlp', 'wk', 'wcp', 'no', 'npa', 'writein'))
+_FIRST_PARTY: str = 'dem'
+
+
+def segment_multi_grid(grid: StringGrid, column_x: ColumnX) -> 'list[dict]':
+    '''Cut a wide multi-contest (mega-)grid into one clean flat sub-table per contest.
+
+    The grid packs several contests side-by-side sharing the precinct rows: leading stat columns, a
+    precinct-label column, then one contiguous COLUMN BLOCK per contest. Boundaries are printed: a
+    party-header row repeats its first label ("Dem") at the start of every partisan block, and the
+    block before it (party-name choices, no party header) is Straight Party. This reads no English --
+    it locates the party-header row (the row with the most party abbreviations), the precinct-label
+    column (the leading column whose data cells are non-numeric), and the "Dem" restarts, then slices.
+
+    Returns one dict per contest: {title, columns, grid, column_x, names} -- `grid`/`column_x` are a
+    standalone flat sub-table ([label column] + the block's candidate columns, all rows kept incl. the
+    Total row) ready for scope_flat_tables; `names` are the block's header names for block selection.'''
+    width: int = max((len(row) for row in grid), default=0)
+    cell = lambda row, c: row[c] if c < len(row) else ''
+    party_score = lambda row: sum(1 for c in range(width) if _norm(cell(row, c)) in _PARTY_LABELS)
+    party_row_index: int = max(range(len(grid)), key=lambda i: party_score(grid[i]))
+    party_row: StringRow = grid[party_row_index]
+    name_row_index: int = party_row_index + 1
+    title_row: StringRow = grid[party_row_index - 1] if party_row_index else ['']
+    data_rows: list[StringRow] = grid[name_row_index + 1:]
+    # precinct-label column: among the leading columns, the one whose data cells are mostly non-numeric
+    def label_score(c: int) -> int:
+        return sum(1 for row in data_rows if _clean(cell(row, c)) and _cell_count(cell(row, c)) is None)
+    label_column: int = max(range(min(width, 6)), key=label_score)
+    last_named: int = max((c for c in range(width) if _clean(cell(grid[name_row_index], c))),
+                          default=width - 1)
+    dem_starts: list[int] = [c for c in range(label_column + 1, width)
+                             if _norm(cell(party_row, c)) == _FIRST_PARTY]
+    # block column ranges: Straight Party (label+1 .. first Dem-1), then each partisan block Dem..next
+    bounds: list[tuple[int, int]] = []
+    if dem_starts and dem_starts[0] > label_column + 1:
+        bounds.append((label_column + 1, dem_starts[0] - 1))          # Straight Party (party-name choices)
+    for order, start in enumerate(dem_starts):
+        stop: int = dem_starts[order + 1] - 1 if order + 1 < len(dem_starts) else last_named
+        bounds.append((start, stop))
+    blocks: list[dict] = []
+    for start, stop in bounds:
+        columns: list[int] = [label_column] + list(range(start, stop + 1))
+        title: str = ' '.join(_clean(cell(title_row, c)) for c in range(start, stop + 1)
+                              if _clean(cell(title_row, c)))
+        names: list[str] = [_clean(cell(grid[name_row_index], c)) for c in range(start, stop + 1)]
+        blocks.append({
+            'title': title,
+            'columns': columns,
+            'grid': [[cell(row, c) for c in columns] for row in grid],
+            'column_x': [column_x[c] if c < len(column_x) else 0.0 for c in columns],
+            'names': names})
+    return blocks
+
+
 class VoteExtractor(dspy.Module):
     '''The full vote-extraction program: read -> interpret (LLM) -> stitch -> canonical rows.
 
@@ -1326,6 +1387,12 @@ class VoteExtractor(dspy.Module):
             if _reconciles(votes, totals):
                 return votes
             logger.info('flat-tables read did not reconcile with printed county totals '
+                        '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
+        if read_strategy == 'flat_multi':
+            votes, totals = self._extract_multi_grid(file_path, pages, office, candidate_context)
+            if _reconciles(votes, totals):
+                return votes
+            logger.info('flat-multi (mega-grid) read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy == 'ruled_columns':
             return self._extract_contest(file_path, pages, office, candidate_context, via_tables=True)
@@ -1568,6 +1635,42 @@ class VoteExtractor(dspy.Module):
         return scope_flat_tables(
             tables, candidate_context,
             lambda anchor: self._columns_schema(office, candidate_context, anchor), column_x=column_x)
+
+    def _extract_multi_grid(self, file_path: str, pages: list[int], office: str,
+                            candidate_context: str) -> tuple[dict, dict]:
+        '''Read one contest out of a mega-grid -- a single wide table holding several contests
+        side-by-side that share the precinct rows. segment_multi_grid cuts the columns into one flat
+        sub-table per contest (deterministic, from the printed party-header restarts); we pick the
+        block whose header names the most expected candidates -- unambiguous WITHIN a block, where the
+        whole-table alignment fails ("Stein" belongs to both President and Senate across the full grid)
+        -- and hand that one clean sub-table to the same scope_flat_tables read.'''
+        read: list[tuple] = read_flat_tables(file_path, pages[0])
+        if not read:
+            return {}, {}
+        grid, column_x = max(read, key=lambda pair: len(pair[0][0]) if pair[0] else 0)
+        blocks: list[dict] = segment_multi_grid(grid, column_x)
+        if not blocks:
+            return {}, {}
+        names_wanted: set = {_norm(token) for line in candidate_context.splitlines()
+                             for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
+        party_wanted: set = {_norm(code) for line in candidate_context.splitlines()
+                             for code in re.findall(r'\(([^)]+)\)', line)}
+
+        def block_score(block: dict) -> int:
+            # a candidate-NAME hit is decisive; party-abbrev hits only break the tie for Straight Party
+            # (whose "candidates" ARE party abbreviations, so no name ever matches its block)
+            named: int = sum(1 for token in names_wanted
+                             if any(token in _norm(name) for name in block['names']))
+            partied: int = sum(1 for token in party_wanted
+                               if any(_norm(name) == token for name in block['names']))
+            return named * 100 + partied
+
+        block: dict = max(blocks, key=block_score)
+        logger.info('mega-grid: %d blocks, chose %r for %s', len(blocks), block['title'] or '(straight party)', office)
+        return scope_flat_tables(
+            [block['grid']], candidate_context,
+            lambda anchor: self._columns_schema(office, candidate_context, anchor),
+            column_x=[block['column_x']])
 
     def _extract_grouped_tables(self, file_path: str, pages: list[int], office: str,
                                 candidate_context: str) -> tuple[dict, dict]:
