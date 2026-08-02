@@ -17,9 +17,14 @@ walkers, stitch, consensus, write-in consolidation, all-zero drop) is determinis
 
 ## Status snapshot (current)
 
-- **Gold: 39 contests, macro wF1=1.000 (F1=1.000).** 33 prior + Bay 4 (President/US Senate/US House/
-  Straight Party) + Missaukee 2 (President/US Senate). One pre-existing non-1.000: `columbia-us-house`
-  F1=0.996
+- **Gold: 40 contests, macro wF1=1.000 (F1=1.000), all COLD-cache robust.** 33 prior + Bay 4
+  (President/US Senate/US House/Straight Party) + Missaukee 1 (President; US Senate PULLED as
+  cold-flaky) + Mono 1 (President) + Nevada 1 (President). Nevada/Mono read via new report-line
+  readers (Dominion per-precinct reports, read_strategy `report_lines`). Nevada gold is source-correct
+  and deliberately diverges from reference data-entry errors (cp33/cp66) + keeps 3 single-vote
+  precincts (Mike-approved). **Always cold-validate a new gold (cache=False) BEFORE committing** — a
+  warm-cache 1.000 hid Missaukee US Senate's non-deterministic mega-grid scoping. One pre-existing
+  non-1.000: `columbia-us-house` F1=0.996
   (fn=1, a single zero-vote `CATAWISSA BOROUGH | Write-ins = 0` row the flat_tables read omits;
   wF1=1.000). Score the whole set with `oe2d-votes-evaluate` (no args); the content-addressed
   Textract cache makes re-runs free.
