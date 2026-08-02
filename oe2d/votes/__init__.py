@@ -61,8 +61,11 @@ ColumnX: typing.TypeAlias = list[float]
 # precinct, unioning candidate columns -- unlike the continuation semantics above, where same-width
 # tables are more PRECINCTS, not more CANDIDATES. This is orthogonal to CONTENT structure -- candidate
 # orientation, and whether a table is flat (one row per precinct) or has vote-method sub-rows, are
-# decided from the interpreted content.
-ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped']
+# decided from the interpreted content. 'ruled_columns' is the columns-with-method-sub-rows path
+# (_extract_contest) reading each page's candidate grid via Textract TABLES -- for a ruled SCAN whose
+# candidates carry Election Day / AV / Early Voting / Total sub-rows (Montmorency), where the drawn
+# grid places cells the cheap-words reader would mis-cluster.
+ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'ruled_columns']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -1099,22 +1102,43 @@ class VoteExtractor(dspy.Module):
                 return votes
             logger.info('flat-tables read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
+        if read_strategy == 'ruled_columns':
+            return self._extract_contest(file_path, pages, office, candidate_context, via_tables=True)
         if orientation == 'rows':
             return self._extract_precinct_contest(file_path, pages, office, candidate_context)
         return self._extract_contest(file_path, pages, office, candidate_context)
 
     def _extract_contest(self, file_path: str, pages: list[int], office: str,
-                         candidate_context: str) -> dict:
+                         candidate_context: str, via_tables: bool = False) -> dict:
         '''Read the contest's pages and stitch them into votes[(precinct, candidate, party)][bucket].
 
         Reads each page, interprets it (LLM), walks it into ordered precinct blocks, partitions the
         pages into precinct-groups, then within a group concatenates candidate columns across the
         candidate-group pages by precinct position and across groups appends the precinct lists. The
         interpreter never touches a number; this moves them.
-        '''
+
+        via_tables reads each page's candidate grid with Textract TABLES instead of the cheap-words
+        read_page_grid -- for a ruled SCAN whose candidate columns carry vote-method sub-rows (a
+        ClearBallot SOVC: precinct label, then Election Day / AV / Early Voting / Total rows). TABLES
+        segments the ruled grid (and rotated headers) cleanly where the word reader drops a faint
+        sub-row or write-in cell. The candidate table is the one whose header names the most
+        candidates (a same-page turnout block names none).'''
+        wanted: set = {_norm(token) for line in candidate_context.splitlines()
+                       for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
+
+        def page_grid(page: int) -> StringGrid:
+            if not via_tables:
+                return read_page_grid(file_path, page)
+            grids: list[StringGrid] = [grid for grid, _x in read_flat_tables(file_path, page)]
+            if not grids:
+                return []
+            names_in = lambda grid: sum(1 for token in wanted
+                                        if any(token in _norm(cell) for row in grid[:3] for cell in row))
+            return max(grids, key=names_in)
+
         page_schemas: list[tuple] = []
         for page in pages:
-            rows: StringGrid = read_page_grid(file_path, page)
+            rows: StringGrid = page_grid(page)
             schema: signatures.PageSchema = self._columns_schema(office, candidate_context, rows)
             page_schemas.append((schema, rows))
 
