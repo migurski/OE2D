@@ -54,11 +54,33 @@ CA file must use its **2020** source+results (Plumas/Mono/Nevada are all 2020).
 | `scanned--columbia-pa.pdf` | scanned, count+% columns | US House, US Senate, President | **DONE, 1.000** (committed) -- fixed by the normalize repair below |
 | `scanned--plumas-ca.pdf` (2020) | scanned Hart SOV | President, US House | **DONE, 1.000** (committed) -- president drove the new flat_grouped strategy below |
 | `scanned--montmorency-mi.pdf` | scanned, ClearBallot method sub-rows + rotated | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) -- drove the `ruled_columns` read strategy (TABLES-fed _extract_contest) |
-| `vector--missaukee-mi.pdf` | vector multi-contest mega-grid | all four races on p1 | not started |
-| `robustness--nevada-ca.pdf` | ClearBallot outside MI — **use 2020 source** | (completeness) | not started |
-| `robustness--bay-mi.pdf` | Electionware outside PA | (completeness) | not started |
+| `vector--missaukee-mi.pdf` | vector multi-contest mega-grid | all four races on p1 | **DEFERRED** (see recon below) |
+| `robustness--nevada-ca.pdf` | ClearBallot outside MI — **use 2020 source** | (completeness) | **DEFERRED** (see recon below) |
+| `robustness--bay-mi.pdf` | Electionware outside PA | (completeness) | not started (286 pp, methods, 47 precincts) |
 | `optional--ontonagon-mi.pdf` | scanned ClearBallot flat | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) -- drove the geometry-alignment + 400-DPI + snap work below |
-| `optional--mono-ca.pdf` (2020) | Hart SOV rows + **ballot measures** (#4 gap) | (completeness) | not started |
+| `optional--mono-ca.pdf` (2020) | per-precinct summary reports (NOT ballot measures) | (completeness) | **DEFERRED** (see recon below) |
+
+### Deferred batch recon (2026-08 session; ran out of context, banked for next time)
+
+- **Missaukee** (`vector--missaukee-mi.pdf`, 7 pp vector, 18 precincts, votes-only). ALL federal contests
+  are one wide FLAT mega-grid on p1 (Straight Party | President | US Senate | US House | State House as
+  side-by-side candidate-column blocks). Via `read_strategy=flat_tables` (TABLES on the rendered page):
+  Straight Party, President, US Senate read CLEAN (0 by-party diffs); **US House fails (67 diffs)** and
+  President write-in is +1 off (Richland). WHY US House fails: the Textract grid header carries only
+  PARTY labels (`Dem/Rep/Lib/Grn`, repeated across every contest) plus contest TITLES (`Rep Congress
+  4th`); the candidate NAMES (Barr/Bergman/Gale/Hakola) are NOT in the grid, so the interpreter must
+  scope US House's 4 columns among 37 by title+position and grabs the wrong ones (it sits between US
+  Senate and State House). The fix is title/position-aware column scoping for a single-table multi-
+  contest grid -- real work, no continuation/geometry to lean on. Source sha1 matches local.
+- **Nevada** (`robustness--nevada-ca.pdf`, **832 pp** vector, 97 precincts, methods: absentee/EV/ED/prov).
+  Per-precinct-report layout (President/US House/State Senate/State Assembly). Huge; not attempted --
+  needs a page-mapping pass to locate each precinct's contest pages before any extraction.
+- **Mono** (`optional--mono-ca.pdf`, 75 pp vector, 13 precincts, methods). NOT ballot measures after all:
+  the results CSV has only President / U.S. House / State Assembly (the source's propositions are not
+  transcribed, so no measure gold to score). Format is per-precinct "Election Summary Report" documents
+  (~6 pp each, President on that report's p1), i.e. ROWS orientation (_extract_precinct_contest). Would
+  need report-boundary mapping across the 75 pp.
+- **Bay** (`robustness--bay-mi.pdf`, 286 pp vector, 47 precincts, methods, Electionware). Not examined.
 
 ## The gold-build process (validated on Branch)
 
@@ -190,8 +212,10 @@ write-in county total 133). A gold test set must not demand a known-wrong value.
 
 ## Next steps (priority)
 
-1. **Work the batch**: Missaukee (vector mega-grid), then robustness (Nevada, Bay) and Mono (ballot
-   measures, #4 coverage gap). Follow the validated build process; verify each 1.000.
+1. **Finish the batch** (all DEFERRED, recon banked above): easiest first -- **Bay** (Electionware,
+   an unexamined but standard methods layout) and **Mono** (small, 13 precincts, rows-orientation
+   per-precinct reports); then the harder **Missaukee** (needs title/position column scoping for the
+   single-table multi-contest mega-grid -- US House) and **Nevada** (832 pp, needs page mapping).
 2. **Then** the deferred items from HANDOFF-2 #3-4: header-slice interpretation (LLM cost), teaching
    `detect_dispatch` to pick `flat_tables` for vector, GEPA optimization once there's error signal.
 3. Cheap→TABLES **escalation** (cost): try the cheap read, checksum, escalate to TABLES only on
