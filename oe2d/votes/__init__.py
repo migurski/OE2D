@@ -95,9 +95,11 @@ def _parse_number(text: str) -> int | None:
 
 def _cell_count(cell: str) -> int | None:
     '''The vote count in a cell, or None. Table conversion sometimes MERGES a count with its
-    percent into one cell ("1 100.00%"); the count is then the leading whitespace token. A
-    pure-percent cell ("86.32%") has no integer leading token, so it is correctly skipped.'''
-    token: str = _clean(cell).split(' ')[0].replace(',', '')
+    percent into one cell ("1 100.00%"); the count is then the leading whitespace token. A trailing
+    period on that token is a scan speck ("7." for "7", seen at higher render DPI) and is stripped;
+    a trailing "%" is NOT, so a pure-percent cell ("86.32%", "50%") still has no integer token and is
+    correctly skipped.'''
+    token: str = _clean(cell).split(' ')[0].replace(',', '').rstrip('.')
     return int(token) if re.fullmatch(r'-?\d+', token) else None
 
 

@@ -138,6 +138,8 @@ def test_cell_count_reads_merged_count_and_skips_percent():
     assert votes._cell_count('1 100.00%') == 1        # count merged with its percent
     assert votes._cell_count('86.32%') is None        # pure percent -> not a count
     assert votes._cell_count('1,234') == 1234         # comma stripped
+    assert votes._cell_count('7. 0.81%') == 7         # stray period on the count token -> stripped
+    assert votes._cell_count('50%') is None           # whole-number percent still skipped (only . stripped)
 
 
 def test_assign_methods_ignores_a_spurious_wedged_cell_via_prefix_sum():
