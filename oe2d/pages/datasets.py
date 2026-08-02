@@ -72,6 +72,11 @@ def load_examples(labels_path: str = _LABELS_PATH) -> list[dspy.Example]:
         example._synthetic = bool(record.get('synthetic'))
         example._transform = record.get('transform')       # 'rotate' | 'crop_top' | None
         example._fixture = record.get('source_fixture', record['image'])
+        # A record may pin its fixture to the train split ("split": "train"). Used for a
+        # shape with only one exemplar (the mega-grid): stranded in val it is unlearnable and
+        # only tanks the score, so it must train. Held-out measurement of such a shape comes
+        # from the votes --detect acceptance test on the real source, not this split.
+        example._force_train = record.get('split') == 'train'
         examples.append(example)
     return examples
 
@@ -94,12 +99,17 @@ def split(examples: list[dspy.Example], val_fraction: float = 0.25) -> tuple[lis
     for example in real:
         by_fixture[getattr(example, '_fixture')].append(example)
 
+    # Fixtures pinned to train (a shape with only one or two exemplars, e.g. the mega-grid):
+    # they must never land in val, where the model could not learn them.
+    force_train: set[str] = {getattr(ex, '_fixture') for ex in real
+                             if getattr(ex, '_force_train', False)}
+
     stride: int = max(2, round(1 / val_fraction))
     val_fixtures: set[str] = set()
     trainset: list[dspy.Example] = []
     valset: list[dspy.Example] = []
     for index, fixture in enumerate(sorted(by_fixture)):
-        if index % stride == 0:
+        if index % stride == 0 and fixture not in force_train:
             val_fixtures.add(fixture)
             valset.extend(by_fixture[fixture])
         else:

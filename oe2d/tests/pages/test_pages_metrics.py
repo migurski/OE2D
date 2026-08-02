@@ -7,7 +7,8 @@ _FIELDS = dict(
     candidate_orientation='columns', contest_name_present=True,
     candidate_names_present=True, headers_present=True,
     precinct_scope='multi_precinct', precinct_orientation='rows',
-    ruled_table=True,
+    ruled_table=True, contests_across='single', precinct_rows='multiple',
+    value_columns='total_only',
 )
 
 
@@ -26,9 +27,9 @@ def test_all_correct_scores_one():
 
 
 def test_orientation_is_weighted_heaviest():
-    # orientation weight 3 of total weight 11 -> missing it gives 8/11
+    # orientation weight 3 of total weight 17 -> missing it gives 14/17
     result = metrics.score_page(_gold(), _pred(candidate_orientation='rows'))
-    assert abs(result.score - (8 / 11)) < 1e-9
+    assert abs(result.score - (14 / 17)) < 1e-9
     assert 'candidate_orientation' in result.feedback
 
 

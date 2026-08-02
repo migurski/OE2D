@@ -28,6 +28,9 @@ class _StubPredictor:
             precinct_scope='multi_precinct',
             precinct_orientation='rows',
             ruled_table=True,
+            contests_across='single',
+            precinct_rows='multiple',
+            value_columns='total_only',
         )
 
 

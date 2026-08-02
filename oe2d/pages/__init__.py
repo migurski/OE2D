@@ -71,6 +71,14 @@ class PageProperties(pydantic.BaseModel):
     # columns (False)? A VLM content field: it routes the scanned read (ruled -> Textract
     # TABLES, borderless -> cheap reconstruction) and describes vector pages.
     ruled_table: bool
+    # Read-shape VLM fields: they separate strategies the older fields collapse. contests_across
+    # multiple -> a mega-grid (flat_multi when vector, ruled_scan when scanned); precinct_rows
+    # multiple -> vote-method sub-rows per precinct (ruled_columns/auto) vs single -> one row per
+    # precinct (flat_tables); value_columns separates the three rows-orientation report layouts.
+    # Combined in votes.detect_dispatch.
+    contests_across: signatures.ContestsAcross
+    precinct_rows: signatures.PrecinctRows
+    value_columns: signatures.ValueColumns
     # Detector-sourced (deskew), positive = counter-clockwise; NOT a VLM output.
     skew_degrees: float
 
@@ -158,6 +166,9 @@ class PageAnalyzer(dspy.Module):
             precinct_scope=content.precinct_scope,
             precinct_orientation=content.precinct_orientation,
             ruled_table=content.ruled_table,
+            contests_across=content.contests_across,
+            precinct_rows=content.precinct_rows,
+            value_columns=content.value_columns,
             skew_degrees=skew,
         )
 
@@ -199,6 +210,9 @@ def analyze_image(image_path: str) -> dict:
         precinct_scope=prediction.precinct_scope,
         precinct_orientation=prediction.precinct_orientation,
         ruled_table=prediction.ruled_table,
+        contests_across=prediction.contests_across,
+        precinct_rows=prediction.precinct_rows,
+        value_columns=prediction.value_columns,
         skew_degrees=float(prediction.skew_degrees),
     )
     return properties.model_dump(mode='json')

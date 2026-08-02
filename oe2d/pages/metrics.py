@@ -19,6 +19,13 @@ FIELD_WEIGHTS: dict[str, float] = {
     'candidate_orientation': 3.0,
     'ruled_table': 2.0,
     'precinct_scope': 2.0,
+    # The read-shape routers. value_columns is weighted like the other routers because it
+    # picks the rows-family read (total_only/methods/methods_with_percent) with no county-total
+    # reconcile to self-correct a slip; contests_across and precinct_rows route the columns
+    # family, where the reconcile fallback catches a miss, so they sit at the router weight too.
+    'value_columns': 2.0,
+    'contests_across': 2.0,
+    'precinct_rows': 2.0,
     'contest_name_present': 1.0,
     'candidate_names_present': 1.0,
     'headers_present': 1.0,
@@ -52,8 +59,11 @@ def score_page(gold, pred, trace=None, pred_name=None, pred_trace=None):
             f'Score {score:.2f}. Wrong fields:\n  - ' + '\n  - '.join(misses)
             + '\nLook only at what is visible on THIS page: whether candidates are '
             'columns or rows, whether a contest title / candidate names / headers '
-            'appear here (a continuation page may lack them), the precinct scope, and '
-            'whether the table is a drawn grid of ruling lines or just aligned columns.'
+            'appear here (a continuation page may lack them), the precinct scope, '
+            'whether the table is a drawn grid of ruling lines or just aligned columns, '
+            'whether SEVERAL contests sit side-by-side (a mega-grid), whether each '
+            'precinct is one row or a stack of vote-method sub-rows, and whether each '
+            "candidate's numbers are a lone total, method counts, or count+percent pairs."
         )
     else:
         feedback = f'Score {score:.2f}. All scored fields correct: {", ".join(hits)}.'

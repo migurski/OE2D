@@ -25,6 +25,26 @@ PrecinctScope = typing.Literal['multi_precinct', 'per_precinct', 'county']
 # concrete member rather than null.
 PrecinctAxis = typing.Literal['rows', 'columns', 'none']
 
+# The three READ-SHAPE observations. The seven fields above name a page's axes and what labels
+# are present; these name the finer layout an extractor must route on -- distinct read strategies
+# that share identical values for the older fields (a mega-grid and a single-contest table are
+# both columns/multi_precinct/rows; three Dominion/Electionware rows layouts are all
+# rows/per_precinct). Each is a plain visible fact, combined downstream in votes.detect_dispatch.
+#
+# contests_across: how many distinct contests run ACROSS the page columns side-by-side, sharing
+# one precinct-row axis (a mega-grid) -- 'multiple' -- versus one contest spanning the columns
+# ('single'). Named for the horizontal axis on purpose: contests STACKED down the page do not
+# count, so "how many contests are on the page" would mislabel a stacked page as multiple.
+ContestsAcross = typing.Literal['single', 'multiple']
+# precinct_rows: on a multi_precinct page, does each precinct occupy ONE data row, or SEVERAL
+# stacked vote-method sub-rows (Election Day / Absentee / Total, one per precinct)? 'none' when
+# the page is not multi_precinct (per_precinct or county).
+PrecinctRows = typing.Literal['single', 'multiple', 'none']
+# value_columns: for ONE candidate/choice, how many number columns carry its vote figures -- a
+# lone total, several method totals, or count+percent PAIRS per method? Separates the three
+# rows-orientation report layouts and flags percent-bearing scans.
+ValueColumns = typing.Literal['total_only', 'methods', 'methods_with_percent']
+
 
 class PageAnalysis(dspy.Signature):
     '''Report factual, in-page observations about ONE election-results page image.
@@ -40,6 +60,29 @@ class PageAnalysis(dspy.Signature):
     columns are held by whitespace/alignment or by only a shaded header band, even if
     a few horizontal separators appear between rows -- horizontal lines alone are not a
     grid and do not make it ruled.
+
+    contests_across: answer 'multiple' when TWO OR MORE different contests (different
+    offices -- e.g. a US House race AND a state senate race, each with its own candidate
+    columns and its own Total-Votes header) sit SIDE BY SIDE across the page, all sharing
+    ONE column of precinct labels down the left, so each precinct is a single row that
+    runs left-to-right through every contest (a mega-grid). Answer 'single' when only one
+    contest's candidates span the page (however many candidate columns it has), or when a
+    second contest appears only STACKED BELOW the first (a separate block further down the
+    page, not beside it). A turnout / registered-voters block beside one contest is not a
+    second contest.
+
+    precinct_rows: on a multi_precinct page, answer 'single' when each precinct is ONE
+    row of numbers, 'multiple' when each precinct is a stack of vote-method sub-rows
+    (e.g. an Election Day row, an Absentee/AV row, a Total row -- one group per
+    precinct). Answer 'none' when the page is not laid out as many precincts (a single
+    per-precinct page, or a county-summary page).
+
+    value_columns: look at ONE candidate/choice and count the kinds of number that
+    follow it. Answer 'total_only' for a single vote figure. Answer 'methods' for
+    several plain vote counts broken out by method (Election Day, Absentee, Total ...)
+    with NO percentages. Answer 'methods_with_percent' when each method figure is a
+    count paired with a percent (e.g. "1,234  57.3%") -- the tell is a % sign beside
+    the counts.
     '''
     image: dspy.Image = dspy.InputField(desc='A single rendered election-results page')
     candidate_orientation: CandidateOrientation = dspy.OutputField(
@@ -65,3 +108,16 @@ class PageAnalysis(dspy.Signature):
     ruled_table: bool = dspy.OutputField(
         desc='Whether the results table is drawn as a full grid of ruling lines '
              '(see the instructions for how to decide)')
+    contests_across: ContestsAcross = dspy.OutputField(
+        desc="'multiple' when several different contests sit side-by-side across the "
+             "columns (a mega-grid, one precinct row spanning them all); 'single' for one "
+             "contest across the page (a second contest STACKED below still counts as "
+             "single)")
+    precinct_rows: PrecinctRows = dspy.OutputField(
+        desc="For a multi_precinct page, whether each precinct is 'single' (one data "
+             "row) or 'multiple' (a stack of vote-method sub-rows); 'none' when the "
+             "page is not multi_precinct")
+    value_columns: ValueColumns = dspy.OutputField(
+        desc="Per candidate/choice, the number columns: 'total_only' (a lone total), "
+             "'methods' (several method counts, no percentages), or "
+             "'methods_with_percent' (each method a count+percent pair)")
