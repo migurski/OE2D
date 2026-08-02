@@ -686,6 +686,90 @@ def _precinct_groups(pages_schema_blocks: list[tuple]) -> list[list[tuple]]:
     return groups
 
 
+def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
+                      schema_for: typing.Callable[[list[list[str]]], signatures.PageSchema],
+                      ) -> tuple[dict, dict]:
+    '''Scope a scan's flat tables to one contest by column structure and read their CONTENT.
+
+    The pure core of _extract_scanned_tables, with the two impure dependencies injected: `tables`
+    are the grids already read (read_flat_tables per page, Textract), and `schema_for(anchor_grid)`
+    returns the interpreter's PageSchema for a grid (the LLM step). Kept standalone so this scoping
+    and digit-moving logic -- the part that decides which tables belong to the contest and reads
+    their columns -- can be exercised on captured grids with a stub schema, no Textract and no LM.
+
+    A scanned page holds several contests' tables plus a header-less continuation of the previous
+    page's contest, so we read EVERY table and scope by column structure: learn the candidate
+    columns ONCE from the table whose header matches the expected candidates (the anchor), then take
+    the anchor and every table sharing its column count -- the anchor and its header-less
+    continuations. The interpreter is used only to map header columns to candidates; this reads a
+    FLAT table (one row per precinct, one total per candidate, no vote-method sub-rows) directly from
+    those columns, so it is independent of method_labels and never touches the sub-row walker.
+
+    Returns (votes, totals): votes as elsewhere, and totals mapping each non-write-in candidate
+    column to the printed COUNTY-TOTAL row's value for that column -- the checksum target _read_votes
+    reconciles the ruled_scan read against (Sigma precincts == printed total per candidate).
+    '''
+    if not tables:
+        return {}, {}
+    wanted: set = {_norm(token) for line in candidate_context.splitlines()
+                   for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
+    header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
+    anchor: list[list[str]] = max(tables, key=header_match)
+    schema: signatures.PageSchema = schema_for(anchor)
+    column_count: int = len(anchor[0])
+    label_column: int = schema.label_column
+    candidates = [column for column in schema.columns if column.role == 'candidate']
+
+    def has_data(row: list[str]) -> bool:
+        return any(column.index < len(row) and _cell_count(row[column.index]) is not None
+                   for column in candidates)
+
+    def label_of(row: list[str]) -> str:
+        return _clean(row[label_column]) if label_column < len(row) else ''
+
+    # Build the precinct list across the contest's tables in page order, stitching a precinct
+    # whose row STRADDLES a page: its data sits at the bottom of one page under a (truncated)
+    # label, and the label continues on a label-only row at the top of the next table. A
+    # label-only row that appears before any precinct of a continuation table is that
+    # continuation, so append it to the previous precinct.
+    entries: list[list] = []                         # [label, data_row]
+    for grid in tables:                              # anchor + its column-count-matching continuations
+        if not grid or len(grid[0]) != column_count:
+            continue
+        started: bool = False
+        for row in grid:
+            if has_data(row):
+                entries.append([label_of(row), row])
+                started = True
+            elif label_of(row) and not started and entries:
+                entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
+
+    votes: dict = {}
+    totals: dict = {}                                # (candidate, party) -> printed county total
+    write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
+    for precinct, row in entries:
+        # a grand-total row is a CHECKSUM, not a precinct; treat a bare "Total" label as one.
+        # Capture its non-write-in candidate values (largest wins if several) for reconciliation.
+        is_total: bool = (not precinct or precinct in schema.skip_labels
+                          or _norm(precinct) in ('total', 'totals'))
+        for column in candidates:
+            value = _cell_count(row[column.index]) if column.index < len(row) else None
+            if value is None:
+                continue
+            candidate, party = _split_party(column.candidate, column.party)
+            if is_total:
+                if not column.write_in:
+                    totals[(candidate, party)] = max(value, totals.get((candidate, party), 0))
+            elif column.write_in:
+                write_ins[precinct]['total' if column.write_in_total else 'component'].append(value)
+            else:
+                votes[(precinct, candidate, party)] = {'votes': value}
+    for precinct, parts in write_ins.items():
+        votes[(precinct, WRITE_IN_LABEL, '')] = {
+            'votes': _consolidate_write_in(parts['total'], parts['component'])}
+    return votes, totals
+
+
 class VoteExtractor(dspy.Module):
     '''The full vote-extraction program: read -> interpret (LLM) -> stitch -> canonical rows.
 
@@ -915,82 +999,15 @@ class VoteExtractor(dspy.Module):
 
     def _extract_scanned_tables(self, file_path: str, pages: list[int], office: str,
                                 candidate_context: str) -> tuple[dict, dict]:
-        '''Extract a contest read from a ruled scan as tables (read_scanned_tables), scoping to the
-        contest by column structure and reading CONTENT the interpreter reports.
-
-        A scanned page holds several contests' tables plus a header-less continuation of the previous
-        page's contest, so we read EVERY table and scope by column structure: learn the candidate
-        columns ONCE from the table whose header matches the expected candidates (the anchor), then
-        take the anchor and every table sharing its column count -- the anchor and its header-less
-        continuations. The interpreter is used only to map header columns to candidates; this reads a
-        FLAT table (one row per precinct, one total per candidate, no vote-method sub-rows) directly
-        from those columns, so it is independent of method_labels and never touches the sub-row walker.
-
-        Returns (votes, totals): votes as elsewhere, and totals mapping each non-write-in candidate
-        column to the printed COUNTY-TOTAL row's value for that column -- the checksum target _read_votes
-        reconciles the ruled_scan read against (Sigma precincts == printed total per candidate).
-        '''
+        '''Read the contest's pages as flat tables (read_flat_tables, Textract) and hand them to
+        scope_flat_tables with the interpreter bound as the schema resolver. The scoping and
+        digit-moving live in that standalone function so they can be tested on captured grids; this
+        method only supplies the two impure dependencies -- the Textract read and the LLM schema.'''
         tables: list[list[list[str]]] = [grid for page in pages
                                          for grid in read_flat_tables(file_path, page)]
-        if not tables:
-            return {}, {}
-        wanted: set = {_norm(token) for line in candidate_context.splitlines()
-                       for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
-        header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
-        anchor: list[list[str]] = max(tables, key=header_match)
-        schema: signatures.PageSchema = self._columns_schema(office, candidate_context, anchor)
-        column_count: int = len(anchor[0])
-        label_column: int = schema.label_column
-        candidates = [column for column in schema.columns if column.role == 'candidate']
-
-        def has_data(row: list[str]) -> bool:
-            return any(column.index < len(row) and _cell_count(row[column.index]) is not None
-                       for column in candidates)
-
-        def label_of(row: list[str]) -> str:
-            return _clean(row[label_column]) if label_column < len(row) else ''
-
-        # Build the precinct list across the contest's tables in page order, stitching a precinct
-        # whose row STRADDLES a page: its data sits at the bottom of one page under a (truncated)
-        # label, and the label continues on a label-only row at the top of the next table. A
-        # label-only row that appears before any precinct of a continuation table is that
-        # continuation, so append it to the previous precinct.
-        entries: list[list] = []                         # [label, data_row]
-        for grid in tables:                              # anchor + its column-count-matching continuations
-            if not grid or len(grid[0]) != column_count:
-                continue
-            started: bool = False
-            for row in grid:
-                if has_data(row):
-                    entries.append([label_of(row), row])
-                    started = True
-                elif label_of(row) and not started and entries:
-                    entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
-
-        votes: dict = {}
-        totals: dict = {}                                # (candidate, party) -> printed county total
-        write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
-        for precinct, row in entries:
-            # a grand-total row is a CHECKSUM, not a precinct; treat a bare "Total" label as one.
-            # Capture its non-write-in candidate values (largest wins if several) for reconciliation.
-            is_total: bool = (not precinct or precinct in schema.skip_labels
-                              or _norm(precinct) in ('total', 'totals'))
-            for column in candidates:
-                value = _cell_count(row[column.index]) if column.index < len(row) else None
-                if value is None:
-                    continue
-                candidate, party = _split_party(column.candidate, column.party)
-                if is_total:
-                    if not column.write_in:
-                        totals[(candidate, party)] = max(value, totals.get((candidate, party), 0))
-                elif column.write_in:
-                    write_ins[precinct]['total' if column.write_in_total else 'component'].append(value)
-                else:
-                    votes[(precinct, candidate, party)] = {'votes': value}
-        for precinct, parts in write_ins.items():
-            votes[(precinct, WRITE_IN_LABEL, '')] = {
-                'votes': _consolidate_write_in(parts['total'], parts['component'])}
-        return votes, totals
+        return scope_flat_tables(
+            tables, candidate_context,
+            lambda anchor: self._columns_schema(office, candidate_context, anchor))
 
 
 def build_extractor() -> VoteExtractor:
