@@ -5,11 +5,10 @@ already produced and a schema resolver, it scopes them to one contest by column 
 the digits into votes + printed county totals. Both impure dependencies are injected, so a stub
 schema fully drives it and a few tiny hand-built grids stand in for what Textract returns -- each
 grid shaped to isolate one behaviour (a clean read, column-count scoping, write-in consolidation, a
-page-straddling precinct). These are the passing guardrails; the Columbia multi-page column-count
-case (the one that does NOT read today) gets its own failing test alongside them.
+page-straddling precinct). The multi-page column-count divergence that once broke Columbia US Senate
+is fixed upstream in _normalize_table_columns (both pages normalize to one width before scope sees
+them), so scope never receives a width-divergent same-contest pair -- see test_votes_normalize_columns.
 '''
-import pytest
-
 from ... import votes
 from ...votes import signatures
 
@@ -136,33 +135,3 @@ def test_empty_tables_returns_empty_without_resolving_a_schema():
     vote_map, totals = votes.scope_flat_tables([], 'Casey (DEM)', lambda anchor: called.append(anchor))
     assert vote_map == {} and totals == {}
     assert not called
-
-
-@pytest.mark.xfail(strict=True, reason='multi-page column-count inconsistency: the continuation '
-                   'page is dropped by single-anchor column-count scoping (see votes-HANDOFF-3). '
-                   'Remove this marker when per-table interpretation lands.')
-def test_same_contest_different_column_count_per_page():
-    # Columbia US Senate shape: the anchor page merges each candidate's count and percent into one
-    # cell ('428 76.16%'), so it comes back N columns wide; a later page of the SAME contest splits
-    # some percents into their own cell ('425' | '76.58%'), coming back WIDER -- and with too few
-    # rows for the percent-column normalizer (>= 3) to collapse it back. Single-anchor scoping keeps
-    # only the anchor's column count, so the wider continuation page is dropped: its precinct AND the
-    # county Total row (the reconcile checksum) vanish. The fix is to interpret each header-bearing
-    # table on its own, reusing a schema across matching continuations rather than one global width.
-    anchor = [
-        ['', 'CASEY', 'MCCORMICK', 'Write-in'],
-        ['BEAVER TWP', '125', '428 76.16%', '0'],
-        ['BENTON TWP', '189', '569 73.61%', '0'],
-    ]
-    continuation = [                                    # percent split out -> 6 cols; only 2 data rows
-        ['', 'CASEY', 'MCCORMICK', '', 'Write-in', ''],
-        ['SUGARLOAF TWP', '119', '425', '76.58%', '0', ''],
-        ['Total', '10962', '20600', '63.57%', '29', ''],
-    ]
-    schema = _schema([_col(1, 'Casey', 'DEM'), _col(2, 'McCormick', 'REP'),
-                      _col(3, 'Scattered', write_in=True)])
-    vote_map, totals = _run([anchor, continuation], schema, context='Casey (DEM)\nMcCormick (REP)')
-    precincts = {precinct for (precinct, _c, _p) in vote_map}
-    assert 'SUGARLOAF TWP' in precincts                 # the continuation page's precinct is kept
-    assert totals                                        # its Total row is captured as the checksum
-    assert votes._reconciles(vote_map, totals)
