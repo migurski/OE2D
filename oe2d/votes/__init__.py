@@ -1114,7 +1114,11 @@ class VoteExtractor(dspy.Module):
             read_strategy = read_strategy or detected['read_strategy']
         votes: dict = self._read_votes(file_path, pages, office, candidate_context,
                                        orientation, read_strategy)
-        rows: list[dict] = votes_to_rows(votes, county, office, district)
+        # A per-precinct ROWS report is the document's own precinct roster: a precinct present in it
+        # participated in the contest even at zero votes, so keep an all-zero precinct there. The
+        # all-zero drop (foreign placeholder rows) applies only to the flat/columns reads.
+        rows: list[dict] = votes_to_rows(votes, county, office, district,
+                                         drop_all_zero=(orientation != 'rows'))
         return dspy.Prediction(rows=rows, votes=votes)
 
     def _read_votes(self, file_path: str, pages: list[int], office: str, candidate_context: str,
@@ -1381,19 +1385,24 @@ def extract(file_path: str, pages: list[int], office: str, candidate_context: st
                      orientation=orientation, read_strategy=read_strategy).votes
 
 
-def votes_to_rows(votes: dict, county: str, office: str, district: str = '') -> list[dict]:
+def votes_to_rows(votes: dict, county: str, office: str, district: str = '',
+                  drop_all_zero: bool = True) -> list[dict]:
     '''Canonical precinct rows from a stitched votes mapping.
 
-    Drop a precinct whose every candidate total is zero: in these MI reports a zero-vote precinct is
-    an out-of-county split fragment the county lists as a placeholder but does not own ("Chester
-    Township (Eaton OOC)", "Delaware Township (Sanilac County)" -- confirmed a Sanilac township), and
-    the human-authored CSVs exclude them. This is a NUMERIC data-integrity rule (no votes -> not a
-    result row); it reads no text, so it is not a language/terminology decision.'''
+    With `drop_all_zero`, drop a precinct whose every candidate total is zero. In a FLAT/columns
+    contest a zero-vote precinct is typically an out-of-county split fragment the county lists as a
+    placeholder row but does not own ("Chester Township (Eaton OOC)", "Delaware Township (Sanilac
+    County)"), which the human-authored CSVs exclude; the drop is a NUMERIC data-integrity rule (no
+    votes -> not a result row), reading no text. But in a per-precinct ROWS report the precinct set is
+    the document's own roster and a precinct's presence is decided by whether its report carries THIS
+    contest's block, not by its vote sum: a real precinct that cast zero straight-party votes (Bay's
+    City of Midland Precinct 2) belongs in the output as all-zeros. So callers pass drop_all_zero=False
+    for the rows path, where an all-zero precinct that was read genuinely participated.'''
     live: set = {precinct for (precinct, _candidate, _party), buckets in votes.items()
                  if (buckets.get('votes') or 0)}
     rows: list[dict] = []
     for (precinct, candidate, party), buckets in votes.items():
-        if precinct not in live:
+        if drop_all_zero and precinct not in live:
             continue
         row: dict = {column: '' for column in CANON_COLUMNS}
         row.update(county=county, precinct=precinct, office=office, district=district,

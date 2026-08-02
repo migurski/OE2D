@@ -60,6 +60,21 @@ def test_votes_to_rows_canonical_shape():
     assert rows[0]['early_voting'] == ''
 
 
+def test_votes_to_rows_all_zero_drop_is_opt_out():
+    # a precinct whose every candidate total is 0: dropped by default (a flat contest's out-of-county
+    # placeholder row), but KEPT when drop_all_zero=False (a per-precinct report's roster member that
+    # cast zero votes in this contest, e.g. Bay's Midland P2 straight-party block)
+    votes_map = {('Live', 'Democrat', 'DEM'): {'votes': 12},
+                 ('Live', 'Republican', 'REP'): {'votes': 30},
+                 ('Zeroed', 'Democrat', 'DEM'): {'votes': 0},
+                 ('Zeroed', 'Republican', 'REP'): {'votes': 0}}
+    dropped = votes.votes_to_rows(votes_map, county='Bay', office='Straight Party')
+    assert {row['precinct'] for row in dropped} == {'Live'}
+    kept = votes.votes_to_rows(votes_map, county='Bay', office='Straight Party', drop_all_zero=False)
+    assert {row['precinct'] for row in kept} == {'Live', 'Zeroed'}
+    assert all(row['votes'] == 0 for row in kept if row['precinct'] == 'Zeroed')
+
+
 def test_norm_is_whitespace_and_case_insensitive():
     assert votes._norm('DEM HARRIS and  WALZ') == votes._norm('dem harris andwalz')
 
