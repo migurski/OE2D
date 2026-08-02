@@ -275,6 +275,41 @@ def _contiguous_label(row: StringRow, start: int) -> str:
     return ' '.join(parts)
 
 
+def _despace(text: str) -> str:
+    '''Lowercase alphanumerics only -- a spacing-agnostic identity for a run of text.'''
+    return re.sub(r'[^a-z0-9]', '', text.lower())
+
+
+@functools.lru_cache(maxsize=None)
+def _page_text_lines(path: str, page: int) -> tuple[str, ...]:
+    '''The page's raw text lines (pdfplumber extract_text), memoized. Used to recover a header line
+    with its original word spacing, which the text-strategy grid can split mid-word.'''
+    pdf: pdfplumber.PDF = _open_pdf(path)
+    if page < 1 or page > len(pdf.pages):
+        return ()
+    return tuple((pdf.pages[page - 1].extract_text() or '').splitlines())
+
+
+def _match_header_line(fragments: str, lines: 'typing.Sequence[str]') -> str:
+    '''Recover a header label's ORIGINAL spacing from candidate raw text lines. The text-strategy grid
+    aligns the precinct-name header to the data columns below it, so a column boundary can fall inside
+    a word ("Township" -> "Tow" | "nship", joined "Tow nship"); the raw text layer has the line
+    intact. Return the raw line whose de-spaced form equals the fragments' de-spaced form, so the gold
+    precinct name is source-faithful. Falls back to the fragments when no single raw line matches.'''
+    target: str = _despace(fragments)
+    if not target:
+        return fragments
+    for line in lines:
+        if _despace(line) == target:
+            return line.strip()
+    return fragments
+
+
+def _clean_header_label(path: str, page: int, fragments: str) -> str:
+    '''`_match_header_line` against the page's raw text lines (the impure read).'''
+    return _match_header_line(fragments, _page_text_lines(path, page))
+
+
 def grid_to_text(rows: StringGrid) -> str:
     '''Render an extracted grid for the interpreter: one row per line, 0-based columns.'''
     return '\n'.join('%d: %s' % (i, ' | '.join(_clean(cell) for cell in row))
@@ -1262,6 +1297,7 @@ class VoteExtractor(dspy.Module):
             precinct: str = ''
             if schema.precinct_row < len(grid):
                 precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
+                precinct = _clean_header_label(file_path, page, precinct)
             count_columns: list[int] = _count_columns(grid, schema.candidate_rows, len(buckets))
             for role in schema.candidate_rows:
                 if role.row_index >= len(grid):
