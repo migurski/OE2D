@@ -2,8 +2,9 @@
 
 Continues `votes-HANDOFF-4.md`. Read HANDOFF-4 for the full architecture (read strategies, geometry
 alignment, conventions, environment/ops, code map) — it is still accurate except where noted below.
-This doc covers **what changed since HANDOFF-4** and the **one substantial task left: the Missaukee
-mega-grid column-scoping**, which is written up in enough detail to implement cold.
+This doc covers **what changed since HANDOFF-4**; its headline task (the Missaukee mega-grid) is DONE.
+The next substantial task, **autonomous dispatch (#3)**, is handed to oe2d.pages — see the Next-steps
+section and `pages-HANDOFF-2.md`.
 
 ## Status snapshot (current)
 
@@ -13,8 +14,38 @@ mega-grid column-scoping**, which is written up in enough detail to implement co
 - **The Missaukee mega-grid task below is now DONE** (all 5 Missaukee contests in gold). Kept below as
   the design record; the remaining open work is the Tier-2 breadth fills.
 - Counties/offices now covered (see `datasets.load_index()`): Adams(2) Barry(2) Bay(4) Branch(4)
-  Calaveras(2) Calhoun(3) Columbia(3) Gogebic(1) Huron(4) Missaukee(1) Mono(3) Montmorency(4)
+  Calaveras(2) Calhoun(3) Columbia(3) Gogebic(1) Huron(4) Missaukee(5) Mono(3) Montmorency(4)
   Nevada(5) Ontonagon(4) Oscoda(2) Plumas(2).
+
+## Next steps (overall list, reconciled across HANDOFF-2..5)
+
+The whole deferred batch, the mega-grid, and the State House/Senate split are DONE. What remains:
+
+1. **Autonomous dispatch (#3) — IN PROGRESS, handed to oe2d.pages (`pages-HANDOFF-2.md`).** Today
+   `detect_dispatch` only proposes `auto`/`ruled_scan`; the six newer strategies all misdetect as
+   `auto` (`oe2d-votes-evaluate --detect`: orientation 92%, read_strategy 46%). The VLM must learn to
+   name the read shape (new `PageAnalysis` fields + labeled pages gold + re-optimize). STOPGAP DONE:
+   the votes CLI `--read-strategy` now accepts all 8 strategies (derived from `ReadStrategy`), so an
+   operator can name the shape by hand until detection catches up. **Votes-side finish once the VLM
+   field exists:** replace the coarse read_strategy line in `detect_dispatch` with the mapping in
+   pages-HANDOFF-2, then confirm `oe2d-votes-evaluate --detected` stays 1.000 (the reconcile fallback
+   protects the flat family; the rows family leans on the new `value_columns` field).
+2. **Tier-2 breadth fills** (cheap, existing machinery): missing offices in covered counties — Gogebic
+   (Straight Party / US Senate / US House), Oscoda (Straight Party / US Senate), Barry (US Senate / US
+   House), Calhoun (Straight Party / US Senate), Adams (US Senate / US House), Calaveras (State Senate /
+   Assembly).
+3. **A ballot-measure (Yes/No) contest** — the one contest *shape* not in gold (all 50 are candidate
+   races). From a county whose results include measures.
+4. **Cost**: header-slice interpretation (send the interpreter only header + one block, not every
+   numeric cell of every page); cheap→TABLES escalation (try cheap, checksum, pay for TABLES only on
+   reconcile failure).
+5. **Robustness/future**: dual-DPI reconciliation (run a pair of render DPIs, diff, reconcile against
+   source); the fuller all-zero roster (document-level precinct roster + name-based out-of-jurisdiction
+   filter replacing the zero-sum drop) — deferred until a county needs it.
+6. **`columbia-us-house` F1=0.996** — one zero-vote write-in row the flat read drops (wF1=1.000).
+7. **GEPA** pass over the two interpreter predictors (harness `optimize.py` exists, never run) — worth
+   it since the recurring cold-flaky moments (Mono write-in inclusion, mega-grid non-determinism before
+   segmentation) were interpreter prompt-sensitivity, which GEPA hardens.
 
 ## What changed since HANDOFF-4
 
