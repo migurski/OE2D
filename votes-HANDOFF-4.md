@@ -17,14 +17,22 @@ walkers, stitch, consensus, write-in consolidation, all-zero drop) is determinis
 
 ## Status snapshot (current)
 
-- **Gold: 33 contests, all 1.000.** 16 original + Branch 4 + Columbia 3 + Plumas 2 + Ontonagon 4 +
-  Montmorency 4. Score the whole set with `oe2d-votes-evaluate` (no args); the content-addressed
+- **Gold: 38 contests, macro wF1=1.000 (F1=1.000).** 33 prior + Bay 3 (President/US Senate/US House)
+  + Missaukee 2 (President/US Senate). One pre-existing non-1.000: `columbia-us-house` F1=0.996
+  (fn=1, a single zero-vote `CATAWISSA BOROUGH | Write-ins = 0` row the flat_tables read omits;
+  wF1=1.000). Score the whole set with `oe2d-votes-evaluate` (no args); the content-addressed
   Textract cache makes re-runs free.
 - **Rendered at 400 DPI** (`votes.TEXTRACT_DPI = 400`).
-- **Tests: `oe2d/tests/votes/` 53 pass** (`test_votes_walker`, `_metrics`, `_scope_flat_tables`,
-  `_normalize_columns`, `_join_flat_table_pages`, `_align_columns`). `oe2d/tests/pages/` pass too.
+- **Tests: `oe2d/tests/votes/` 58 pass** (added `test_votes_header_label` — 5 for `_match_header_line`).
+  `oe2d/tests/pages/` pass too.
 - Gold data: `oe2d-data/votes/index.jsonl` (one record per contest) + one
   `<county>__<contest>__expected.csv` each.
+- **Precinct page-header repair (this session):** read_text_grid's text-strategy splits the
+  precinct-major page-header mid-word ("Bangor Township" -> "Bangor Tow nship" — a numeric column's
+  x-boundary cuts the word). `_match_header_line(fragments, lines)` (pure, tested) restores the
+  original spacing by matching the fragmented join to the page's raw text line with the same de-spaced
+  content; `_clean_header_label(path, page, fragments)` is the impure wrapper wired into
+  `_extract_precinct_contest`. Keeps the gold precinct name source-faithful.
 
 ## Environment / operational notes (READ FIRST)
 
@@ -166,29 +174,35 @@ repeated-run "determinism" check proves nothing. To test a read is genuinely sta
 `cache=False` (`dspy.LM(..., cache=False)`) and run several times (Plumas president verified this way).
 The committed gold's 1.000 must hold on a COLD cache, not just a warm one.
 
-## Deferred batch files (recon banked — start here)
+## Deferred batch files (recon banked — updated this session)
 
-Four `tmp/new-kinds/*.pdf` remain, all DEFERRED for context budget. Suggested order easiest-first:
+Bay is DONE and Missaukee is PARTIAL (see status). Remaining, hardest-last:
 
-- **Bay** (`robustness--bay-mi.pdf`, 286 pp vector, 47 precincts, methods, Electionware). UNEXAMINED —
-  standard methods layout, probably `ruled_columns` or the `auto`/columns method path. Do this first.
-- **Mono** (`optional--mono-ca.pdf`, 75 pp vector, 13 precincts, methods). Per-precinct "Election
-  Summary Report" documents (~6 pp each; President on that report's p1) → ROWS orientation
-  (`_extract_precinct_contest`). NOTE: its propositions are NOT in the results CSV, so there is no
-  ballot-measure gold — only President / U.S. House / State Assembly. Needs report-boundary page
-  mapping across the 75 pp.
-- **Missaukee** (`vector--missaukee-mi.pdf`, 7 pp vector, 18 precincts, votes-only). ALL federal
-  contests are ONE wide FLAT mega-grid on p1 (Straight Party | President | US Senate | US House |
-  State House as side-by-side candidate-column blocks). `flat_tables` reads Straight Party / President
-  / US Senate CLEAN (0 by-party diffs) but **US House fails (67 diffs)** and President write-in is +1
-  (Richland). WHY: the Textract grid header carries only PARTY labels (`Dem/Rep/Lib/Grn`, repeated per
-  contest) + contest TITLES (`Rep Congress 4th`); candidate NAMES (Barr/Bergman/Gale/Hakola) are NOT
-  in the grid, so the interpreter scopes US House's 4 columns among 37 by title+position and grabs the
-  wrong ones (it sits between US Senate and State House). FIX = title/position-aware column scoping for
-  a single-table multi-contest grid; there's no continuation/geometry to lean on. This is the most
-  interesting remaining problem.
-- **Nevada** (`robustness--nevada-ca.pdf`, **832 pp** vector, 97 precincts, methods). Per-precinct
-  layout (President/US House/State Senate/State Assembly). Huge; needs a page-mapping pass first.
+- **Bay** — DONE (President/US Senate/US House). Straight Party still deferred: the reference keeps 7
+  all-zero precincts (6 single-page placeholder reports Bently/Buena Vista/Grim/Kochville/Titabawassee/
+  Zilwaukee + City of Midland Precinct 2, which cast zero straight-party votes) that the all-zero-drop
+  removes — a divergence-from-reference call for Mike, not autonomous.
+- **Missaukee** — PARTIAL. President + US Senate banked (flat_tables/columns, page 1, votes-only,
+  0 by-party diffs, write-ins match — the old "+1 Richland" is gone). **Straight Party** now fails
+  with "No column structure found on page 1/2" (its leftmost party block isn't segmented as a Textract
+  table) and **US House** still grabs the wrong 4-of-37 columns. Both are the single-grid
+  column-scoping problem: the header carries only PARTY labels (Dem/Rep/Lib/UStx/Grn/NL/WCP, repeated
+  per contest) + contest TITLES, not candidate NAMES, so name-identity can't anchor. FIX =
+  title/position-aware column scoping for a single-table multi-contest grid. The most interesting
+  remaining problem.
+- **Mono** (`optional--mono-ca.pdf`) — the PDF is **2020**, not 2024 (HANDOFF-4 was wrong); the 2020
+  Mono results CSV DOES exist (`.../2020/counties/20201103__ca__general__mono__precinct.csv`). 12
+  precincts, President/US House/State Assembly, **Total-only** per candidate (the reference's
+  election_day/mail splits come from a richer export we don't have — gold would be votes-only, like
+  Ontonagon). Blocked on a NEW reader: `_extract_precinct_contest` reads 0 rows because it's a Dominion
+  "Election Summary Report" whose candidate names WRAP across 2-3 physical lines with the vote floating
+  on the middle line ("JOSEPH BIDEN/KAMALA" / "DEM 210" / "HARRIS"); read_text_grid fragments it. Needs
+  a line-oriented narrow-report reader.
+- **Nevada** (`robustness--nevada-ca.pdf`) — **BLOCKED**: no 2024 precinct results CSV exists in
+  openelections-data-ca (latest general is 2020), so gold can't be verified. Also a NEW reader anyway:
+  Dominion "Precinct Results Report", 832pp vector, 118 precincts, each candidate one line with full
+  method count+percent pairs (Vote by Mail/Early/Election Day/Provisional/Total) + a bare running-mate
+  line to skip.
 
 ## Then the deferred infrastructure (from HANDOFF-2/3)
 
