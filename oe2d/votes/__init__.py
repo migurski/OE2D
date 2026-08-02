@@ -166,6 +166,38 @@ def _record(components: list[str], values: list[int], total: int) -> dict:
     return record
 
 
+_PERCENT_CELL: re.Pattern = re.compile(r'^\s*-?[\d,]*\.?\d+\s*%\s*$')
+
+
+def _normalize_table_columns(grid: list[list[str]]) -> list[list[str]]:
+    '''Drop the columns a flat table reader adds noise in, so the SAME contest keeps the same column
+    count page to page (the flat scoper matches tables by column count).
+
+    Two kinds are removed: (1) a candidate's PERCENT column -- some vendors print each candidate as a
+    count column followed by a percent column under one (colspan-2) header, and a reader segments the
+    pair inconsistently, sometimes count and percent in ONE cell ("122 21.55%"), sometimes in TWO
+    ("437" then "77.07%"), so page A gets fewer columns than page B; a percent column (non-empty cells
+    are pure percents, no leading count) holds nothing we keep. (2) an ALL-EMPTY column -- a spacer the
+    reader inserts on one page but not another. A merged "count percent" cell stays put and its count
+    is read as the leading token downstream. Count-only tables with no percent/empty columns pass
+    through unchanged.'''
+    if not grid:
+        return grid
+    width: int = max(len(row) for row in grid)
+
+    def cells(col: int) -> list[str]:
+        return [_clean(row[col]) for row in grid if col < len(row) and _clean(row[col])]
+
+    def drop(col: int) -> bool:
+        values: list[str] = cells(col)
+        if not values:
+            return True                                  # all-empty spacer column
+        return len(values) >= 3 and sum(bool(_PERCENT_CELL.match(v)) for v in values) >= 0.6 * len(values)
+
+    keep: list[int] = [col for col in range(width) if not drop(col)]
+    return [[row[col] if col < len(row) else '' for col in keep] for row in grid]
+
+
 def _count_columns(grid: list[list[str]], candidate_rows: list, want: int) -> list[int]:
     '''The columns that hold vote counts, by CONSENSUS across a page's candidate rows. The column
     structure is consistent within a page even when table conversion drifts across pages, so a
@@ -467,8 +499,10 @@ def read_flat_tables(file_path: str, page: int) -> list[list[list[str]]]:
     text-strategy geometry returns one messy merged grid with wrapped, fragmented headers. Rendering
     a vector page costs a Textract call, but the flat path is chosen deliberately (read_strategy
     flat_tables / ruled_scan), so paying for the robust reader is the point; the free readers still
-    serve the 'auto' path. This is READ MECHANICS -- the flat CONTENT handling downstream is the same.'''
-    return read_scanned_tables(file_path, page)
+    serve the 'auto' path. This is READ MECHANICS -- the flat CONTENT handling downstream is the same.
+    Percent columns from a count+percent (colspan-2) candidate layout are stripped so a contest's
+    column count stays consistent across pages.'''
+    return [_normalize_table_columns(grid) for grid in read_scanned_tables(file_path, page)]
 
 
 def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap: float = 0.02,
@@ -910,7 +944,7 @@ class VoteExtractor(dspy.Module):
         candidates = [column for column in schema.columns if column.role == 'candidate']
 
         def has_data(row: list[str]) -> bool:
-            return any(column.index < len(row) and _parse_number(row[column.index]) is not None
+            return any(column.index < len(row) and _cell_count(row[column.index]) is not None
                        for column in candidates)
 
         def label_of(row: list[str]) -> str:
@@ -920,8 +954,7 @@ class VoteExtractor(dspy.Module):
         # whose row STRADDLES a page: its data sits at the bottom of one page under a (truncated)
         # label, and the label continues on a label-only row at the top of the next table. A
         # label-only row that appears before any precinct of a continuation table is that
-        # continuation, so append it to the previous precinct. Precincts run down the rows, so nothing
-        # needs positional alignment.
+        # continuation, so append it to the previous precinct.
         entries: list[list] = []                         # [label, data_row]
         for grid in tables:                              # anchor + its column-count-matching continuations
             if not grid or len(grid[0]) != column_count:
@@ -938,14 +971,12 @@ class VoteExtractor(dspy.Module):
         totals: dict = {}                                # (candidate, party) -> printed county total
         write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
         for precinct, row in entries:
-            # a grand-total row is a CHECKSUM, not a precinct; the interpreter flags it in skip_labels
-            # when the anchor table shows it, but the total can sit on a header-less continuation the
-            # anchor never saw, so also treat a bare "Total" label as one. Capture its non-write-in
-            # candidate values (the largest wins if several total-like rows appear) for reconciliation.
+            # a grand-total row is a CHECKSUM, not a precinct; treat a bare "Total" label as one.
+            # Capture its non-write-in candidate values (largest wins if several) for reconciliation.
             is_total: bool = (not precinct or precinct in schema.skip_labels
                               or _norm(precinct) in ('total', 'totals'))
             for column in candidates:
-                value = _parse_number(row[column.index]) if column.index < len(row) else None
+                value = _cell_count(row[column.index]) if column.index < len(row) else None
                 if value is None:
                     continue
                 candidate, party = _split_party(column.candidate, column.party)
