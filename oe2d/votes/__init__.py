@@ -66,7 +66,7 @@ ColumnX: typing.TypeAlias = list[float]
 # candidates carry Election Day / AV / Early Voting / Total sub-rows (Montmorency), where the drawn
 # grid places cells the cheap-words reader would mis-cluster.
 ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'ruled_columns',
-                              'report_lines']
+                              'report_lines_methods', 'report_lines_total']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -328,14 +328,18 @@ def _word_lines(words: list, y_tol: float = 3) -> list:
     return [sorted(ws, key=lambda w: w['x0']) for _top, ws in rows]
 
 
-def read_report_blocks(path: str, page: int) -> 'list[tuple[str, StringGrid]]':
-    '''Read a per-precinct report page into one clean grid per contest block, dispatching on the
-    Dominion report kind: a "Precinct Results Report" (Nevada CA -- method count+percent columns) or an
-    "Election Summary Report" (Mono CA -- a single Total per choice, names wrapped around a floating
-    party+value line). Both return (title, grid) with grid = [precinct-row, header, choice rows...] for
-    the same precinct-page schema-learn/apply path.'''
-    header_text: str = '\n'.join(_page_text_lines(path, page)[:6])
-    if 'Election Summary Report' in header_text:
+def read_report_blocks(path: str, page: int, grammar: str) -> 'list[tuple[str, StringGrid]]':
+    '''Read a per-precinct report page into one clean grid per contest block, in the given report
+    grammar -- 'methods' (a "Precinct Results Report": one row per choice with a count+percent per vote
+    method) or 'total' (an "Election Summary Report": a single Total per choice, the name wrapped around
+    a floating party+value line). Both return (title, grid) with grid = [precinct-row, header, choice
+    rows...] for the same precinct-page schema-learn/apply path.
+
+    The grammar is NOT sniffed here from the page text -- which shape a document is, is a structural
+    judgement, so it rides in the read_strategy the gold record sets (report_lines_methods /
+    report_lines_total) and that oe2d.pages' image VLM is meant to propose; this reader only moves the
+    digits for whichever shape it is told.'''
+    if grammar == 'total':
         return _summary_report_blocks(path, page)
     return _precinct_results_blocks(path, page)
 
@@ -420,8 +424,15 @@ def _summary_report_blocks(path: str, page: int) -> 'list[tuple[str, StringGrid]
     lines: list = _word_lines(pdf.pages[page - 1].extract_words())
     texts: list[str] = [' '.join(word['text'] for word in words) for words in lines]
     tops: list[float] = [min(word['top'] for word in words) for words in lines]
-    precinct: str = next((match.group(1).strip() for line in texts
-                          for match in [_SUMMARY_PRECINCT.match(line)] if match), '')
+    # The precinct name is on the report's COVER page ("PRECINCT #01 ANTELOPE") and is NOT repeated on
+    # its continuation/down-ballot pages, so walk back to the nearest preceding page that carries it.
+    precinct: str = ''
+    for back in range(page, 0, -1):
+        found = next((match.group(1).strip() for line in _page_text_lines(path, back)
+                      for match in [_SUMMARY_PRECINCT.match(line)] if match), '')
+        if found:
+            precinct = found
+            break
     centre = lambda word: (word['x0'] + word['x1']) / 2
     # the "Candidate Party Total" header fixes the party and Total column x-centres
     head_index: int = next((i for i, line in enumerate(texts) if 'Candidate' in line and 'Total' in line), -1)
@@ -1272,9 +1283,9 @@ class VoteExtractor(dspy.Module):
         # Keep an all-zero precinct only where it is a genuine roster member that cast ballots but no
         # votes in THIS contest (an Electionware per-precinct report: Bay's Midland P2 straight party).
         # Drop it for flat/columns (an out-of-county placeholder ROW in a contest table) and for a
-        # Dominion "Precinct Results Report", whose phantom precincts (0 registered / 0 ballots cast)
-        # print an all-zero block the reference excludes (Nevada CP100 etc.).
-        keep_all_zero: bool = orientation == 'rows' and read_strategy != 'report_lines'
+        # Dominion per-precinct report, whose phantom precincts (0 registered / 0 ballots cast) print
+        # an all-zero block the reference excludes (Nevada CP100 etc.).
+        keep_all_zero: bool = orientation == 'rows' and not read_strategy.startswith('report_lines')
         rows: list[dict] = votes_to_rows(votes, county, office, district,
                                          drop_all_zero=not keep_all_zero)
         return dspy.Prediction(rows=rows, votes=votes)
@@ -1301,8 +1312,8 @@ class VoteExtractor(dspy.Module):
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy == 'ruled_columns':
             return self._extract_contest(file_path, pages, office, candidate_context, via_tables=True)
-        if read_strategy == 'report_lines':
-            return self._extract_report_contest(file_path, pages, office, candidate_context)
+        if read_strategy in ('report_lines_methods', 'report_lines_total'):
+            return self._extract_report_contest(file_path, pages, office, candidate_context, read_strategy)
         if orientation == 'rows':
             return self._extract_precinct_contest(file_path, pages, office, candidate_context)
         return self._extract_contest(file_path, pages, office, candidate_context)
@@ -1433,16 +1444,18 @@ class VoteExtractor(dspy.Module):
         return votes
 
     def _extract_report_contest(self, file_path: str, pages: list[int], office: str,
-                                candidate_context: str) -> dict:
-        '''Extract a Dominion "Precinct Results Report" contest (read_report_blocks). A report page
-        stacks several contests, so on each page pick the block whose choice rows name the most
-        expected candidates, then run the same precinct-page schema-learn/apply as the text-grid
+                                candidate_context: str, read_strategy: str) -> dict:
+        '''Extract a Dominion per-precinct report contest (read_report_blocks) in the read_strategy's
+        grammar ('report_lines_methods' -> method columns, 'report_lines_total' -> single Total). A
+        report page stacks several contests, so on each page pick the block whose choice rows name the
+        most expected candidates, then run the same precinct-page schema-learn/apply as the text-grid
         reader over those picked grids.'''
+        grammar: str = 'total' if read_strategy == 'report_lines_total' else 'methods'
         wanted: set = {_norm(token) for line in candidate_context.splitlines()
                        for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
 
         def read_grid(page: int) -> StringGrid:
-            blocks: list = read_report_blocks(file_path, page)
+            blocks: list = read_report_blocks(file_path, page, grammar)
             if not blocks:
                 return []
             names_in = lambda grid: sum(1 for token in wanted
