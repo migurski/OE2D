@@ -57,7 +57,7 @@ CA file must use its **2020** source+results (Plumas/Mono/Nevada are all 2020).
 | `vector--missaukee-mi.pdf` | vector multi-contest mega-grid | all four races on p1 | not started |
 | `robustness--nevada-ca.pdf` | ClearBallot outside MI — **use 2020 source** | (completeness) | not started |
 | `robustness--bay-mi.pdf` | Electionware outside PA | (completeness) | not started |
-| `optional--ontonagon-mi.pdf` | scanned ClearBallot flat | (completeness) | not started |
+| `optional--ontonagon-mi.pdf` | scanned ClearBallot flat | Straight Party, US Senate, US House, President | **DONE, 1.000** (committed) -- drove the geometry-alignment + 400-DPI + snap work below |
 | `optional--mono-ca.pdf` (2020) | Hart SOV rows + **ballot measures** (#4 gap) | (completeness) | not started |
 
 ## The gold-build process (validated on Branch)
@@ -115,6 +115,33 @@ precincts, canonical offices) + index entry; 5) verify 1.000 with `oe2d-votes-ev
    (Textract read + LLM schema resolver passed in), with a full unit-test suite; `_normalize_table_columns`
    likewise characterized + repaired (`c4e1114`, `d5817a9`).
 
+## Column alignment by GEOMETRY, and DPI (the Ontonagon / Columbia-@400 arc)
+
+The exact-column-count gate in `scope_flat_tables` was brittle: Textract segments a page slightly
+differently across pages/DPIs (a count split from its percent, a title word wrapping), diverging the
+column count and silently dropping a page. Replaced with content alignment that carries Textract
+COLUMN X-CENTRES through the read (`read_scanned_tables` now returns `(grid, column_x)`; threaded via
+`scope_flat_tables(..., column_x=)` and `join_flat_table_pages(..., pages_column_x=)`):
+
+- **`_align_columns` splits the two questions.** IDENTITY (does a table belong to THIS contest?) is by
+  NAMES -- a header-bearing table must name ceil-3/4 of the candidates, so a stacked full-width
+  neighbour (Huron president vs senate) sharing a surname is rejected; a header-less/label-only table
+  rests on sharing the anchor's WIDTH. POSITION (which cell holds each count?) is by GEOMETRY -- each
+  candidate claims the nearest count-bearing column to its anchor x-centre (`_X_TOLERANCE`), so a
+  split-off percent, a spacer, or a shifted index all resolve. No geometry (hand grids) -> name/anchor
+  fallback, still unit-tested.
+- **`_snap_to_counts`** repairs the ANCHOR: the interpreter can map a candidate onto an empty split-off
+  party cell ("(REP)"); snap it to the adjacent count column (Ontonagon president Trump).
+- **DPI is 400** (`TEXTRACT_DPI`), not 300: 400 disambiguates dense-scan digits 300 misreads
+  (Ontonagon "5" as "$"). With geometry + `_cell_count` tolerating a trailing-period token ("7."),
+  400 no longer breaks the reads a naive bump used to. Switching DPI RE-OCRs precinct-name strings, so
+  three 300-built golds (Plumas x2, Columbia president) were re-LABELLED to the 400 read -- NO vote
+  value changed (verified nonzero-row-set identical); only Hart "NN - Name" dashes + a couple all-zero
+  rows differ. Evidence: `read_scanned_tables`/`_align_columns`/`_snap_to_counts` commits.
+- **DPI is a trade, not a pure win** -- 400 fixes some cells, 300 others; there is no single best global
+  DPI. FUTURE IDEA (not built): run a pair of DPIs all the way through, diff, and reconcile the
+  discrepancies against the source. Bigger architectural change; noted for later.
+
 ## Determinism / DSPy cache (READ before trusting a re-run)
 
 DSPy caches every LM response by prompt, so **re-running the extractor replays cached schemas** -- a
@@ -149,18 +176,18 @@ write-in county total 133). A gold test set must not demand a known-wrong value.
 
 ## Status snapshot
 
-- **Gold: 25 contests, all 1.000** (16 original + Branch 4 + Columbia 3 + Plumas 2). `oe2d-votes-evaluate`
-  (no args) scores the whole set; caching makes re-runs free.
-- Tests: `oe2d/tests/votes/` 39 pass (`scope_flat_tables`, `_normalize_table_columns`,
-  `join_flat_table_pages` suites); `oe2d/tests/pages/` pass.
-- Columbia and Plumas are DONE. The other 5 batch files (Montmorency, Missaukee, Nevada, Bay, Ontonagon,
+- **Gold: 29 contests, all 1.000** (16 original + Branch 4 + Columbia 3 + Plumas 2 + Ontonagon 4).
+  `oe2d-votes-evaluate` (no args) scores the whole set; caching makes re-runs free. **Rendered at 400 DPI.**
+- Tests: `oe2d/tests/votes/` 53 pass (`scope_flat_tables`, `_normalize_table_columns`,
+  `join_flat_table_pages`, `_align_columns` incl. geometry + snap suites); `oe2d/tests/pages/` pass.
+- Columbia, Plumas, Ontonagon are DONE. The other 4 batch files (Montmorency, Missaukee, Nevada, Bay,
   Mono) are not started.
 
 ## Next steps (priority)
 
-1. **Work the batch** in order of read-path novelty: Ontonagon (scan flat), Montmorency (degraded scan —
-   real stress test), Missaukee (mega-grid), then robustness (Nevada, Bay) and Mono (ballot measures, #4
-   coverage gap). Follow the validated build process; verify each 1.000.
+1. **Work the batch** in order of read-path novelty: Montmorency (degraded scan — real stress test),
+   Missaukee (mega-grid), then robustness (Nevada, Bay) and Mono (ballot measures, #4 coverage gap).
+   Follow the validated build process; verify each 1.000.
 2. **Then** the deferred items from HANDOFF-2 #3-4: header-slice interpretation (LLM cost), teaching
    `detect_dispatch` to pick `flat_tables` for vector, GEPA optimization once there's error signal.
 3. Cheap→TABLES **escalation** (cost): try the cheap read, checksum, escalate to TABLES only on
