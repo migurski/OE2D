@@ -39,11 +39,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 # How to turn a contest's pages into grids -- READ MECHANICS ONLY. 'auto' picks the reader from what
 # each page offers (ruled vector, rotated text-aligned, or a scan with no text layer, one grid per
-# page). 'ruled_scan' reads a scanned page's ruled tables with Textract TABLES (borders segment
-# cells reliably) and returns ALL tables on the page. This is orthogonal to CONTENT structure --
-# candidate orientation, and whether a table is flat (one row per precinct) or has vote-method
-# sub-rows, are decided from the interpreted content, not from how the pixels were read.
-ReadStrategy = typing.Literal['auto', 'ruled_scan']
+# page). 'flat_tables' reads a page as a set of flat candidate-column tables and scopes the contest
+# across them by header-match -- the content structure Huron and Branch share; the table reader is
+# picked by the page (Textract TABLES for a scan, pdfplumber text-strategy for a borderless vector
+# page). 'ruled_scan' is the scan-only spelling of the same flat path (kept for existing gold). This
+# is orthogonal to CONTENT structure -- candidate orientation, and whether a table is flat (one row
+# per precinct) or has vote-method sub-rows, are decided from the interpreted content.
+ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -420,6 +422,18 @@ def read_scanned_tables(file_path: str, page: int) -> list[list[list[str]]]:
     return [grid for _top, grid in sorted(found, key=lambda item: item[0])]
 
 
+def read_flat_tables(file_path: str, page: int) -> list[list[list[str]]]:
+    '''Flat candidate-column tables on a page, read with Textract TABLES (render the page, then
+    AnalyzeDocument) -- for BOTH scanned and vector pages. Textract's table detection segments
+    stacked contests into separate clean tables and reads full candidate headers even on a
+    BORDERLESS dense layout (e.g. Electionware candidates-as-columns), where pdfplumber's
+    text-strategy geometry returns one messy merged grid with wrapped, fragmented headers. Rendering
+    a vector page costs a Textract call, but the flat path is chosen deliberately (read_strategy
+    flat_tables / ruled_scan), so paying for the robust reader is the point; the free readers still
+    serve the 'auto' path. This is READ MECHANICS -- the flat CONTENT handling downstream is the same.'''
+    return read_scanned_tables(file_path, page)
+
+
 def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap: float = 0.02,
                       data_left: float = 0.14, half: float = 0.45) -> list[list[str]]:
     '''Read a SCANNED SOVC page into a grid from cheap-mode Textract words -- no vendor table cells.
@@ -492,15 +506,20 @@ def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap
 
 def read_page_grid(file_path: str, page: int) -> list[list[str]]:
     '''One page's grid, choosing the reader by what the page offers: ruled Hart SOVC
-    (source_table) -> rotated-header text-aligned SOVC (read_rotated_grid) -> a scanned page with no
-    text layer at all (read_scanned_grid via Textract). The Textract path only fires when the page
-    has no extractable words, so a vector document never pays for it.'''
+    (source_table) -> rotated-header text-aligned SOVC (read_rotated_grid) -> a borderless
+    text-aligned vector page (read_text_grid) -> a scanned page with no text layer at all
+    (read_scanned_grid via Textract). The text-alignment reader fills the columns path for a
+    borderless VECTOR page (e.g. Electionware laid out candidates-as-columns) that has no ruled
+    lines for source_table and is not rotated; the Textract path only fires when the page has no
+    extractable words, so a vector document never pays for it.'''
     grid: list[list[str]] = source_table.page_table(file_path, page) or read_rotated_grid(file_path, page)
     if grid:
         return grid
     pdf: pdfplumber.PDF = _open_pdf(file_path)
-    if 1 <= page <= len(pdf.pages) and not pdf.pages[page - 1].extract_words():
-        return read_scanned_grid(file_path, page)
+    if 1 <= page <= len(pdf.pages):
+        if pdf.pages[page - 1].extract_words():
+            return read_text_grid(file_path, page)          # borderless text-aligned vector
+        return read_scanned_grid(file_path, page)           # scanned, no text layer
     return []
 
 
@@ -653,11 +672,11 @@ class VoteExtractor(dspy.Module):
         content, not flat, doubles every column -- so the flat read's per-candidate sums will not
         equal the county-total row; that mismatch drops us to the cheap auto read (which the reader
         self-detects for a scan). huron's clean flat table reconciles and stays on TABLES.'''
-        if read_strategy == 'ruled_scan':
+        if read_strategy in ('ruled_scan', 'flat_tables'):
             votes, totals = self._extract_scanned_tables(file_path, pages, office, candidate_context)
             if _reconciles(votes, totals):
                 return votes
-            logger.info('ruled_scan read did not reconcile with printed county totals '
+            logger.info('flat-tables read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if orientation == 'rows':
             return self._extract_precinct_contest(file_path, pages, office, candidate_context)
@@ -841,7 +860,7 @@ class VoteExtractor(dspy.Module):
         reconciles the ruled_scan read against (Sigma precincts == printed total per candidate).
         '''
         tables: list[list[list[str]]] = [grid for page in pages
-                                         for grid in read_scanned_tables(file_path, page)]
+                                         for grid in read_flat_tables(file_path, page)]
         if not tables:
             return {}, {}
         wanted: set = {_norm(token) for line in candidate_context.splitlines()
