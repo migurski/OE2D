@@ -17,8 +17,9 @@ walkers, stitch, consensus, write-in consolidation, all-zero drop) is determinis
 
 ## Status snapshot (current)
 
-- **Gold: 38 contests, macro wF1=1.000 (F1=1.000).** 33 prior + Bay 3 (President/US Senate/US House)
-  + Missaukee 2 (President/US Senate). One pre-existing non-1.000: `columbia-us-house` F1=0.996
+- **Gold: 39 contests, macro wF1=1.000 (F1=1.000).** 33 prior + Bay 4 (President/US Senate/US House/
+  Straight Party) + Missaukee 2 (President/US Senate). One pre-existing non-1.000: `columbia-us-house`
+  F1=0.996
   (fn=1, a single zero-vote `CATAWISSA BOROUGH | Write-ins = 0` row the flat_tables read omits;
   wF1=1.000). Score the whole set with `oe2d-votes-evaluate` (no args); the content-addressed
   Textract cache makes re-runs free.
@@ -164,8 +165,15 @@ that values reconcile to the results.
   and record the source-correct value (à la Barry; Columbia MOUNT PLEASANT write-in 4 vs reference 0;
   Missaukee/Branch Peter Sonski a named write-in that folds into Write-ins). This is a decision to
   RAISE, per the first bullet.
-- **All-zero precinct drop**: `votes_to_rows` drops a precinct whose every candidate total is 0 (an
-  out-of-county placeholder like "Duncan Township (Houghton County)"); the results exclude them too.
+- **All-zero precinct drop is orientation-scoped**: `votes_to_rows(..., drop_all_zero=True)` and
+  `forward` passes `drop_all_zero=(orientation != 'rows')`. FLAT/columns reads still drop an all-zero
+  precinct (an out-of-county placeholder ROW inside a contest table, "Duncan Township (Houghton
+  County)" / Huron "Delaware Township (Sanilac County)"). ROWS (per-precinct reports) KEEP an all-zero
+  precinct: the report set is the document's own roster and membership is contest-block presence, not
+  vote sum, so a precinct that cast zero votes in this contest (Bay Straight Party: Midland P2 + 6
+  placeholder stubs, 47 precincts) belongs as all-zeros, matching the reference. Fuller follow-up
+  (deferred): a document-level roster + name-based out-of-jurisdiction filter replacing the zero-sum
+  drop everywhere, plus true zero-fill of a contest a report omits.
 
 ## Determinism / DSPy cache (READ before trusting a re-run)
 
@@ -178,10 +186,10 @@ The committed gold's 1.000 must hold on a COLD cache, not just a warm one.
 
 Bay is DONE and Missaukee is PARTIAL (see status). Remaining, hardest-last:
 
-- **Bay** — DONE (President/US Senate/US House). Straight Party still deferred: the reference keeps 7
-  all-zero precincts (6 single-page placeholder reports Bently/Buena Vista/Grim/Kochville/Titabawassee/
-  Zilwaukee + City of Midland Precinct 2, which cast zero straight-party votes) that the all-zero-drop
-  removes — a divergence-from-reference call for Mike, not autonomous.
+- **Bay** — DONE (President/US Senate/US House/Straight Party). Straight Party needed the
+  orientation-scoped all-zero drop (see conventions): the reference keeps 7 all-zero precincts (6
+  placeholder stubs + Midland P2, which cast zero straight-party votes) that the old drop removed; the
+  rows path now keeps them, 47 precincts, 1.000.
 - **Missaukee** — PARTIAL. President + US Senate banked (flat_tables/columns, page 1, votes-only,
   0 by-party diffs, write-ins match — the old "+1 Richland" is gone). **Straight Party** now fails
   with "No column structure found on page 1/2" (its leftmost party block isn't segmented as a Textract
