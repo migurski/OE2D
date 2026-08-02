@@ -180,20 +180,16 @@ def _record(components: list[str], values: list[int], total: int) -> dict:
 _PERCENT_CELL: re.Pattern = re.compile(r'^\s*-?[\d,]*\.?\d+\s*%\s*$')
 
 
-def _normalize_table_columns(grid: list[list[str]]) -> list[list[str]]:
-    '''Drop the columns a flat table reader adds noise in, so the SAME contest keeps the same column
-    count page to page (the flat scoper matches tables by column count).
-
-    Two kinds are removed: (1) a candidate's PERCENT column -- some vendors print each candidate as a
-    count column followed by a percent column under one (colspan-2) header, and a reader segments the
-    pair inconsistently, sometimes count and percent in ONE cell ("122 21.55%"), sometimes in TWO
-    ("437" then "77.07%"), so page A gets fewer columns than page B; a percent column (non-empty cells
-    are pure percents, no leading count) holds nothing we keep. (2) an ALL-EMPTY column -- a spacer the
-    reader inserts on one page but not another. A merged "count percent" cell stays put and its count
-    is read as the leading token downstream. Count-only tables with no percent/empty columns pass
-    through unchanged.'''
+def _kept_columns(grid: list[list[str]]) -> list[int]:
+    '''The columns _normalize_table_columns keeps: everything except a candidate's PERCENT column and
+    an ALL-EMPTY spacer. Some vendors print each candidate as a count column followed by a percent
+    column under one (colspan-2) header, and a reader segments the pair inconsistently -- count and
+    percent in ONE cell ("122 21.55%") or in TWO ("437" then "77.07%") -- so a percent column (every
+    non-empty cell a pure percent, no leading count) holds nothing we keep. A merged "count percent"
+    cell stays (its count is the leading token downstream). Exposed so a parallel per-column list
+    (column x-centres) can be subset the same way.'''
     if not grid:
-        return grid
+        return []
     width: int = max(len(row) for row in grid)
 
     def cells(col: int) -> list[str]:
@@ -212,7 +208,13 @@ def _normalize_table_columns(grid: list[list[str]]) -> list[list[str]]:
             return True
         return len(values) >= 3 and percents >= 0.6 * len(values)
 
-    keep: list[int] = [col for col in range(width) if not drop(col)]
+    return [col for col in range(width) if not drop(col)]
+
+
+def _normalize_table_columns(grid: list[list[str]]) -> list[list[str]]:
+    '''Drop a candidate's PERCENT column and any all-empty spacer (see _kept_columns), so a merged or
+    split count+percent layout reduces to just the count columns.'''
+    keep: list[int] = _kept_columns(grid)
     return [[row[col] if col < len(row) else '' for col in keep] for row in grid]
 
 
@@ -409,6 +411,13 @@ def _cluster_1d(values: list[float], gap: float) -> list[float]:
 # call accounting below -- cache hits cost nothing, so only real API calls are counted.
 _TEXTRACT_PRICE_USD: dict[str, float] = {'text': 0.0015, 'TABLES': 0.015}
 
+# Render DPI for the image sent to Textract, and part of the cache key. 300 is the baseline every
+# committed flat/scanned gold was built at; raising it re-segments tables and re-OCRs labels, so it
+# is NOT a free global knob (400 fixes a dense-ClearBallot "5" misread as "$" but regressed
+# Columbia/Plumas gold built at 300). A per-contest override is the way to raise it for a specific
+# hard scan without rebuilding the rest -- future work if a ClearBallot county is added.
+TEXTRACT_DPI: int = 300
+
 # Paid Textract calls this process, by mode ('text' | 'TABLES'). Cache hits are excluded, so this
 # is the real spend; read it with textract_usage().
 _textract_calls: collections.Counter = collections.Counter()
@@ -436,7 +445,7 @@ def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[di
     from PIL import Image
     from .. import rendering
     from ..pages import deskew
-    resolution: int = 300                                   # render DPI; part of the key (it changes the image Textract sees)
+    resolution: int = TEXTRACT_DPI                          # render DPI; part of the key (it changes the image Textract sees)
     tag: str = '+'.join(features) if features else 'text'
     # Content-addressed: key on the file's BYTES (+ page, mode, render DPI) -- what actually determines
     # the Textract result -- NOT the file path, so the same source at several paths shares one entry.
@@ -478,14 +487,19 @@ def _textract_words(file_path: str, page: int) -> list[dict]:
     return words
 
 
-def read_scanned_tables(file_path: str, page: int) -> list[list[list[str]]]:
-    '''EVERY ruled table on a scanned page, each a grid, in top-to-bottom order (like
+def read_scanned_tables(file_path: str, page: int) -> list[tuple[list[list[str]], list[float]]]:
+    '''EVERY ruled table on a scanned page as (grid, column_x), in top-to-bottom order (like
     source_table.page_tables, but for a scan via Textract TABLES). A scanned page routinely holds
     several contests' tables plus a header-less continuation of the previous page's contest, so the
     reader returns them all and the caller decides which belong to the target contest -- picking a
     single table here loses the header-less continuation. TABLES uses the drawn borders to segment
     cells reliably, including multi-line cells (a precinct name wrapped over several lines is ONE
-    cell) and rotated headers, which our word-only reconstruction cannot group without borders.'''
+    cell) and rotated headers, which our word-only reconstruction cannot group without borders.
+
+    column_x[c] is the normalized (0-1) horizontal centre of column c, from Textract's per-cell
+    geometry. It is the durable signal for aligning a contest's columns across pages: a continuation
+    keeps each candidate at the same x even when Textract splits a count from its percent or shifts
+    the column index, and a side-by-side neighbouring contest sits in a different x band.'''
     blocks = _textract_blocks(file_path, page, features=('TABLES',))
     by_id: dict[str, dict] = {b['Id']: b for b in blocks}
 
@@ -501,26 +515,38 @@ def read_scanned_tables(file_path: str, page: int) -> list[list[list[str]]]:
         cells: list[dict] = [c for c in children(table) if c['BlockType'] == 'CELL']
         if not cells:
             continue
-        grid: list[list[str]] = [[''] * max(c['ColumnIndex'] for c in cells)
-                                 for _ in range(max(c['RowIndex'] for c in cells))]
+        width: int = max(c['ColumnIndex'] for c in cells)
+        grid: list[list[str]] = [[''] * width for _ in range(max(c['RowIndex'] for c in cells))]
+        centres: dict[int, list[float]] = collections.defaultdict(list)
         for cell in cells:
             grid[cell['RowIndex'] - 1][cell['ColumnIndex'] - 1] = _clean(cell_text(cell))
-        found.append((table['Geometry']['BoundingBox']['Top'], grid))
-    return [grid for _top, grid in sorted(found, key=lambda item: item[0])]
+            box = cell['Geometry']['BoundingBox']
+            centres[cell['ColumnIndex'] - 1].append(box['Left'] + box['Width'] / 2)
+        column_x: list[float] = [sum(centres[c]) / len(centres[c]) if centres[c] else 0.0
+                                 for c in range(width)]
+        found.append((table['Geometry']['BoundingBox']['Top'], grid, column_x))
+    return [(grid, column_x) for _top, grid, column_x in sorted(found, key=lambda item: item[0])]
 
 
-def read_flat_tables(file_path: str, page: int) -> list[list[list[str]]]:
-    '''Flat candidate-column tables on a page, read with Textract TABLES (render the page, then
-    AnalyzeDocument) -- for BOTH scanned and vector pages. Textract's table detection segments
-    stacked contests into separate clean tables and reads full candidate headers even on a
+def read_flat_tables(file_path: str, page: int) -> list[tuple[list[list[str]], list[float]]]:
+    '''Flat candidate-column tables on a page as (grid, column_x), read with Textract TABLES (render
+    the page, then AnalyzeDocument) -- for BOTH scanned and vector pages. Textract's table detection
+    segments stacked contests into separate clean tables and reads full candidate headers even on a
     BORDERLESS dense layout (e.g. Electionware candidates-as-columns), where pdfplumber's
     text-strategy geometry returns one messy merged grid with wrapped, fragmented headers. Rendering
     a vector page costs a Textract call, but the flat path is chosen deliberately (read_strategy
     flat_tables / ruled_scan), so paying for the robust reader is the point; the free readers still
     serve the 'auto' path. This is READ MECHANICS -- the flat CONTENT handling downstream is the same.
-    Percent columns from a count+percent (colspan-2) candidate layout are stripped so a contest's
-    column count stays consistent across pages.'''
-    return [_normalize_table_columns(grid) for grid in read_scanned_tables(file_path, page)]
+    A candidate's percent column is stripped from BOTH the grid and its column_x, keeping the two
+    aligned.'''
+    out: list[tuple[list[list[str]], list[float]]] = []
+    for grid, column_x in read_scanned_tables(file_path, page):
+        keep: list[int] = _kept_columns(grid)
+        normalized: list[list[str]] = [[row[col] if col < len(row) else '' for col in keep]
+                                       for row in grid]
+        kept_x: list[float] = [column_x[col] if col < len(column_x) else 0.0 for col in keep]
+        out.append((normalized, kept_x))
+    return out
 
 
 def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap: float = 0.02,
@@ -704,24 +730,135 @@ def _precinct_groups(pages_schema_blocks: list[tuple]) -> list[list[tuple]]:
     return groups
 
 
+def _name_tokens(name: str) -> set[str]:
+    '''The distinctive tokens of a candidate/party name for header matching: the words before any
+    trailing "(PARTY)", normalized, keeping only tokens over three characters (so "DAN"/"JR" don't
+    match spuriously while "MEUSER"/"HARRIS" do).'''
+    return {_norm(token) for token in re.split(r'\s*\(', name)[0].split() if len(token) > 3}
+
+
+_X_TOLERANCE: float = 0.04                            # a column x-centre may drift this far (page fraction)
+
+
+def _align_columns(grid: list[list[str]], candidate_names: list[str], anchor_columns: list[int],
+                   label_column: int = 0, anchor_width: int | None = None,
+                   column_x: list[float] | None = None,
+                   anchor_x: list[float | None] | None = None) -> dict[int, int]:
+    '''Map each candidate (by position) to ITS count column in `grid`, aligning a continuation to the
+    anchor's candidates. Two questions, two signals:
+
+    IDENTITY -- does this table belong to THIS contest? Decided by NAMES. A header-bearing table must
+    name a strong fraction (ceil 3/4) of the candidates in its own header; a neighbouring contest that
+    shares a surname ("Jill Stein" vs "Dave Stein") names a few and is rejected. A header-less table
+    (first row is data) or a label-only-header table (a straddle "Precinct 1") carries no names, so its
+    identity rests on sharing the anchor's column WIDTH. Anything else (a turnout block, a foreign
+    header) returns {} and is dropped.
+
+    POSITION -- once a table belongs, which cell holds each candidate's count? By GEOMETRY when
+    column_x/anchor_x are given: each candidate claims the nearest count-bearing column to its anchor
+    x-centre (within _X_TOLERANCE), so a count split from its percent, an inserted spacer, or a
+    shifted index all still resolve. Without geometry (hand-built test grids) it falls back to the
+    header name match, or to the anchor's own column positions for a header-less continuation.
+
+    Only COUNT-bearing columns are eligible; a percent-only or empty column is never a value column.'''
+    if not grid:
+        return {}
+    def count_cells(row: list[str]) -> int:
+        return sum(1 for cell in row if _cell_count(cell) is not None)
+    first_data: int | None = next((i for i, row in enumerate(grid) if count_cells(row) >= 2), None)
+    if first_data is None:
+        return {}
+    width: int = max(len(row) for row in grid)
+    data: list[list[str]] = grid[first_data:]
+    def has_count(col: int) -> bool:
+        return any(col < len(row) and _cell_count(row[col]) is not None for row in data)
+
+    def positions(indices: typing.Iterable[int]) -> dict[int, int]:
+        '''Column for each given candidate: nearest count column to its anchor x (geometry), else the
+        candidate's anchor column index.'''
+        chosen: dict[int, int] = {}
+        if column_x is not None and anchor_x is not None:
+            claimed: set[int] = set()
+            for index in indices:
+                target = anchor_x[index]
+                if target is None:
+                    continue
+                best, best_distance = None, _X_TOLERANCE
+                for col in range(len(column_x)):
+                    if col in claimed or not has_count(col):
+                        continue
+                    distance = abs(column_x[col] - target)
+                    if distance < best_distance:
+                        best, best_distance = col, distance
+                if best is not None:
+                    chosen[index] = best
+                    claimed.add(best)
+        else:
+            chosen = {index: anchor_columns[index] for index in indices}
+        return chosen
+
+    same_width: bool = anchor_width is None or width == anchor_width
+    if first_data == 0:                              # header-less: identity = same width
+        return positions(range(len(candidate_names))) if same_width else {}
+    header: list[list[str]] = grid[:first_data]
+    signature: list[str] = [_norm(' '.join(row[col] for row in header if col < len(row)))
+                            for col in range(width)]
+    named: set[int] = {index for index, name in enumerate(candidate_names)
+                       if (tokens := _name_tokens(name))
+                       and any(token in signature[col] for token in tokens for col in range(width))}
+    if not named:                                    # label-only header -> continuation; else foreign
+        header_has_value_text = any(col != label_column and signature[col] for col in range(width))
+        if header_has_value_text or not same_width:
+            return {}
+        return positions(range(len(candidate_names)))
+    count: int = len(candidate_names)
+    need: int = count if count <= 1 else max(2, (3 * count + 3) // 4)
+    if len(named) < need:                            # a neighbouring contest sharing a few names
+        return {}
+    # When aligning by name (no geometry) use only the columns that actually named a candidate; with
+    # geometry map every candidate by x (a split-off surname may sit on a percent column the name path
+    # would wrongly pick, but its count keeps the anchor x).
+    if column_x is not None and anchor_x is not None:
+        return positions(range(count))
+    mapping: dict[int, int] = {}
+    claimed_cols: set[int] = set()
+    for index in named:
+        tokens = _name_tokens(candidate_names[index])
+        best, best_score = None, 0
+        for col in range(width):
+            if col in claimed_cols or not has_count(col):
+                continue
+            score = sum(1 for token in tokens if token in signature[col])
+            if score > best_score:
+                best, best_score = col, score
+        if best is not None:
+            mapping[index] = best
+            claimed_cols.add(best)
+    return mapping
+
+
 def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
                       schema_for: typing.Callable[[list[list[str]]], signatures.PageSchema],
-                      drop_foreign_tables: bool = False) -> tuple[dict, dict]:
-    '''Scope a scan's flat tables to one contest by column structure and read their CONTENT.
+                      column_x: list[list[float]] | None = None) -> tuple[dict, dict]:
+    '''Scope a scan's flat tables to one contest and read them, aligning each table's columns to the
+    anchor's candidates.
 
-    The pure core of _extract_scanned_tables, with the two impure dependencies injected: `tables`
-    are the grids already read (read_flat_tables per page, Textract), and `schema_for(anchor_grid)`
-    returns the interpreter's PageSchema for a grid (the LLM step). Kept standalone so this scoping
-    and digit-moving logic -- the part that decides which tables belong to the contest and reads
-    their columns -- can be exercised on captured grids with a stub schema, no Textract and no LM.
+    The pure core of _extract_scanned_tables, with the impure dependencies injected: `tables` are the
+    grids already read (read_flat_tables per page, Textract), `schema_for(anchor_grid)` returns the
+    interpreter's PageSchema (the LLM step), and `column_x` (when supplied) is the per-table list of
+    each column's x-centre from Textract geometry. Kept standalone so the scoping and digit-moving --
+    which tables belong to the contest and which cell holds each candidate's count -- can be exercised
+    on captured grids with a stub schema, no Textract and no LM.
 
     A scanned page holds several contests' tables plus a header-less continuation of the previous
-    page's contest, so we read EVERY table and scope by column structure: learn the candidate
-    columns ONCE from the table whose header matches the expected candidates (the anchor), then take
-    the anchor and every table sharing its column count -- the anchor and its header-less
-    continuations. The interpreter is used only to map header columns to candidates; this reads a
-    FLAT table (one row per precinct, one total per candidate, no vote-method sub-rows) directly from
-    those columns, so it is independent of method_labels and never touches the sub-row walker.
+    page's contest, so we read EVERY table and align each to the anchor's candidates. The anchor is
+    the table whose header names the expected candidates; the interpreter reads its schema once. Every
+    other table is aligned by GEOMETRY when column_x is present -- each candidate keeps its column
+    x-centre across pages, so a count split from its percent, a shifted column, or a side-by-side
+    neighbouring contest (a different x band) all resolve correctly. Without geometry (hand-built test
+    grids) it falls back to matching candidate NAMES in the table's own header. A table that aligns to
+    none of the candidates is dropped. This reads a FLAT table (one row per precinct, one total per
+    candidate) directly, independent of method_labels and the sub-row walker.
 
     Returns (votes, totals): votes as elsewhere, and totals mapping each non-write-in candidate
     column to the printed COUNTY-TOTAL row's value for that column -- the checksum target _read_votes
@@ -732,50 +869,48 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
     wanted: set = {_norm(token) for line in candidate_context.splitlines()
                    for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
     header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
-    anchor: list[list[str]] = max(tables, key=header_match)
+    anchor_index: int = max(range(len(tables)), key=lambda i: header_match(tables[i]))
+    anchor: list[list[str]] = tables[anchor_index]
     schema: signatures.PageSchema = schema_for(anchor)
-    column_count: int = len(anchor[0])
     label_column: int = schema.label_column
+    anchor_width: int = len(anchor[0])
     candidates = [column for column in schema.columns if column.role == 'candidate']
+    anchor_columns: list[int] = [column.index for column in candidates]
+    candidate_names: list[str] = [column.candidate for column in candidates]
 
-    def has_data(row: list[str]) -> bool:
-        return any(column.index < len(row) and _cell_count(row[column.index]) is not None
-                   for column in candidates)
+    # The x-centre of each candidate's column in the anchor, when geometry is available.
+    anchor_x: list[float | None] | None = None
+    if column_x is not None:
+        anchor_column_x: list[float] = column_x[anchor_index]
+        anchor_x = [anchor_column_x[index] if index < len(anchor_column_x) else None
+                    for index in anchor_columns]
 
     def label_of(row: list[str]) -> str:
         return _clean(row[label_column]) if label_column < len(row) else ''
 
-    def is_header_text(row: list[str]) -> bool:
-        '''True when a row carries TEXT labels in the candidate columns (a header), not numbers (a
-        data row) or blanks (a straddle-continuation label-only row).'''
-        return any(column.index < len(row) and _clean(row[column.index])
-                   and _cell_count(row[column.index]) is None for column in candidates)
-
-    # Build the precinct list across the contest's tables in page order, stitching a precinct
-    # whose row STRADDLES a page: its data sits at the bottom of one page under a (truncated)
-    # label, and the label continues on a label-only row at the top of the next table. A
-    # label-only row that appears before any precinct of a continuation table is that
-    # continuation, so append it to the previous precinct.
-    entries: list[list] = []                         # [label, data_row]
-    for grid in tables:                              # anchor + its column-count-matching continuations
-        if not grid or len(grid[0]) != column_count:
+    # Build the precinct list across the contest's tables in page order. The anchor keeps its
+    # interpreted schema positions; every other table is aligned to the anchor's candidates by column
+    # x-centre (geometry) or, failing that, by candidate names in its own header. A table that aligns
+    # to none of the candidates (a turnout block, a neighbouring contest) is dropped. A precinct whose
+    # row STRADDLES a page leaves a label-only row atop the next table; that label (before any data
+    # there) folds into the previous precinct.
+    entries: list[list] = []                         # [label, data_row, column_map]
+    for table_index, grid in enumerate(tables):
+        if not grid:
             continue
-        # A same-width NEIGHBOUR table whose header names none of the candidates is not part of this
-        # contest -- a ClearBallot page (flat_grouped) sets the candidate block beside a turnout block
-        # ("Times Cast", "Registered Voters") of the same width, and reading its columns as votes
-        # would corrupt the precincts. Only drop_foreign_tables enables this (the flat_grouped path,
-        # whose candidate names sit in grid[0]); the continuation path leaves it off, because there a
-        # contest's candidate names can ride a row BELOW a title row (Columbia's "PRESIDENTIAL
-        # ELECTORS"), making header_match on grid[0] an unreliable 0. Exclude only a real header row
-        # (text in the candidate columns) matching no candidate; the anchor, a header-less
-        # continuation (first row is data), and a straddle continuation (label-only row) all pass.
-        if drop_foreign_tables and grid is not anchor and is_header_text(grid[0]) \
-                and header_match(grid) < 1:
-            continue
+        if table_index == anchor_index:
+            column_map: dict[int, int] = {index: anchor_columns[index] for index in range(len(candidates))}
+        else:
+            grid_x: list[float] | None = column_x[table_index] if column_x is not None else None
+            column_map = _align_columns(grid, candidate_names, anchor_columns, label_column,
+                                        anchor_width, column_x=grid_x, anchor_x=anchor_x)
+        if not column_map:
+            continue                                 # foreign table (turnout block / another contest)
+        used: set[int] = set(column_map.values())
         started: bool = False
         for row in grid:
-            if has_data(row):
-                entries.append([label_of(row), row])
+            if any(col < len(row) and _cell_count(row[col]) is not None for col in used):
+                entries.append([label_of(row), row, column_map])
                 started = True
             elif label_of(row) and not started and entries:
                 entries[-1][0] = (entries[-1][0] + ' ' + label_of(row)).strip()
@@ -783,13 +918,14 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
     votes: dict = {}
     totals: dict = {}                                # (candidate, party) -> printed county total
     write_ins: dict = collections.defaultdict(lambda: {'total': [], 'component': []})
-    for precinct, row in entries:
+    for precinct, row, column_map in entries:
         # a grand-total row is a CHECKSUM, not a precinct; treat a bare "Total" label as one.
         # Capture its non-write-in candidate values (largest wins if several) for reconciliation.
         is_total: bool = (not precinct or precinct in schema.skip_labels
                           or _norm(precinct) in ('total', 'totals'))
-        for column in candidates:
-            value = _cell_count(row[column.index]) if column.index < len(row) else None
+        for index, column in enumerate(candidates):
+            col: int | None = column_map.get(index)
+            value = _cell_count(row[col]) if col is not None and col < len(row) else None
             if value is None:
                 continue
             candidate, party = _split_party(column.candidate, column.party)
@@ -808,7 +944,7 @@ def scope_flat_tables(tables: list[list[list[str]]], candidate_context: str,
 
 def join_flat_table_pages(pages_tables: list[list[list[list[str]]]], candidate_context: str,
                           schema_for: typing.Callable[[list[list[str]]], signatures.PageSchema],
-                          ) -> tuple[dict, dict]:
+                          pages_column_x: list[list[list[float]]] | None = None) -> tuple[dict, dict]:
     '''Read a candidate-GROUP flat contest -- one whose candidate columns are split across pages that
     all repeat the SAME precincts (a Hart SOVC too wide for one page: page N holds some candidates,
     page N+1 the rest, both listing every precinct down the rows). scope_flat_tables reads ONE page's
@@ -826,11 +962,12 @@ def join_flat_table_pages(pages_tables: list[list[list[list[str]]]], candidate_c
     label: dict[str, str] = {}                       # normalized precinct -> canonical label (first wins)
     by_key: dict[tuple, dict] = {}                   # (normprecinct, candidate, party) -> buckets
     totals: dict = {}
-    for tables in pages_tables:
-        # drop_foreign_tables: a candidate-group page can carry a same-width turnout block beside the
-        # candidate table (ClearBallot); exclude it so its columns are not read as votes.
-        page_votes, page_totals = scope_flat_tables(
-            tables, candidate_context, schema_for, drop_foreign_tables=True)
+    for page_index, tables in enumerate(pages_tables):
+        # a candidate-group page can carry a same-width turnout block beside the candidate table
+        # (ClearBallot); scope_flat_tables aligns by column x, so that block sits in a different x band
+        # and is dropped without any special flag here.
+        column_x = pages_column_x[page_index] if pages_column_x is not None else None
+        page_votes, page_totals = scope_flat_tables(tables, candidate_context, schema_for, column_x=column_x)
         for (precinct, candidate, party), buckets in page_votes.items():
             key: str = _precinct_key(precinct)
             label.setdefault(key, precinct)
@@ -1084,25 +1221,30 @@ class VoteExtractor(dspy.Module):
     def _extract_scanned_tables(self, file_path: str, pages: list[int], office: str,
                                 candidate_context: str) -> tuple[dict, dict]:
         '''Read the contest's pages as flat tables (read_flat_tables, Textract) and hand them to
-        scope_flat_tables with the interpreter bound as the schema resolver. The scoping and
-        digit-moving live in that standalone function so they can be tested on captured grids; this
-        method only supplies the two impure dependencies -- the Textract read and the LLM schema.'''
-        tables: list[list[list[str]]] = [grid for page in pages
-                                         for grid in read_flat_tables(file_path, page)]
+        scope_flat_tables with the interpreter bound as the schema resolver and the per-table column
+        x-centres for geometric alignment. The scoping and digit-moving live in that standalone
+        function so they can be tested on captured grids; this method only supplies the impure
+        dependencies -- the Textract read (grids + geometry) and the LLM schema.'''
+        read: list[tuple] = [pair for page in pages for pair in read_flat_tables(file_path, page)]
+        tables: list[list[list[str]]] = [grid for grid, _x in read]
+        column_x: list[list[float]] = [x for _grid, x in read]
         return scope_flat_tables(
             tables, candidate_context,
-            lambda anchor: self._columns_schema(office, candidate_context, anchor))
+            lambda anchor: self._columns_schema(office, candidate_context, anchor), column_x=column_x)
 
     def _extract_grouped_tables(self, file_path: str, pages: list[int], office: str,
                                 candidate_context: str) -> tuple[dict, dict]:
         '''Read a candidate-GROUP flat contest (candidate columns split across pages that repeat the
         same precincts) via join_flat_table_pages: one read_flat_tables per page, joined by precinct.
-        Like _extract_scanned_tables, this only supplies the Textract read and the LLM schema; the
-        join and digit-moving live in the standalone function so they can be tested on captured grids.'''
-        pages_tables: list[list[list[list[str]]]] = [read_flat_tables(file_path, page) for page in pages]
+        Like _extract_scanned_tables, this only supplies the Textract read (grids + column x-centres)
+        and the LLM schema; the join and digit-moving live in the standalone function.'''
+        read: list[list[tuple]] = [read_flat_tables(file_path, page) for page in pages]
+        pages_tables: list[list[list[list[str]]]] = [[grid for grid, _x in page] for page in read]
+        pages_column_x: list[list[list[float]]] = [[x for _grid, x in page] for page in read]
         return join_flat_table_pages(
             pages_tables, candidate_context,
-            lambda anchor: self._columns_schema(office, candidate_context, anchor))
+            lambda anchor: self._columns_schema(office, candidate_context, anchor),
+            pages_column_x=pages_column_x)
 
 
 def build_extractor() -> VoteExtractor:

@@ -55,14 +55,13 @@ def test_scoping_drops_a_table_of_a_different_column_count():
 
 def test_ignores_a_same_width_turnout_block_beside_the_candidate_table():
     # a ClearBallot page sets the candidate table beside a same-width turnout block ("Times Cast",
-    # "Registered Voters"); with drop_foreign_tables (the flat_grouped path) that neighbour names no
-    # candidate, so its precinct rows must NOT be read as candidate votes (which would double the
-    # precincts and inject turnout numbers as votes)
+    # "Registered Voters"); content alignment names no candidate in that neighbour, so its precinct
+    # rows are NOT read as candidate votes (which would double the precincts and inject turnout
+    # numbers as votes)
     candidates = [['', 'Harris', 'Trump'], ['P1', '10', '20'], ['P2', '30', '40']]
     turnout = [['', 'Times Cast', 'Registered Voters'], ['P1', '322', '438'], ['P2', '390', '569']]
     schema = _schema([_col(1, 'Harris', 'DEM'), _col(2, 'Trump', 'REP')])
-    vote_map, _totals = votes.scope_flat_tables(
-        [candidates, turnout], 'Harris (DEM)\nTrump (REP)', lambda _a: schema, drop_foreign_tables=True)
+    vote_map, _totals = _run([candidates, turnout], schema)
     assert vote_map[('P1', 'Harris', 'DEM')] == {'votes': 10}       # not 322 from the turnout block
     assert {precinct for (precinct, _c, _p) in vote_map} == {'P1', 'P2'}
 
