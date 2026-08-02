@@ -37,6 +37,23 @@ from . import signatures
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+# One cache home under the caller's cwd, with a subdirectory per backend, so a run's caches sit
+# together (and clear together) instead of the LM cache landing in the home directory and Textract's
+# under a separate .cache. DSPY_CACHEDIR still wins for the LM cache if a caller sets it.
+CACHE_ROOT: str = os.path.join(os.getcwd(), 'oe2d-cache')
+TEXTRACT_CACHE_DIR: str = os.path.join(CACHE_ROOT, 'textract')
+DSPY_CACHE_DIR: str = os.environ.get('DSPY_CACHEDIR') or os.path.join(CACHE_ROOT, 'dspy')
+
+
+def configure_cache() -> None:
+    '''Point DSPy's on-disk LM cache at DSPY_CACHE_DIR (the shared oe2d cache home). Called once at
+    import so every entry point -- the CLIs, evaluate, a bare VoteExtractor -- shares it; the Textract
+    cache reads TEXTRACT_CACHE_DIR directly. Idempotent and cheap (diskcache opens lazily).'''
+    dspy.configure_cache(disk_cache_dir=DSPY_CACHE_DIR)
+
+
+configure_cache()
+
 # A table read from the page: a StringGrid is the whole grid, a StringRow one line of its cells. The
 # flat read threads grids, lists of grids, and pages of grids around, so these aliases keep the
 # signatures legible -- list[StringGrid] reads as "a list of grids" where list[list[list[str]]] does not.
@@ -650,8 +667,8 @@ def textract_usage() -> dict:
 
 
 def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[dict]:
-    '''Textract Blocks for a page, cached under ./.cache/textract/ (the caller's cwd) so re-runs do not
-    re-pay. Renders the page and deskews it (deskew helps Textract's cell assignment), then calls
+    '''Textract Blocks for a page, cached under TEXTRACT_CACHE_DIR (oe2d-cache/textract) so re-runs do
+    not re-pay. Renders the page and deskews it (deskew helps Textract's cell assignment), then calls
     DetectDocumentText (features empty -- cheap, words only) or AnalyzeDocument (features, e.g.
     TABLES, ~10x). Inline PNG bytes, no S3. A cache MISS is a real (paid) call: it is counted in
     _textract_calls and logged with the running estimated spend. The Textract client takes AWS creds
@@ -670,7 +687,7 @@ def _textract_blocks(file_path: str, page: int, features: tuple = ()) -> list[di
     # the Textract result -- NOT the file path, so the same source at several paths shares one entry.
     key: str = hashlib.sha1(
         ('%s\0%d\0%s\0%d' % (_file_digest(file_path), page, tag, resolution)).encode()).hexdigest()
-    cache_dir: str = os.path.join('.cache', 'textract')     # ./.cache relative to the caller's cwd
+    cache_dir: str = TEXTRACT_CACHE_DIR
     cache: str = os.path.join(cache_dir, '%s.json' % key)
     if os.path.exists(cache):
         return json.load(open(cache))

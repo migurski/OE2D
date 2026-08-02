@@ -48,8 +48,12 @@ walkers, stitch, consensus, write-in consolidation, all-zero drop) is determinis
   AWS_PROFILE=cmpnd-mike-root AWS_REGION_NAME=us-west-2`.
 - **Interpreter LM**: `votes.LM_CLAUDE_SONNET45` (Bedrock Sonnet 4.5). Pages VLM:
   `pages.LM_LLAMA4_MAVERICK` (Fireworks Kimi K2 is suspended — billing).
+- **Caches (one home, gitignored)**: `./oe2d-cache/` under the caller's cwd, with `textract/` and
+  `dspy/` subdirectories (the LM cache no longer lands in `~/.dspy_cache`; both clear together).
+  `votes.configure_cache()` points DSPy at `oe2d-cache/dspy` at import (DSPY_CACHEDIR still overrides);
+  `votes.TEXTRACT_CACHE_DIR` is `oe2d-cache/textract`.
 - **Textract cost + cache**: cheap `DetectDocumentText` (~$0.0015/pg) vs `AnalyzeDocument TABLES`
-  (~$0.015/pg, 10x). Cache: `./.cache/textract/` (caller cwd, gitignored), **content-addressed** on
+  (~$0.015/pg, 10x). The Textract cache is **content-addressed** on
   `sha1(file BYTES + page + mode + render-DPI)` so the same source at any path shares one entry.
   `votes.textract_usage()` → `{calls, usd}` (paid calls only); `oe2d-votes-evaluate` prints a spend
   line. DPI is part of the key, so switching DPI re-pays (once) and re-OCRs.
