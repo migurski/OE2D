@@ -37,10 +37,11 @@ from . import signatures
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# One row of a table grid: the cells of a single line as read from the page. A grid is a
-# list[StringRow]; the flat read threads grids and lists of grids around, so the alias keeps those
-# signatures legible (list[StringRow] reads as "a grid" where list[StringRow] does not).
+# A table read from the page: a StringGrid is the whole grid, a StringRow one line of its cells. The
+# flat read threads grids, lists of grids, and pages of grids around, so these aliases keep the
+# signatures legible -- list[StringGrid] reads as "a list of grids" where list[list[list[str]]] does not.
 StringRow: typing.TypeAlias = list[str]
+StringGrid: typing.TypeAlias = list[StringRow]
 
 # How to turn a contest's pages into grids -- READ MECHANICS ONLY. 'auto' picks the reader from what
 # each page offers (ruled vector, rotated text-aligned, or a scan with no text layer, one grid per
@@ -187,7 +188,7 @@ def _record(components: list[str], values: list[int], total: int) -> dict:
 _PERCENT_CELL: re.Pattern = re.compile(r'^\s*-?[\d,]*\.?\d+\s*%\s*$')
 
 
-def _kept_columns(grid: list[StringRow]) -> list[int]:
+def _kept_columns(grid: StringGrid) -> list[int]:
     '''The columns _normalize_table_columns keeps: everything except a candidate's PERCENT column and
     an ALL-EMPTY spacer. Some vendors print each candidate as a count column followed by a percent
     column under one (colspan-2) header, and a reader segments the pair inconsistently -- count and
@@ -218,14 +219,14 @@ def _kept_columns(grid: list[StringRow]) -> list[int]:
     return [col for col in range(width) if not drop(col)]
 
 
-def _normalize_table_columns(grid: list[StringRow]) -> list[StringRow]:
+def _normalize_table_columns(grid: StringGrid) -> StringGrid:
     '''Drop a candidate's PERCENT column and any all-empty spacer (see _kept_columns), so a merged or
     split count+percent layout reduces to just the count columns.'''
     keep: list[int] = _kept_columns(grid)
     return [[row[col] if col < len(row) else '' for col in keep] for row in grid]
 
 
-def _count_columns(grid: list[StringRow], candidate_rows: list, want: int) -> list[int]:
+def _count_columns(grid: StringGrid, candidate_rows: list, want: int) -> list[int]:
     '''The columns that hold vote counts, by CONSENSUS across a page's candidate rows. The column
     structure is consistent within a page even when table conversion drifts across pages, so a
     stray cell wedged into one row (present in no other) is outvoted, while the real method columns
@@ -264,7 +265,7 @@ def _contiguous_label(row: StringRow, start: int) -> str:
     return ' '.join(parts)
 
 
-def grid_to_text(rows: list[StringRow]) -> str:
+def grid_to_text(rows: StringGrid) -> str:
     '''Render an extracted grid for the interpreter: one row per line, 0-based columns.'''
     return '\n'.join('%d: %s' % (i, ' | '.join(_clean(cell) for cell in row))
                      for i, row in enumerate(rows))
@@ -285,7 +286,7 @@ def _file_digest(path: str) -> str:
         return hashlib.sha1(handle.read()).hexdigest()
 
 
-def read_text_grid(path: str, page: int, text_tolerance: int = 3) -> list[StringRow]:
+def read_text_grid(path: str, page: int, text_tolerance: int = 3) -> StringGrid:
     '''Vendor-adaptive read for precinct-major (Electionware-style) pages: text-alignment table
     reconstruction. source_table.page_table is tuned for the ruled Hart SOVCs and mis-reads these
     (ruled lines only bound fragments); text alignment recovers the full grid, and text_tolerance
@@ -322,7 +323,7 @@ def _reads_better_reversed(tokens: list[str]) -> bool:
     return reverse > forward
 
 
-def read_rotated_grid(path: str, page: int, x_gap: float = 15, y_tol: float = 3) -> list[StringRow]:
+def read_rotated_grid(path: str, page: int, x_gap: float = 15, y_tol: float = 3) -> StringGrid:
     '''Read a rotated-header text-aligned SOVC page (e.g. Calhoun MI) into a grid.
 
     These pages have no ruled lines (so source_table.page_table finds no columns) and their column
@@ -381,7 +382,7 @@ def read_rotated_grid(path: str, page: int, x_gap: float = 15, y_tol: float = 3)
             row_groups.append([])
         row_groups[-1].append(word)
 
-    grid: list[StringRow] = [[''] + [name for _lo, _hi, name in band_defs]]
+    grid: StringGrid = [[''] + [name for _lo, _hi, name in band_defs]]
     for row in row_groups:
         cells: StringRow = [''] * (len(band_defs) + 1)
         label_parts: list[str] = []
@@ -494,7 +495,7 @@ def _textract_words(file_path: str, page: int) -> list[dict]:
     return words
 
 
-def read_scanned_tables(file_path: str, page: int) -> list[tuple[list[StringRow], list[float]]]:
+def read_scanned_tables(file_path: str, page: int) -> list[tuple[StringGrid, list[float]]]:
     '''EVERY ruled table on a scanned page as (grid, column_x), in top-to-bottom order (like
     source_table.page_tables, but for a scan via Textract TABLES). A scanned page routinely holds
     several contests' tables plus a header-less continuation of the previous page's contest, so the
@@ -523,7 +524,7 @@ def read_scanned_tables(file_path: str, page: int) -> list[tuple[list[StringRow]
         if not cells:
             continue
         width: int = max(c['ColumnIndex'] for c in cells)
-        grid: list[StringRow] = [[''] * width for _ in range(max(c['RowIndex'] for c in cells))]
+        grid: StringGrid = [[''] * width for _ in range(max(c['RowIndex'] for c in cells))]
         centres: dict[int, list[float]] = collections.defaultdict(list)
         for cell in cells:
             grid[cell['RowIndex'] - 1][cell['ColumnIndex'] - 1] = _clean(cell_text(cell))
@@ -535,7 +536,7 @@ def read_scanned_tables(file_path: str, page: int) -> list[tuple[list[StringRow]
     return [(grid, column_x) for _top, grid, column_x in sorted(found, key=lambda item: item[0])]
 
 
-def read_flat_tables(file_path: str, page: int) -> list[tuple[list[StringRow], list[float]]]:
+def read_flat_tables(file_path: str, page: int) -> list[tuple[StringGrid, list[float]]]:
     '''Flat candidate-column tables on a page as (grid, column_x), read with Textract TABLES (render
     the page, then AnalyzeDocument) -- for BOTH scanned and vector pages. Textract's table detection
     segments stacked contests into separate clean tables and reads full candidate headers even on a
@@ -546,10 +547,10 @@ def read_flat_tables(file_path: str, page: int) -> list[tuple[list[StringRow], l
     serve the 'auto' path. This is READ MECHANICS -- the flat CONTENT handling downstream is the same.
     A candidate's percent column is stripped from BOTH the grid and its column_x, keeping the two
     aligned.'''
-    out: list[tuple[list[StringRow], list[float]]] = []
+    out: list[tuple[StringGrid, list[float]]] = []
     for grid, column_x in read_scanned_tables(file_path, page):
         keep: list[int] = _kept_columns(grid)
-        normalized: list[StringRow] = [[row[col] if col < len(row) else '' for col in keep]
+        normalized: StringGrid = [[row[col] if col < len(row) else '' for col in keep]
                                        for row in grid]
         kept_x: list[float] = [column_x[col] if col < len(column_x) else 0.0 for col in keep]
         out.append((normalized, kept_x))
@@ -557,7 +558,7 @@ def read_flat_tables(file_path: str, page: int) -> list[tuple[list[StringRow], l
 
 
 def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap: float = 0.02,
-                      data_left: float = 0.14, half: float = 0.45) -> list[StringRow]:
+                      data_left: float = 0.14, half: float = 0.45) -> StringGrid:
     '''Read a SCANNED SOVC page into a grid from cheap-mode Textract words -- no vendor table cells.
 
     Cluster words into rows by their y-center; take column x-centers from the counts on real DATA
@@ -597,7 +598,7 @@ def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap
             if 0.12 < word['cy'] < first_data_y and word['cx'] >= label_bound and '%' not in word['text']:
                 header[nearest(word['cx']) + 1] = (header[nearest(word['cx']) + 1] + ' ' + word['text']).strip()
 
-    grid: list[StringRow] = [header]
+    grid: StringGrid = [header]
     for row in sorted(rows, key=lambda r: min(w['cy'] for w in r)):
         counts = data_counts(row)
         cells: StringRow = [''] * (len(centers) + 1)
@@ -626,7 +627,7 @@ def read_scanned_grid(file_path: str, page: int, row_gap: float = 0.006, col_gap
     return grid
 
 
-def read_page_grid(file_path: str, page: int) -> list[StringRow]:
+def read_page_grid(file_path: str, page: int) -> StringGrid:
     '''One page's grid, choosing the reader by what the page offers: ruled Hart SOVC
     (source_table) -> rotated-header text-aligned SOVC (read_rotated_grid) -> a borderless
     text-aligned vector page (read_text_grid) -> a scanned page with no text layer at all
@@ -634,7 +635,7 @@ def read_page_grid(file_path: str, page: int) -> list[StringRow]:
     borderless VECTOR page (e.g. Electionware laid out candidates-as-columns) that has no ruled
     lines for source_table and is not rotated; the Textract path only fires when the page has no
     extractable words, so a vector document never pays for it.'''
-    grid: list[StringRow] = source_table.page_table(file_path, page) or read_rotated_grid(file_path, page)
+    grid: StringGrid = source_table.page_table(file_path, page) or read_rotated_grid(file_path, page)
     if grid:
         return grid
     pdf: pdfplumber.PDF = _open_pdf(file_path)
@@ -677,7 +678,7 @@ def detect_dispatch(file_path: str, page: int) -> dict:
             'scanned': scanned, 'ruled_table': ruled}
 
 
-def walk_page(rows: list[StringRow], schema: signatures.PageSchema) -> list[dict]:
+def walk_page(rows: StringGrid, schema: signatures.PageSchema) -> list[dict]:
     '''Ordered precinct blocks on a page, driven entirely by the schema (no English here).
 
     Each block is {'label': str | None, 'methods': {bucket: row}}. A block accumulates its
@@ -744,7 +745,7 @@ def _name_tokens(name: str) -> set[str]:
     return {_norm(token) for token in re.split(r'\s*\(', name)[0].split() if len(token) > 3}
 
 
-def _snap_to_counts(grid: list[StringRow], columns: list[int]) -> dict[int, int]:
+def _snap_to_counts(grid: StringGrid, columns: list[int]) -> dict[int, int]:
     '''Repair the anchor's schema column indices that landed on a NON-count column: the interpreter
     sometimes maps a candidate to a split-off party cell ("(REP)") that holds no votes while the count
     sits in the adjacent name cell. A candidate whose assigned column already bears counts is kept;
@@ -773,7 +774,7 @@ def _snap_to_counts(grid: list[StringRow], columns: list[int]) -> dict[int, int]
 _X_TOLERANCE: float = 0.04                            # a column x-centre may drift this far (page fraction)
 
 
-def _align_columns(grid: list[StringRow], candidate_names: list[str], anchor_columns: list[int],
+def _align_columns(grid: StringGrid, candidate_names: list[str], anchor_columns: list[int],
                    label_column: int = 0, anchor_width: int | None = None,
                    column_x: list[float] | None = None,
                    anchor_x: list[float | None] | None = None) -> dict[int, int]:
@@ -802,7 +803,7 @@ def _align_columns(grid: list[StringRow], candidate_names: list[str], anchor_col
     if first_data is None:
         return {}
     width: int = max(len(row) for row in grid)
-    data: list[StringRow] = grid[first_data:]
+    data: StringGrid = grid[first_data:]
     def has_count(col: int) -> bool:
         return any(col < len(row) and _cell_count(row[col]) is not None for row in data)
 
@@ -833,7 +834,7 @@ def _align_columns(grid: list[StringRow], candidate_names: list[str], anchor_col
     same_width: bool = anchor_width is None or width == anchor_width
     if first_data == 0:                              # header-less: identity = same width
         return positions(range(len(candidate_names))) if same_width else {}
-    header: list[StringRow] = grid[:first_data]
+    header: StringGrid = grid[:first_data]
     signature: list[str] = [_norm(' '.join(row[col] for row in header if col < len(row)))
                             for col in range(width)]
     named: set[int] = {index for index, name in enumerate(candidate_names)
@@ -870,8 +871,8 @@ def _align_columns(grid: list[StringRow], candidate_names: list[str], anchor_col
     return mapping
 
 
-def scope_flat_tables(tables: list[list[StringRow]], candidate_context: str,
-                      schema_for: typing.Callable[[list[StringRow]], signatures.PageSchema],
+def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
+                      schema_for: typing.Callable[[StringGrid], signatures.PageSchema],
                       column_x: list[list[float]] | None = None) -> tuple[dict, dict]:
     '''Scope a scan's flat tables to one contest and read them, aligning each table's columns to the
     anchor's candidates.
@@ -903,7 +904,7 @@ def scope_flat_tables(tables: list[list[StringRow]], candidate_context: str,
                    for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
     header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
     anchor_index: int = max(range(len(tables)), key=lambda i: header_match(tables[i]))
-    anchor: list[StringRow] = tables[anchor_index]
+    anchor: StringGrid = tables[anchor_index]
     schema: signatures.PageSchema = schema_for(anchor)
     label_column: int = schema.label_column
     anchor_width: int = len(anchor[0])
@@ -979,8 +980,8 @@ def scope_flat_tables(tables: list[list[StringRow]], candidate_context: str,
     return votes, totals
 
 
-def join_flat_table_pages(pages_tables: list[list[list[StringRow]]], candidate_context: str,
-                          schema_for: typing.Callable[[list[StringRow]], signatures.PageSchema],
+def join_flat_table_pages(pages_tables: list[list[StringGrid]], candidate_context: str,
+                          schema_for: typing.Callable[[StringGrid], signatures.PageSchema],
                           pages_column_x: list[list[list[float]]] | None = None) -> tuple[dict, dict]:
     '''Read a candidate-GROUP flat contest -- one whose candidate columns are split across pages that
     all repeat the SAME precincts (a Hart SOVC too wide for one page: page N holds some candidates,
@@ -1048,7 +1049,7 @@ class VoteExtractor(dspy.Module):
         self.interpret_rows: dspy.Module = dspy.Predict(signatures.InterpretPrecinctPage)
 
     def _columns_schema(self, office: str, candidate_context: str,
-                        rows: list[StringRow]) -> signatures.PageSchema:
+                        rows: StringGrid) -> signatures.PageSchema:
         '''Interpret one contest-major page's grid into a PageSchema (the LLM step; no numbers).'''
         return self.interpret_columns(office=office, candidate_context=candidate_context,
                                       grid=grid_to_text(rows)).page_schema
@@ -1106,7 +1107,7 @@ class VoteExtractor(dspy.Module):
         '''
         page_schemas: list[tuple] = []
         for page in pages:
-            rows: list[StringRow] = read_page_grid(file_path, page)
+            rows: StringGrid = read_page_grid(file_path, page)
             schema: signatures.PageSchema = self._columns_schema(office, candidate_context, rows)
             page_schemas.append((schema, rows))
 
@@ -1208,7 +1209,7 @@ class VoteExtractor(dspy.Module):
         ONE sample page and apply that schema to every page -- one LLM call per document, then
         deterministic exact-label extraction. Candidate rows are found by their verbatim row-label
         (identical across pages); the precinct name is read from the learned header cell.'''
-        sample: list[StringRow] = read_text_grid(file_path, pages[0])
+        sample: StringGrid = read_text_grid(file_path, pages[0])
         schema: signatures.PrecinctPageSchema = self.interpret_rows(
             office=office, candidate_context=candidate_context, grid=grid_to_text(sample)).precinct_schema
         # The interpreter names the method buckets in left-to-right order; trust that order, not its
@@ -1226,7 +1227,7 @@ class VoteExtractor(dspy.Module):
         write_ins: dict = collections.defaultdict(
             lambda: collections.defaultdict(lambda: {'total': [], 'component': []}))
         for page in pages:
-            grid: list[StringRow] = read_text_grid(file_path, page)
+            grid: StringGrid = read_text_grid(file_path, page)
             precinct: str = ''
             if schema.precinct_row < len(grid):
                 precinct = _contiguous_label(grid[schema.precinct_row], schema.precinct_column)
@@ -1263,7 +1264,7 @@ class VoteExtractor(dspy.Module):
         function so they can be tested on captured grids; this method only supplies the impure
         dependencies -- the Textract read (grids + geometry) and the LLM schema.'''
         read: list[tuple] = [pair for page in pages for pair in read_flat_tables(file_path, page)]
-        tables: list[list[StringRow]] = [grid for grid, _x in read]
+        tables: list[StringGrid] = [grid for grid, _x in read]
         column_x: list[list[float]] = [x for _grid, x in read]
         return scope_flat_tables(
             tables, candidate_context,
@@ -1276,7 +1277,7 @@ class VoteExtractor(dspy.Module):
         Like _extract_scanned_tables, this only supplies the Textract read (grids + column x-centres)
         and the LLM schema; the join and digit-moving live in the standalone function.'''
         read: list[list[tuple]] = [read_flat_tables(file_path, page) for page in pages]
-        pages_tables: list[list[list[StringRow]]] = [[grid for grid, _x in page] for page in read]
+        pages_tables: list[list[StringGrid]] = [[grid for grid, _x in page] for page in read]
         pages_column_x: list[list[list[float]]] = [[x for _grid, x in page] for page in read]
         return join_flat_table_pages(
             pages_tables, candidate_context,
