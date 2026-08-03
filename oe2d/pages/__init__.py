@@ -174,26 +174,29 @@ class PageAnalyzer(dspy.Module):
 
 
 # The task LMs (multimodal), kept here beside the program, not in a shared config module, so the
-# LM lives next to what uses it. LM_LLAMA4_MAVERICK is the stock INFERENCE model build_analyzer
-# reads pages with -- a Bedrock vision model (litellm reads AWS creds from the environment); it
-# baselines best of the Bedrock options tried (~99% orientation). LM_KIMI_K2P7 is Fireworks' Kimi
-# K2 (litellm reads FIREWORKS_AI_API_KEY), kept as the oe2d.pages.optimize training default.
+# LM lives next to what uses it. LM_QWEN3_VL is the stock INFERENCE model build_analyzer reads pages
+# with -- the strongest of the Bedrock vision options tried (see pages-PERFORMANCE.md; ~99%
+# orientation, and it wins the read-shape fields), litellm reads AWS creds from the environment.
+# LM_LLAMA4_MAVERICK is the cheaper Bedrock baseline, kept for reference / cost trade-offs;
+# LM_KIMI_K2P7 is Fireworks' Kimi K2 (litellm reads FIREWORKS_AI_API_KEY), the optimize training default.
+LM_QWEN3_VL: str = 'bedrock/qwen.qwen3-vl-235b-a22b'
 LM_LLAMA4_MAVERICK: str = 'bedrock/us.meta.llama4-maverick-17b-instruct-v1:0'
 LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
 
 
 def build_analyzer() -> PageAnalyzer:
-    '''Construct the composite page analyzer. A trained artifact, when present, fully
-    governs (its saved prompt AND lm win); otherwise bind the stock inference LM
-    (LM_LLAMA4_MAVERICK, a Bedrock vision model).'''
+    '''Construct the composite page analyzer, bound to the stock inference LM (LM_QWEN3_VL). A trained
+    artifact, when present, fully governs instead (its saved prompt AND lm win) -- but we ship none:
+    GEPA was a no-op on this saturated Qwen seed (see pages-PERFORMANCE.md), so the stock program IS
+    the shipped program and Python is its single source of truth. The load-if-present hook stays for a
+    future optimization that actually lifts.'''
     analyzer: PageAnalyzer = PageAnalyzer()
     if os.path.exists(OPTIMIZED_MODEL_PATH):
         analyzer.load(OPTIMIZED_MODEL_PATH)
     else:
-        # Inference settings: temperature 0 for a settled classifier (not GEPA-style
-        # exploration), and a large max_tokens so a page reasoned about at length doesn't
-        # truncate mid-answer.
-        analyzer.set_lm(dspy.LM(LM_LLAMA4_MAVERICK, temperature=0.0, max_tokens=8192))
+        # Inference settings: temperature 0 for a settled classifier (not GEPA-style exploration), and
+        # a large max_tokens so a page reasoned about at length doesn't truncate mid-answer.
+        analyzer.set_lm(dspy.LM(LM_QWEN3_VL, temperature=0.0, max_tokens=8192))
     return analyzer
 
 
