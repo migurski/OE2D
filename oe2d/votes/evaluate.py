@@ -114,7 +114,8 @@ def report_dispatch(examples: list) -> None:
         gold_orient: str = example.orientation
         gold_read: str = example.read_strategy
         try:
-            got: dict = votes.detect_dispatch(example.file_path, example.pages[0])
+            got: dict = votes.detect_dispatch(example.file_path, example.pages[0],
+                                              example.pages, example.candidate_context)
         except Exception as error:
             print('%-40s ERROR %s: %s' % (getattr(example, '_id', '?'),
                                           type(error).__name__, str(error)[:60]))

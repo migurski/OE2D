@@ -920,7 +920,8 @@ def _propose_read_strategy(orientation: str, scope: str, scanned: bool, ruled: b
     return 'ruled_scan' if (scanned and ruled) else 'auto'
 
 
-def detect_dispatch(file_path: str, page: int) -> dict:
+def detect_dispatch(file_path: str, page: int, contest_pages: list[int] | None = None,
+                    candidate_context: str = '') -> dict:
     '''Choose how to read a contest from ONE sample page, via oe2d.pages (the image VLM) plus a
     deterministic text-layer check -- so dispatch comes from the page image, not a hand-set gold
     field. Returns {orientation, read_strategy, scanned, ruled_table}.
@@ -931,7 +932,13 @@ def detect_dispatch(file_path: str, page: int) -> dict:
     flat-family proposal is checksum-CONFIRMED in _read_votes and falls back to the cheap auto read
     when the per-precinct sums miss the printed county total, so a VLM slip on the columns family
     self-corrects; the rows-family report proposals ride value_columns, which has no cross-family
-    collision.'''
+    collision.
+
+    One read shape is single-page-undetectable: a candidate-GROUP contest (flat_grouped) looks
+    exactly like a flat scan on page 1 -- its candidate columns are split across later pages that
+    repeat the same precincts. When the image proposes a flat scanned read and the FULL contest_pages
+    are known (more than one), a deterministic cross-page probe upgrades the proposal to flat_grouped;
+    the grouped read is itself checksum-confirmed downstream, so a false upgrade self-corrects.'''
     from .. import pages
     props: dict = pages.analyze_page(file_path, page)
     scanned: bool = not _has_text_layer(file_path, page)
@@ -939,6 +946,9 @@ def detect_dispatch(file_path: str, page: int) -> dict:
     read_strategy: ReadStrategy = _propose_read_strategy(
         props['candidate_orientation'], props['precinct_scope'], scanned, ruled,
         props['contests_across'], props['precinct_rows'], props['value_columns'])
+    if (read_strategy in ('ruled_scan', 'flat_tables') and contest_pages is not None
+            and _pages_split_candidates(file_path, contest_pages, candidate_context)):
+        read_strategy = 'flat_grouped'
     return {'orientation': props['candidate_orientation'],
             'read_strategy': read_strategy,
             'scanned': scanned, 'ruled_table': ruled}
@@ -1289,6 +1299,78 @@ def join_flat_table_pages(pages_tables: list[list[StringGrid]], candidate_contex
     return votes, totals
 
 
+def _grid_precincts(grid: StringGrid) -> set[str]:
+    '''Normalized precinct keys of a flat table -- the leading column whose data cells are mostly
+    non-numeric (the heuristic segment_multi_grid uses for its label column), read down every row.
+    For the cross-page probe that spots a candidate-GROUP contest.'''
+    width: int = max((len(row) for row in grid), default=0)
+    if not width:
+        return set()
+    cell = lambda row, c: row[c] if c < len(row) else ''
+    is_label = lambda text: bool(_clean(text)) and _cell_count(text) is None
+    label_column: int = max(range(min(width, 6)),
+                            key=lambda c: sum(1 for row in grid if is_label(cell(row, c))))
+    return {_precinct_key(_clean(cell(row, label_column))) for row in grid
+            if is_label(cell(row, label_column))}
+
+
+def _candidate_tokens(candidate_context: str) -> set[str]:
+    '''Distinctive candidate-name tokens (longer than three chars) from the expected-candidate prose
+    -- the same signal _extract_multi_grid uses to pick a mega-grid block.'''
+    return {_norm(token) for line in candidate_context.splitlines()
+            for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
+
+
+def _pages_split_candidates(file_path: str, contest_pages: list[int], candidate_context: str) -> bool:
+    '''True when the contest's candidate columns are SPLIT across its pages -- a candidate-GROUP
+    (flat_grouped) contest, which reads as an ordinary flat scan on page 1 because its later pages
+    repeat the SAME precincts under DIFFERENT candidates (a SOVC too wide for one page). The tell is
+    two facts together: an expected candidate name that appears ONLY on a later page, AND precinct
+    rows that repeat across pages (a plain continuation instead introduces NEW precincts, and a
+    single-contest method-sub-row scan carries every candidate on page 1). Single-page-undetectable
+    otherwise -- page 1 alone looks identical to flat_tables.
+
+    Deterministic and read-free of the LLM, over the flat tables the read will use anyway (Textract
+    is cached), so this only reorders which read runs first; the grouped read's own county-total
+    checksum still confirms it, so a false positive here (e.g. Gogebic, whose candidates also split
+    but whose grid is really method-sub-rows) costs one grouped read that fails to reconcile and
+    falls back, not a wrong answer.'''
+    wanted: set = _candidate_tokens(candidate_context)
+    if len(contest_pages) < 2 or not wanted:
+        return False
+    grids: list[StringGrid | None] = []
+    for page in contest_pages:
+        read: list = read_flat_tables(file_path, page)
+        grids.append(max(read, key=lambda pair: len(pair[0][0]) if pair[0] and pair[0][0] else 0)[0]
+                     if read else None)
+    return _grids_split_candidates(grids, wanted)
+
+
+def _grids_split_candidates(grids: 'list[StringGrid | None]', wanted: set) -> bool:
+    '''The pure decision behind _pages_split_candidates, on the already-read page grids (so it is
+    testable without a Textract read): the FIRST page's grid must exist, an expected candidate token
+    must appear only on a LATER page (columns split), and some later page must repeat the first
+    page's precincts (rows repeat). Both facts together are the candidate-GROUP tell.'''
+    if not grids or grids[0] is None or not wanted:
+        return False
+    text_of = lambda grid: _norm(' '.join(c for row in grid for c in row)) if grid else ''
+    on_page: list[set] = [{n for n in wanted if n in text_of(grid)} for grid in grids]
+    later_only: set = set().union(*on_page[1:]) - on_page[0]
+    if not later_only:
+        return False
+    first: set = _grid_precincts(grids[0])
+    for grid in grids[1:]:
+        if grid is None:
+            continue
+        repeat: set = _grid_precincts(grid)
+        smaller: int = min(len(first), len(repeat))
+        # a group split repeats nearly EVERY precinct (real docs sit at ~1.0); a disjoint continuation
+        # shares only boilerplate labels ("Total"/header), so require a high overlap, not a bare half.
+        if smaller and len(first & repeat) >= 0.7 * smaller:
+            return True
+    return False
+
+
 # The first-party labels that begin each partisan contest's column run in a mega-grid (see below);
 # a MEGA-GRID is one physical table whose several contests SHARE the precinct rows and partition the
 # COLUMNS (one row per precinct spans every contest), unlike a flat table (one table = one contest) or
@@ -1391,7 +1473,7 @@ class VoteExtractor(dspy.Module):
         from the image, not a caller-set field; pass a value to override. Returns rows + the raw
         stitched votes mapping.'''
         if orientation is None or read_strategy is None:
-            detected: dict = detect_dispatch(file_path, pages[0])
+            detected: dict = detect_dispatch(file_path, pages[0], pages, candidate_context)
             orientation = orientation or detected['orientation']
             read_strategy = read_strategy or detected['read_strategy']
         votes: dict = self._read_votes(file_path, pages, office, candidate_context,
