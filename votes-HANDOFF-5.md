@@ -59,9 +59,17 @@ are DONE. What remains:
    Assembly).
 3. **A ballot-measure (Yes/No) contest** — the one contest *shape* not in gold (all 50 are candidate
    races). From a county whose results include measures.
-4. **Cost**: header-slice interpretation (send the interpreter only header + one block, not every
-   numeric cell of every page); cheap→TABLES escalation (try cheap, checksum, pay for TABLES only on
-   reconcile failure).
+4. **Cost — N+M perimeter reads, not the full N×M page grid** (from HANDOFF-2 §"Perimeter, not the
+   full N×M page grid"; carried forward here so it stops getting lost). A multi-page contest is a grid
+   of pages: **M across** (candidate-group column splits) × **N down** (precinct continuations). The
+   *structure* lives on the perimeter — one horizontal traverse (~M pages, one per candidate-group
+   type) names all candidate columns; the vertical structure is mostly deterministic. So LLM-interpret
+   only the ~**M+N** perimeter page-types and leave the **(N−1)(M−1) interior as pure deterministic
+   fill** (known columns + row-consensus + printed-total/Σ checksums, no LLM), with a checksum-
+   triggered re-interpret for any interior page that doesn't reconcile. "Once per distinct page-type,
+   not once per page" — dozens of interpret calls → a handful. Subsumes the header-slice idea (send
+   only the perimeter pages' header band + label column). Pure cost win, correctness unchanged; the
+   columns path (`_extract_contest`) still interprets every page today, so this is where it pays off.
 5. **Robustness/future**: dual-DPI reconciliation (run a pair of render DPIs, diff, reconcile against
    source); the fuller all-zero roster (document-level precinct roster + name-based out-of-jurisdiction
    filter replacing the zero-sum drop) — deferred until a county needs it.
