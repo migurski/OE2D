@@ -53,6 +53,16 @@ class PageAnalysis(dspy.Signature):
     visible on THIS page; do not infer contests or precincts that would be on other
     pages.
 
+    context: you may be given a passage of external context about this page or its
+    contest. Read it as self-explanatory prose and use it ONLY to resolve ambiguity you
+    cannot settle from the image alone. In particular, if it names the candidates or
+    choices, locate them on the page to fix the CANDIDATE AXIS -- if they run DOWN THE
+    ROWS the orientation is 'rows', if they HEAD THE COLUMNS it is 'columns'. The context
+    is an aid, not ground truth about THIS page: still report every presence field
+    (contest_name_present, candidate_names_present, headers_present) from what is
+    ACTUALLY visible in the image -- never mark something present just because the
+    context mentions it. When context is empty, judge from the image alone.
+
     ruled_table: report whether the results table is drawn as a GRID of ruling lines
     that box the cells -- vertical rules separating the number columns AND horizontal
     rules between rows. Answer True only for a full drawn grid, one a line-based table
@@ -85,9 +95,15 @@ class PageAnalysis(dspy.Signature):
     the counts.
     '''
     image: dspy.Image = dspy.InputField(desc='A single rendered election-results page')
+    context: str = dspy.InputField(
+        desc='Optional external context about this page or its contest (may be empty); '
+             'self-explanatory prose. See the instructions for how to use it')
     candidate_orientation: CandidateOrientation = dspy.OutputField(
-        desc="'columns' when each candidate/party is a column (and precincts run "
-             "down the rows); 'rows' when each candidate/party is a row")
+        desc="Decided by where the CANDIDATE/PARTY NAMES run, NOT by the method or percent "
+             "columns: 'columns' when candidate names head the columns (precincts run down "
+             "the rows); 'rows' when candidate names label the rows -- e.g. a single "
+             "precinct's page listing each candidate on its own row with vote-method columns "
+             "(Election Day / Vote by Mail / Total) across the top")
     contest_name_present: bool = dspy.OutputField(
         desc='Is a contest/office title visible on this page? A continuation page '
              'that just carries more candidate columns or more precinct rows often '

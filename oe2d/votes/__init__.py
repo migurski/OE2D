@@ -947,7 +947,7 @@ def detect_dispatch(file_path: str, page: int, contest_pages: list[int] | None =
     are known (more than one), a deterministic cross-page probe upgrades the proposal to flat_grouped;
     the grouped read is itself checksum-confirmed downstream, so a false upgrade self-corrects.'''
     from .. import pages
-    props: dict = pages.analyze_page(file_path, page)
+    props: dict = pages.analyze_page(file_path, page, context=candidate_context)
     scanned: bool = not _has_text_layer(file_path, page)
     ruled: bool = bool(props.get('ruled_table'))
     read_strategy: ReadStrategy = _propose_read_strategy(
