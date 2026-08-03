@@ -1,5 +1,9 @@
 # oe2d.votes — handoff 5
 
+> **Superseded by `votes-HANDOFF-6.md`** (2026-08-03) for everything after the detected-dispatch
+> residual: that residual is now CLOSED, and Alameda/Humboldt/Mendocino are banked (gold = 53). This
+> doc remains the design record for autonomous dispatch and the mega-grid.
+
 Continues `votes-HANDOFF-4.md`. Read HANDOFF-4 for the full architecture (read strategies, geometry
 alignment, conventions, environment/ops, code map) — it is still accurate except where noted below.
 This doc covers **what changed since HANDOFF-4**; its headline task (the Missaukee mega-grid) is DONE.
