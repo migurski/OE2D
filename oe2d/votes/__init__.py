@@ -895,10 +895,11 @@ def _propose_read_strategy(orientation: str, scope: str, scanned: bool, ruled: b
     sums miss the printed county total -- so those are proposed freely: a scanned mega-grid, a
     method-sub-row scan, and a faint-ruled scan (Gogebic) all fall back to auto on a mismatch, so
     proposing ruled_scan for them cannot read wrong, only cost a Textract call. The rows-family
-    report reads (report_lines_*) have NO county-total confirm, so they are proposed only from
-    value_columns, which separates the three per-precinct report grammars with no cross-family
-    collision (a lone Total -> report_lines_total; count+percent per method -> report_lines_methods;
-    plain method counts -> the Electionware auto tabular).'''
+    report reads (report_lines_*) have no county-total to confirm against, but the report reader
+    itself is the confirm: value_columns picks the grammar (a lone Total -> report_lines_total;
+    count+percent per method -> report_lines_methods; plain method counts -> the Electionware auto
+    tabular), and when the picked reader finds NO blocks -- the page looked like a Dominion report
+    but is some other per-precinct layout (Calaveras) -- _read_votes falls back to the auto read.'''
     # A stacked per-precinct report (choices down the rows). value_columns names the grammar.
     if orientation == 'rows' and scope == 'per_precinct':
         if value_columns == 'total_only':

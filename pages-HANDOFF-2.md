@@ -1,5 +1,57 @@
 # oe2d.pages — handoff 2: teach the page VLM to name the READ SHAPE
 
+## STATUS: DONE (2026-08-03)
+
+Implemented and validated. `PageAnalysis` gained three read-shape fields —
+`contests_across` (single|multiple, the mega-grid detector; named for the horizontal
+axis because a STACKED second contest is not one), `precinct_rows`
+(single|multiple|none), `value_columns` (total_only|methods|methods_with_percent) —
+wired through `PageProperties`, the prediction assembly, `metrics.FIELD_WEIGHTS`
+(the three routers at 2.0), and `datasets` (a `"split":"train"` pin so the sole
+mega-grid exemplars can't strand in val). All 89 existing pages labeled (fixture-level
+structural facts, one representative page viewed per fixture) plus 5 exemplars for the
+new label space: Missaukee (vector mega-grid) + Columbia p11 (scanned mega-grid) for
+`contests_across=multiple`, Columbia p1 (scanned single), Nevada (report_lines_methods),
+Mono (report_lines_total).
+
+The shipped analyzer is now **Qwen3-VL** (committed `optimized_page_analyzer.json`,
+temp 0) — strongest per pages-PERFORMANCE.md. Zero-shot on the new task: orientation
+99%, contests_across 97%, precinct_rows 97%, precinct_scope 97%, value_columns 67%
+(its misses are share-%-vs-method-% gray areas on county/columns pages that DON'T route,
+so routing is unaffected). GEPA (Qwen student, 180 calls) was RUN and confirmed a no-op:
+it raised the 20-page val to 0.982 (value_columns val 90%) but that was val-overfit —
+on the honest full-79 the tuned prompt scored value_columns 63% (< stock 67%), all other
+fields identical, so the STOCK Qwen program ships (the committed artifact). This matches
+pages-PERFORMANCE.md: GEPA rescues weak models, not a capable one whose seed is saturated.
+
+`votes.detect_dispatch` now maps those fields to the full read_strategy (see
+`_propose_read_strategy`). Result on the 50-contest votes gold:
+**--detect read_strategy 46% → 74%, orientation 92% → 100%; --detected macro wF1 0.953
+/ F1 0.969.** Every newly-detected strategy reads at 1.000 (missaukee flat_multi ×5,
+nevada report_lines_methods ×5, mono report_lines_total ×3, branch flat_tables ×4).
+
+Two safety mechanisms make the mapping non-regressing: the flat family is
+checksum-confirmed (a wrong ruled_scan/flat_multi falls back to auto — Gogebic's
+faint-ruled scan self-corrects to 1.000), and `report_lines_*` got the same
+confirm-and-fall-back (an EMPTY report read means the page is some other per-precinct
+grammar — Calaveras looks like Nevada's Dominion report but grids cleanly — so it falls
+back to the auto read).
+
+**Residual gap to the gold-dispatch 1.000** = single-page-undetectable shapes only:
+`flat_grouped` (plumas/ontonagon — candidate columns split ACROSS pages, invisible on
+one page) and `ruled_columns` where it looks identical to `auto` (montmorency
+president/senate — scanned method-sub-rows indistinguishable from Gogebic, which needs
+auto; ruled_columns has no reconcile fallback, so proposing it would break Gogebic).
+The `--read-strategy` CLI override remains for these. Closing them needs either a
+multi-page probe (flat_grouped) or a reconcile-protected ruled_columns read (needs a
+county-total the per-precinct SOVC doesn't print in-range) — deferred.
+
+Commits: `755be2f` (fields + labels + exemplars), `1cecb27` (detect_dispatch mapping +
+report_lines fallback + Qwen artifact). Everything below is the original scoping.
+
+---
+
+
 Pick-up doc for one task: extend `PageAnalysis` so the image VLM reports enough about a page's layout
 that `oe2d.votes.detect_dispatch` can propose the right **read_strategy** — not just `auto`/`ruled_scan`
 as today. Read `pages-HANDOFF.md` for the module's architecture (composite `PageAnalyzer`, in-module
