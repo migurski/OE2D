@@ -1461,10 +1461,18 @@ def read_matrix_page(grid: StringGrid, schema: signatures.PageSchema) -> tuple[d
             continue                                          # a method the interpreter left unmapped
         store: str = 'votes' if bucket == 'total' else bucket
         for column, (name, party) in cand_cols:
-            value = _cell_count(cell(row, column.index))
-            if value is None:
-                continue                                      # masked ("***") or empty
-            votes.setdefault((precinct, name, party), {})[store] = value
+            raw: str = cell(row, column.index)
+            if not raw:
+                continue                                      # absent: nothing in this cell
+            entry: dict = votes.setdefault((precinct, name, party), {})
+            value = _cell_count(raw)
+            if value is not None:
+                entry[store] = value                          # a real count wins
+            else:
+                # non-numeric content (a privacy-suppressed cell, e.g. "***") is NOT zero and NOT
+                # absent: the precinct exists but the value is withheld. Keep it as None so the row
+                # survives and the cell renders BLANK; a real count elsewhere for the same bucket wins.
+                entry.setdefault(store, None)
     return votes, totals
 
 
@@ -1580,7 +1588,11 @@ class VoteExtractor(dspy.Module):
         # Drop it for flat/columns (an out-of-county placeholder ROW in a contest table) and for a
         # Dominion per-precinct report, whose phantom precincts (0 registered / 0 ballots cast) print
         # an all-zero block the reference excludes (Nevada CP100 etc.).
-        keep_all_zero: bool = orientation == 'rows' and not read_strategy.startswith('report_lines')
+        # A precinct-matrix SOVC lists the county's OWN precinct roster (like a rows report), so a
+        # zero or privacy-suppressed precinct is a real precinct kept as zeros/blanks, not an
+        # out-of-county placeholder to drop.
+        keep_all_zero: bool = (orientation == 'rows' and not read_strategy.startswith('report_lines')) \
+            or read_strategy == 'precinct_matrix'
         rows: list[dict] = votes_to_rows(votes, county, office, district,
                                          drop_all_zero=not keep_all_zero)
         return dspy.Prediction(rows=rows, votes=votes)
@@ -2003,7 +2015,8 @@ def votes_to_rows(votes: dict, county: str, office: str, district: str = '',
         row.update(county=county, precinct=precinct, office=office, district=district,
                    party=party, candidate=candidate)
         for bucket, value in buckets.items():
-            row[bucket] = value
+            if value is not None:               # None marks a suppressed value -> leave the cell blank
+                row[bucket] = value
         rows.append(row)
     return rows
 

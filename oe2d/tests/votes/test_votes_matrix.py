@@ -6,7 +6,8 @@ repeating down its methods), candidates in columns. The LANGUAGE (candidate colu
 label -> canonical bucket map) is the shared interpreter's PageSchema, injected here as a stub; the
 read detects the separate precinct-id column deterministically and groups the method rows under it.
 These pin that: the per-precinct Total becomes votes, the method rows fill the breakdown buckets, a
-privacy-masked ("***") precinct drops out, and the "Contest Total" row is captured as the checksum.
+privacy-suppressed ("***") precinct is kept with BLANK (None) values -- present, not zero, not absent
+-- and the "Contest Total" row is captured as the checksum.
 '''
 from ... import votes
 from ...votes import signatures
@@ -50,9 +51,15 @@ def test_matrix_total_becomes_votes_with_method_breakdown() -> None:
     assert votes_out[('B', 'Ro Khanna', 'DEM')] == {'votes': 30, 'election_day': 7, 'absentee_mail': 23}
 
 
-def test_masked_precinct_drops_out() -> None:
+def test_suppressed_precinct_kept_with_blanks() -> None:
+    # C's cells are non-numeric ("***"): the precinct is present but its values are withheld, so it is
+    # kept with None (blank) buckets -- distinct from an absent cell (skipped) and a zero.
     votes_out, _totals = votes.read_matrix_page(GRID, SCHEMA)
-    assert not any(precinct == 'C' for precinct, _c, _p in votes_out)
+    assert votes_out[('C', 'Anita Chen', 'REP')] == {'election_day': None, 'votes': None}
+    # and it renders as blank cells that survive the roster (drop_all_zero off for the matrix path)
+    rows = votes.votes_to_rows(votes_out, 'Alameda', 'U.S. House', '17', drop_all_zero=False)
+    c_chen = next(r for r in rows if r['precinct'] == 'C' and r['party'] == 'REP')
+    assert c_chen['votes'] == '' and c_chen['election_day'] == ''
 
 
 def test_contest_total_is_captured_and_reconciles() -> None:
@@ -63,6 +70,7 @@ def test_contest_total_is_captured_and_reconciles() -> None:
 
 
 def test_precinct_column_detected_not_the_stat_column() -> None:
-    # col 0 (unlisted, empty header, data) is the precinct id -- NOT col 2 (Registered Voters, listed)
+    # col 0 (unlisted, empty header, data) is the precinct id -- NOT col 2 (Registered Voters, listed);
+    # precinct ids A/B/C are read from col 0, not the numeric stat column.
     votes_out, _totals = votes.read_matrix_page(GRID, SCHEMA)
-    assert {precinct for precinct, _c, _p in votes_out} == {'A', 'B'}
+    assert {precinct for precinct, _c, _p in votes_out} == {'A', 'B', 'C'}
