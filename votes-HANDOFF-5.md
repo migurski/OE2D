@@ -11,55 +11,57 @@ the updated Next-steps section here for what remains.
 
 - **Gold: 50 contests, macro wF1=1.000 (F1=1.000), ALL cold-cache robust.** One pre-existing
   non-1.000: `columbia-us-house` F1=0.996 (a single zero-vote write-in row; wF1=1.000).
-- **Tests: `oe2d/tests/votes/` 67 pass.** Score everything with `oe2d-votes-evaluate`.
+- **Tests: `oe2d/tests/votes/` 77 pass** (full oe2d suite 198). Score everything with `oe2d-votes-evaluate`.
 - **The Missaukee mega-grid task below is now DONE** (all 5 Missaukee contests in gold). Kept below as
   the design record.
-- **Autonomous dispatch (#3) DONE.** `detect_dispatch` now proposes the full read strategy from the
-  page VLM's read-shape fields. On the 50-contest gold: `--detect` orientation **92%→100%**,
-  read_strategy **46%→74%→84%**; `--detected` (end-to-end, image-driven routing) macro
-  **wF1 0.953→0.994** (gold-dispatch is ~1.000). Every newly-detected strategy reads at 1.000
-  (missaukee flat_multi, nevada report_lines_methods, mono report_lines_total, branch flat_tables).
-  Shipped a Qwen3-VL analyzer artifact. See the reframed step 1 below for the residual gap.
-- **flat_grouped now autonomously detected (step 1a DONE, 2026-08-03).** A cross-page probe in
-  `detect_dispatch` (`_pages_split_candidates`) upgrades a multi-page flat scan to `flat_grouped` when
-  a candidate name appears only on a LATER page and the precincts repeat — the group-split tell that
-  one page can't show. Deterministic, over Textract-cached grids, reconcile-guarded (Gogebic and
-  Montmorency false-positive the probe but their grouped read fails the county-total checksum and
-  falls back to auto). Lifted `--detected` 0.953→0.994: plumas-president + all four ontonagon
-  contests now read 1.000 image-routed. Commit `7a48854`.
+- **Autonomous dispatch (#3) DONE — step 1 residual now fully CLOSED.** `detect_dispatch` proposes the
+  full read strategy from the page VLM's read-shape fields. On the 50-contest gold: `--detect`
+  orientation **92%→100%**, read_strategy **46%→74%→84%→92%**; `--detected` (end-to-end, image-driven
+  routing) macro **wF1 0.953→0.994→1.000** (matches gold-dispatch). Every strategy now reads at 1.000
+  image-routed. Shipped a Qwen3-VL analyzer artifact. The four remaining `--detect` misses (Gogebic
+  ruled_columns/auto, Calaveras ×2 report_lines/auto, Missaukee-president flat_multi/flat_tables) are
+  all reconcile/empty-guard-protected, so they read correctly end-to-end anyway.
+- **flat_grouped autonomously detected (step 1a DONE, 2026-08-03, commit `7a48854`).** A cross-page
+  probe in `detect_dispatch` (`_pages_split_candidates`) upgrades a multi-page flat scan to
+  `flat_grouped` when a candidate name appears only on a LATER page and the precincts repeat — the
+  group-split tell one page can't show. Deterministic, over Textract-cached grids. The trap it avoids:
+  the plain flat read of a grouped doc SILENTLY reconciles on a SUBSET (ontonagon-president 66 rows vs
+  the real 99), so the strategy must be chosen up front, not recovered by fall-back.
+- **ruled_columns autonomously routed + reconcile-protected (step 1b DONE, 2026-08-03, commit
+  `afbf194`).** A scanned columns page with `precinct_rows=multiple` (a ClearBallot method-sub-row
+  SOVC) now maps to `ruled_columns`; `_county_totals` recovers the printed grand-total row (label
+  carries "county"+"total") and `_reconciles(strict=True)` confirms EVERY column — strict because the
+  faint-grid failure mis-segments only ONE column (Gogebic reads 7/8 right, which the flat family's
+  majority test would wave through). Gogebic proposes ruled_columns, fails strict reconcile, reads via
+  auto (1.000). Montmorency president 0.707→1.000, us-senate 0.985→1.000.
 - Counties/offices now covered (see `datasets.load_index()`): Adams(2) Barry(2) Bay(4) Branch(4)
   Calaveras(2) Calhoun(3) Columbia(3) Gogebic(1) Huron(4) Missaukee(5) Mono(3) Montmorency(4)
   Nevada(5) Ontonagon(4) Oscoda(2) Plumas(2).
 
 ## Next steps (overall list, reconciled across HANDOFF-2..5)
 
-The whole deferred batch, the mega-grid, the State House/Senate split, AND autonomous dispatch (#3)
-are DONE. What remains:
+The whole deferred batch, the mega-grid, the State House/Senate split, autonomous dispatch (#3), AND
+the detected-dispatch residual (step 1) are DONE. What remains:
 
-1. **Close the detected-dispatch residual.** #3 + step 1a shipped at macro wF1 0.994; the gap to the
-   gold-dispatch ~1.000 is now one **single-page-undetectable shape** plus one **narrow VLM risk**:
-   - **`flat_grouped`** — **DONE (2026-08-03, commit `7a48854`).** The cheap multi-page probe now
-     lives in `detect_dispatch` (`_pages_split_candidates`): a candidate name only on a LATER page +
-     repeating precincts ⇒ `flat_grouped`. Note the trap it avoids — the plain flat read of a grouped
-     doc SILENTLY reconciles on a subset (ontonagon-president 66 rows vs the real 99), so the strategy
-     must be chosen up front, not recovered by confirm-and-fall-back. All five grouped contests read
-     1.000 image-routed.
-   - **`ruled_columns` vs `auto`** (montmorency president/senate): a scanned method-sub-row page is
-     visually identical to Gogebic, which needs `auto` — so we can't safely propose `ruled_columns`
-     (it has no reconcile fallback and would break Gogebic). Fix needs a **reconcile-protected
-     `ruled_columns`** (capture the printed county total the SOVC drops as a skip block, then confirm
-     like the flat family) — then it could be proposed freely and self-correct.
-   - **`value_columns` tail risk** (see the risk discussion, 2026-08-03): `value_columns` routes ONLY
-     the rows+per_precinct family, and its low headline accuracy (67%) is dominated by non-routing
-     columns/county pages; on the routing pages it was correct for every gold contest. The one
-     unprotected direction is a genuine Dominion report the VLM calls plain `methods` → routed to
-     `auto` with no fallback (the reverse — Electionware-with-percent mislabeled → `report_lines_*` →
-     empty → `auto` — is already caught by the empty-guard). Hardening options if a novel source hits
-     it: tighten the `value_columns` field description (a lone total with a share-percent is
-     `total_only`, not `methods_with_percent`), or a **2-of-3 multi-page vote** on the detection
-     (currently ONE VLM call per contest on `pages[0]`, temperature 0 — a real ensemble would sample
-     DIFFERENT pages). Not needed on current gold.
-   The `--read-strategy` CLI override remains the escape hatch for any source these miss.
+1. **Close the detected-dispatch residual — DONE (2026-08-03).** `--detected` now matches gold-dispatch
+   at macro wF1 1.000. The two single-page-undetectable shapes were closed with confirm-guarded reads:
+   - **`flat_grouped`** — **DONE (commit `7a48854`).** Cross-page probe in `detect_dispatch`
+     (`_pages_split_candidates`): a candidate name only on a LATER page + repeating precincts ⇒
+     `flat_grouped`. The trap it avoids — the plain flat read of a grouped doc SILENTLY reconciles on a
+     subset (ontonagon-president 66 rows vs the real 99), so the strategy must be chosen up front.
+   - **`ruled_columns` vs `auto`** — **DONE (commit `afbf194`).** Scanned columns +
+     `precinct_rows=multiple` ⇒ `ruled_columns`, reconcile-protected: `_county_totals` recovers the
+     SOVC grand-total row and `_reconciles(strict=True)` confirms EVERY column (strict because the
+     faint-grid failure mis-segments only one column — Gogebic's 7/8 would pass a majority test).
+     Gogebic fails strict → auto; Montmorency president/senate → 1.000.
+   - **`value_columns` tail risk** — remaining hardening, NOT needed on current gold. `value_columns`
+     routes only the rows+per_precinct family; its low headline accuracy (67%) is dominated by
+     non-routing columns/county pages, and it was correct for every routing-relevant gold contest. The
+     one unprotected direction is a genuine Dominion report the VLM calls plain `methods` → `auto` with
+     no fallback (the reverse is already caught by the empty-guard). If a novel source hits it: tighten
+     the field description (a lone total with a share-percent is `total_only`, not
+     `methods_with_percent`), or a **2-of-3 multi-page vote** on the detection (today ONE VLM call per
+     contest on `pages[0]`, temperature 0). The `--read-strategy` CLI override is the escape hatch.
 2. **Tier-2 breadth fills** (cheap, existing machinery): missing offices in covered counties — Gogebic
    (Straight Party / US Senate / US House), Oscoda (Straight Party / US Senate), Barry (US Senate / US
    House), Calhoun (Straight Party / US Senate), Adams (US Senate / US House), Calaveras (State Senate /
