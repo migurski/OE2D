@@ -74,3 +74,29 @@ def test_precinct_column_detected_not_the_stat_column() -> None:
     # precinct ids A/B/C are read from col 0, not the numeric stat column.
     votes_out, _totals = votes.read_matrix_page(GRID, SCHEMA)
     assert {precinct for precinct, _c, _p in votes_out} == {'A', 'B', 'C'}
+
+
+# The dispatch probe: a MATRIX page has a dedicated vote-method column (a small label set cycling once
+# per precinct); a walk_page columns page interleaves the method labels INTO the precinct-label column,
+# which then carries every precinct name (high cardinality) -- no dedicated method column.
+def test_looks_like_matrix_true_for_dedicated_method_column() -> None:
+    # 8 precincts x (Election Day / Vote by Mail / Total) -- col 1 is 3 labels cycling 8 times.
+    grid = [['Office', 'Office', 'REP Chen', 'DEM Khanna']]
+    for p in range(8):
+        pid = str(830000 + p)
+        for method, a, b in (('Election Day', '10', '20'), ('Vote by Mail', '30', '40'),
+                             ('Total', '40', '60')):
+            grid.append([pid, method, a, b])
+    assert votes._looks_like_matrix(grid) is True
+
+
+def test_looks_like_matrix_false_for_walk_page_layout() -> None:
+    # walk_page shape: col 0 is a precinct-label row then method rows, so it carries every precinct
+    # NAME plus the methods -- high cardinality, no small cycling label set standing alone.
+    grid = [['Office', 'Registered', 'Chen', 'Khanna']]
+    for name in ('Alpha Township', 'Bravo Township', 'Charlie Township', 'Delta Township',
+                 'Echo Township', 'Foxtrot Township', 'Golf Township', 'Hotel Township'):
+        grid.append([name, '', '', ''])
+        grid.append(['Election Day', '100', '40', '50'])
+        grid.append(['Total', '100', '40', '50'])
+    assert votes._looks_like_matrix(grid) is False

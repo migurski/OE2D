@@ -964,6 +964,13 @@ def detect_dispatch(file_path: str, page: int, contest_pages: list[int] | None =
     if (read_strategy in ('ruled_scan', 'flat_tables') and contest_pages is not None
             and _pages_split_candidates(file_path, contest_pages, candidate_context)):
         read_strategy = 'flat_grouped'
+    # A precinct-MATRIX page (precinct id and vote-method in separate columns, an Alameda-style SOVC)
+    # reads as a flat columns page to the VLM -> auto, which mis-reads it. A dedicated vote-method
+    # column is the deterministic tell; when a vector columns page proposed auto has one, route to the
+    # matrix reader (which the walk_page columns reader cannot model).
+    if (read_strategy == 'auto' and not scanned and props['candidate_orientation'] == 'columns'
+            and _looks_like_matrix(read_page_grid(file_path, page))):
+        read_strategy = 'precinct_matrix'
     return {'orientation': props['candidate_orientation'],
             'read_strategy': read_strategy,
             'scanned': scanned, 'ruled_table': ruled}
@@ -1474,6 +1481,28 @@ def read_matrix_page(grid: StringGrid, schema: signatures.PageSchema) -> tuple[d
                 # survives and the cell renders BLANK; a real count elsewhere for the same bucket wins.
                 entry.setdefault(store, None)
     return votes, totals
+
+
+def _looks_like_matrix(grid: StringGrid) -> bool:
+    '''True when a vector columns page is a precinct-MATRIX (precinct id and vote-method in SEPARATE
+    columns), so it must NOT be read by the walk_page columns reader. The tell is a DEDICATED
+    vote-method column: a text column whose SMALL set of labels (Election Day / Vote by Mail / Total
+    ...) cycles once per precinct, standing on its own. A walk_page columns page instead interleaves
+    the method labels INTO the precinct-label column, so that column carries every precinct name too
+    and has high cardinality -- no column is a small label set repeating many times. Deterministic,
+    on the already-read grid; used only to route, and only for a vector columns page proposed auto.'''
+    if not grid:
+        return False
+    width: int = max(len(row) for row in grid)
+    for c in range(min(width, 6)):
+        cells: list = [_clean(row[c]) for row in grid if c < len(row) and _clean(row[c])]
+        text: list = [value for value in cells if _cell_count(value) is None]
+        if len(cells) < 6 or len(text) < 0.7 * len(cells):
+            continue                                          # a numeric column (counts/stats), skip
+        distinct: set = set(text)
+        if 2 <= len(distinct) <= 8 and len(text) >= 3 * len(distinct):
+            return True                                       # a small label set cycling many times
+    return False
 
 
 # The first-party labels that begin each partisan contest's column run in a mega-grid (see below);
