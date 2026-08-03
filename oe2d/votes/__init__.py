@@ -82,8 +82,16 @@ ColumnX: typing.TypeAlias = list[float]
 # (_extract_contest) reading each page's candidate grid via Textract TABLES -- for a ruled SCAN whose
 # candidates carry Election Day / AV / Early Voting / Total sub-rows (Montmorency), where the drawn
 # grid places cells the cheap-words reader would mis-cluster.
+# 'precinct_matrix' is for a precinct-MATRIX vector page (an Alameda-style SOVC): precincts run down
+# the rows but the precinct id and the vote-method label are in TWO SEPARATE columns (each row is one
+# precinct x one method, the id repeating down its methods), candidates in columns. walk_page's single
+# label column can't model it. The read is DETERMINISTIC (no LLM): read_matrix_page finds the header
+# row and candidate columns by matching the supplied candidate_context (as scope_flat_tables does),
+# the method column by a fixed vote-method vocabulary, and the precinct column as the id that repeats
+# down a precinct's method rows -- then groups the rows on the precinct id and moves the digits.
 ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'flat_multi',
-                              'ruled_columns', 'report_lines_methods', 'report_lines_total']
+                              'ruled_columns', 'report_lines_methods', 'report_lines_total',
+                              'precinct_matrix']
 
 OPTIMIZED_MODEL_PATH: str = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'model', 'optimized_vote_extractor.json')
@@ -1402,6 +1410,64 @@ def _county_totals(page_schemas: 'list[tuple]') -> dict:
     return totals
 
 
+def read_matrix_page(grid: StringGrid, schema: signatures.PageSchema) -> tuple[dict, dict]:
+    '''Read one precinct-MATRIX page (an Alameda-style SOVC: precincts down the rows, but the precinct
+    id and the vote-method label in SEPARATE columns, candidates in columns) into
+    votes[(precinct, candidate, party)][bucket] plus per-candidate grand totals (the "Contest Total"
+    row, a reconcile target).
+
+    The LANGUAGE is the shared interpreter's, unchanged: `schema` is the PageSchema interpret_columns
+    returns for this grid -- label_column is the vote-method column, `columns` the candidates, and
+    method_labels the DOCUMENT's own method terminology mapped to canonical buckets (so a source that
+    writes "AV" or "Mailed Ballots" is handled by the model, not a hard-coded list). The one thing the
+    schema can't carry is that the precinct id sits in its own column, so THAT is detected here
+    deterministically -- the unlisted, header-less, data-bearing column that is not the method column
+    -- and the method rows are grouped under it.'''
+    if not grid:
+        return {}, {}
+    width: int = max(len(row) for row in grid)
+    cell = lambda row, c: _clean(row[c]) if c < len(row) else ''
+    data: StringGrid = grid[schema.first_data_row:]
+    header: StringRow = grid[schema.first_data_row - 1] if schema.first_data_row else []
+    listed: set = {column.index for column in schema.columns} | {schema.label_column}
+
+    # precinct column: a column the interpreter did NOT list (so not a candidate/stat/method column),
+    # with an empty column-header and data down the rows -- the id repeating down a precinct's methods.
+    def has_data(c: int) -> bool:
+        return sum(1 for row in data if cell(row, c)) >= max(1, len(data) // 2)
+    options: list = [c for c in range(width)
+                     if c not in listed and not cell(header, c) and has_data(c)]
+    precinct_column: int = min(options) if options else 0
+    cand_cols: list = [(column, _split_party(column.candidate, column.party))
+                       for column in schema.columns if column.role == 'candidate']
+    skip: set = {_norm(label) for label in schema.skip_labels}
+
+    votes: dict = {}
+    totals: dict = {}
+    for row in data:
+        precinct: str = cell(row, precinct_column)
+        if not precinct:
+            continue                                          # a wrapped-label fragment (empty id)
+        key: str = _norm(precinct)
+        if 'total' in key or 'contest' in key or key in skip:
+            if 'contesttotal' in key:                         # the grand total -> reconcile target
+                for column, (name, party) in cand_cols:
+                    value = _cell_count(cell(row, column.index))
+                    if value is not None:
+                        totals[(name, party)] = value
+            continue                                          # section/grand-total row, not a precinct
+        bucket: str | None = schema.method_labels.get(cell(row, schema.label_column))
+        if bucket is None:
+            continue                                          # a method the interpreter left unmapped
+        store: str = 'votes' if bucket == 'total' else bucket
+        for column, (name, party) in cand_cols:
+            value = _cell_count(cell(row, column.index))
+            if value is None:
+                continue                                      # masked ("***") or empty
+            votes.setdefault((precinct, name, party), {})[store] = value
+    return votes, totals
+
+
 # The first-party labels that begin each partisan contest's column run in a mega-grid (see below);
 # a MEGA-GRID is one physical table whose several contests SHARE the precinct rows and partition the
 # COLUMNS (one row per precinct spans every contest), unlike a flat table (one table = one contest) or
@@ -1545,6 +1611,12 @@ class VoteExtractor(dspy.Module):
                 return votes
             logger.info('flat-multi (mega-grid) read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
+        if read_strategy == 'precinct_matrix':
+            votes, totals = self._extract_matrix_contest(file_path, pages, office, candidate_context)
+            if totals and not _reconciles(votes, totals, strict=True):
+                logger.info('precinct-matrix read did not reconcile with the Contest Total row '
+                            '(%d candidate column(s))', len(totals))
+            return votes
         if read_strategy == 'ruled_columns':
             votes, totals = self._extract_contest(file_path, pages, office, candidate_context,
                                                   via_tables=True, with_totals=True)
@@ -1860,6 +1932,23 @@ class VoteExtractor(dspy.Module):
             pages_tables, candidate_context,
             lambda anchor: self._columns_schema(office, candidate_context, anchor),
             pages_column_x=pages_column_x)
+
+    def _extract_matrix_contest(self, file_path: str, pages: list[int], office: str,
+                                candidate_context: str) -> tuple[dict, dict]:
+        '''Read a precinct-MATRIX contest (precinct id and vote-method label in separate columns). The
+        SHARED interpret_columns (unchanged) reads one structurally-identical page for the candidate
+        columns and the document's method terminology; read_matrix_page does the deterministic
+        precinct-column detection and row-grouping. One LLM call per document, then digit-moving.'''
+        schema: signatures.PageSchema = self._columns_schema(
+            office, candidate_context, read_page_grid(file_path, pages[0]))
+        votes: dict = {}
+        totals: dict = {}
+        for page in pages:
+            page_votes, page_totals = read_matrix_page(read_page_grid(file_path, page), schema)
+            for key, buckets in page_votes.items():
+                votes.setdefault(key, {}).update(buckets)
+            totals.update(page_totals)
+        return votes, totals
 
 
 def build_extractor() -> VoteExtractor:
