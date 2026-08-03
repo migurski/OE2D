@@ -3,8 +3,9 @@
 Continues `votes-HANDOFF-4.md`. Read HANDOFF-4 for the full architecture (read strategies, geometry
 alignment, conventions, environment/ops, code map) — it is still accurate except where noted below.
 This doc covers **what changed since HANDOFF-4**; its headline task (the Missaukee mega-grid) is DONE.
-The next substantial task, **autonomous dispatch (#3)**, is handed to oe2d.pages — see the Next-steps
-section and `pages-HANDOFF-2.md`.
+The next substantial task, **autonomous dispatch (#3), is now also DONE** (2026-08-03) — the page VLM
+learned the read shape and `detect_dispatch` routes on it; see `pages-HANDOFF-2.md` for that side and
+the updated Next-steps section here for what remains.
 
 ## Status snapshot (current)
 
@@ -12,24 +13,46 @@ section and `pages-HANDOFF-2.md`.
   non-1.000: `columbia-us-house` F1=0.996 (a single zero-vote write-in row; wF1=1.000).
 - **Tests: `oe2d/tests/votes/` 67 pass.** Score everything with `oe2d-votes-evaluate`.
 - **The Missaukee mega-grid task below is now DONE** (all 5 Missaukee contests in gold). Kept below as
-  the design record; the remaining open work is the Tier-2 breadth fills.
+  the design record.
+- **Autonomous dispatch (#3) DONE.** `detect_dispatch` now proposes the full read strategy from the
+  page VLM's read-shape fields. On the 50-contest gold: `--detect` orientation **92%→100%**,
+  read_strategy **46%→74%**; `--detected` (end-to-end, image-driven routing) macro **wF1 0.953 /
+  F1 0.969** (gold-dispatch is 1.000). Every newly-detected strategy reads at 1.000 (missaukee
+  flat_multi, nevada report_lines_methods, mono report_lines_total, branch flat_tables). Shipped a
+  Qwen3-VL analyzer artifact. See the reframed step 1 below for the residual gap.
 - Counties/offices now covered (see `datasets.load_index()`): Adams(2) Barry(2) Bay(4) Branch(4)
   Calaveras(2) Calhoun(3) Columbia(3) Gogebic(1) Huron(4) Missaukee(5) Mono(3) Montmorency(4)
   Nevada(5) Ontonagon(4) Oscoda(2) Plumas(2).
 
 ## Next steps (overall list, reconciled across HANDOFF-2..5)
 
-The whole deferred batch, the mega-grid, and the State House/Senate split are DONE. What remains:
+The whole deferred batch, the mega-grid, the State House/Senate split, AND autonomous dispatch (#3)
+are DONE. What remains:
 
-1. **Autonomous dispatch (#3) — IN PROGRESS, handed to oe2d.pages (`pages-HANDOFF-2.md`).** Today
-   `detect_dispatch` only proposes `auto`/`ruled_scan`; the six newer strategies all misdetect as
-   `auto` (`oe2d-votes-evaluate --detect`: orientation 92%, read_strategy 46%). The VLM must learn to
-   name the read shape (new `PageAnalysis` fields + labeled pages gold + re-optimize). STOPGAP DONE:
-   the votes CLI `--read-strategy` now accepts all 8 strategies (derived from `ReadStrategy`), so an
-   operator can name the shape by hand until detection catches up. **Votes-side finish once the VLM
-   field exists:** replace the coarse read_strategy line in `detect_dispatch` with the mapping in
-   pages-HANDOFF-2, then confirm `oe2d-votes-evaluate --detected` stays 1.000 (the reconcile fallback
-   protects the flat family; the rows family leans on the new `value_columns` field).
+1. **Close the detected-dispatch residual (the last 0.047 of `--detected`).** #3 shipped at macro
+   wF1 0.953; the gap to the gold-dispatch 1.000 is entirely **single-page-undetectable shapes** plus
+   one **narrow VLM risk**:
+   - **`flat_grouped`** (plumas/ontonagon, ~5 contests): candidate columns are split ACROSS pages, so
+     one page can't reveal it — `detect_dispatch` proposes `ruled_scan`, which fails reconcile and
+     falls back to `auto`; `auto` reads it only partially. Fix needs a cheap **multi-page probe** (do
+     later pages repeat the same precinct labels under DIFFERENT candidate headers?) — see
+     pages-HANDOFF-2 "the residual: flat_grouped".
+   - **`ruled_columns` vs `auto`** (montmorency president/senate): a scanned method-sub-row page is
+     visually identical to Gogebic, which needs `auto` — so we can't safely propose `ruled_columns`
+     (it has no reconcile fallback and would break Gogebic). Fix needs a **reconcile-protected
+     `ruled_columns`** (capture the printed county total the SOVC drops as a skip block, then confirm
+     like the flat family) — then it could be proposed freely and self-correct.
+   - **`value_columns` tail risk** (see the risk discussion, 2026-08-03): `value_columns` routes ONLY
+     the rows+per_precinct family, and its low headline accuracy (67%) is dominated by non-routing
+     columns/county pages; on the routing pages it was correct for every gold contest. The one
+     unprotected direction is a genuine Dominion report the VLM calls plain `methods` → routed to
+     `auto` with no fallback (the reverse — Electionware-with-percent mislabeled → `report_lines_*` →
+     empty → `auto` — is already caught by the empty-guard). Hardening options if a novel source hits
+     it: tighten the `value_columns` field description (a lone total with a share-percent is
+     `total_only`, not `methods_with_percent`), or a **2-of-3 multi-page vote** on the detection
+     (currently ONE VLM call per contest on `pages[0]`, temperature 0 — a real ensemble would sample
+     DIFFERENT pages). Not needed on current gold.
+   The `--read-strategy` CLI override remains the escape hatch for any source these miss.
 2. **Tier-2 breadth fills** (cheap, existing machinery): missing offices in covered counties — Gogebic
    (Straight Party / US Senate / US House), Oscoda (Straight Party / US Senate), Barry (US Senate / US
    House), Calhoun (Straight Party / US Senate), Adams (US Senate / US House), Calaveras (State Senate /
