@@ -179,7 +179,7 @@ def _consolidate_write_in(totals: list[int], components: list[int]) -> int:
     return sum(components)
 
 
-def _reconciles(votes: dict, totals: dict) -> bool:
+def _reconciles(votes: dict, totals: dict, strict: bool = False) -> bool:
     '''True when the extracted precinct rows sum to the printed county totals per candidate column.
 
     The confirm for a proposed ruled_scan (Textract TABLES) read: for each candidate column, add up
@@ -191,7 +191,12 @@ def _reconciles(votes: dict, totals: dict) -> bool:
     digit slip in a single cell doesn't veto an otherwise-clean read, while a structural failure --
     which throws off every column at once -- still fails. No printed totals to check against (they can
     sit on a page outside the contest range) -> cannot confirm -> False, and the caller then prefers
-    the cheap read rather than gambling on TABLES.'''
+    the cheap read rather than gambling on TABLES.
+
+    strict requires EVERY printed total to match, not just a majority -- for the ruled_columns
+    (method-sub-row) read, whose faint-grid failure mode (Gogebic) mis-segments only ONE column and so
+    would slip past the majority test; there a single mismatch must veto the read and drop it to auto.
+    A stray OCR slip then costs the ruled read (falls back), which is the safe direction.'''
     if not totals:
         return False
     sums: dict = collections.defaultdict(int)
@@ -200,7 +205,7 @@ def _reconciles(votes: dict, totals: dict) -> bool:
             continue
         sums[(candidate, party)] += buckets.get('votes') or 0
     matched: int = sum(1 for key, printed in totals.items() if sums.get(key, 0) == printed)
-    return matched * 2 > len(totals)
+    return matched == len(totals) if strict else matched * 2 > len(totals)
 
 
 def _record(components: list[str], values: list[int], total: int) -> dict:
@@ -912,7 +917,9 @@ def _propose_read_strategy(orientation: str, scope: str, scanned: bool, ruled: b
         if contests_across == 'multiple':               # a mega-grid: several contests, shared rows
             return 'ruled_scan' if scanned else 'flat_multi'
         if scanned:                                     # flat scan, method-sub-row scan, or grouped
-            return 'ruled_scan'                         # confirm sorts flat vs sub-row vs faint-rule
+            if precinct_rows == 'multiple':             # vote-method sub-rows per precinct (a ClearBallot
+                return 'ruled_columns'                  # SOVC); reconcile-confirmed, so Gogebic's faint
+            return 'ruled_scan'                         # grid fails and drops to auto. flat/grouped: sub-row=single
         if precinct_rows == 'single':                   # a vector one-row-per-precinct flat table
             return 'flat_tables'
         return 'auto'                                   # vector vote-method sub-rows: cheap word grid
@@ -1371,6 +1378,30 @@ def _grids_split_candidates(grids: 'list[StringGrid | None]', wanted: set) -> bo
     return False
 
 
+def _county_totals(page_schemas: 'list[tuple]') -> dict:
+    '''Printed county total per real candidate, for the ruled_columns reconcile. A ClearBallot SOVC
+    ends each candidate group with a grand-total ROW whose label carries both "county" and "total"
+    ("County Total", "<County> County Michigan Total") and whose cells hold the county-wide total per
+    candidate column -- distinct from the zero "Cumulative Total" row (no "county"). Read those cells
+    against each page's candidate columns (write-ins excluded: they consolidate downstream and _read_
+    votes/_reconciles ignore them). Keyed (candidate, party) -> total; the max wins when a group's
+    total is printed twice.'''
+    totals: dict = {}
+    for schema, rows in page_schemas:
+        columns = [(column, _split_party(column.candidate, column.party))
+                   for column in schema.columns if column.role == 'candidate' and not column.write_in]
+        for row in rows:
+            label: str = _norm(row[schema.label_column]) if len(row) > schema.label_column else ''
+            if 'county' not in label or 'total' not in label:
+                continue
+            for column, (candidate, party) in columns:
+                if column.index < len(row):
+                    value = _parse_number(row[column.index])
+                    if value is not None:
+                        totals[(candidate, party)] = max(value, totals.get((candidate, party), 0))
+    return totals
+
+
 # The first-party labels that begin each partisan contest's column run in a mega-grid (see below);
 # a MEGA-GRID is one physical table whose several contests SHARE the precinct rows and partition the
 # COLUMNS (one row per precinct spans every contest), unlike a flat table (one table = one contest) or
@@ -1515,7 +1546,16 @@ class VoteExtractor(dspy.Module):
             logger.info('flat-multi (mega-grid) read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy == 'ruled_columns':
-            return self._extract_contest(file_path, pages, office, candidate_context, via_tables=True)
+            votes, totals = self._extract_contest(file_path, pages, office, candidate_context,
+                                                  via_tables=True, with_totals=True)
+            if _reconciles(votes, totals, strict=True):
+                return votes
+            # A method-sub-row scan whose ruled grid Textract mis-segments (Gogebic's faint rules drop
+            # or merge a column) leaves ONE candidate's sum off the printed county total; strict
+            # reconcile vetoes it and we drop to the cheap auto read, which the word reader self-
+            # detects. Montmorency's clean ClearBallot grid reconciles all columns and stays on TABLES.
+            logger.info('ruled-columns read did not reconcile with printed county totals '
+                        '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy in ('report_lines_methods', 'report_lines_total'):
             votes = self._extract_report_contest(file_path, pages, office, candidate_context, read_strategy)
             if votes:
@@ -1532,7 +1572,8 @@ class VoteExtractor(dspy.Module):
         return self._extract_contest(file_path, pages, office, candidate_context)
 
     def _extract_contest(self, file_path: str, pages: list[int], office: str,
-                         candidate_context: str, via_tables: bool = False) -> dict:
+                         candidate_context: str, via_tables: bool = False,
+                         with_totals: bool = False) -> 'dict | tuple[dict, dict]':
         '''Read the contest's pages and stitch them into votes[(precinct, candidate, party)][bucket].
 
         Reads each page, interprets it (LLM), walks it into ordered precinct blocks, partitions the
@@ -1545,7 +1586,10 @@ class VoteExtractor(dspy.Module):
         ClearBallot SOVC: precinct label, then Election Day / AV / Early Voting / Total rows). TABLES
         segments the ruled grid (and rotated headers) cleanly where the word reader drops a faint
         sub-row or write-in cell. The candidate table is the one whose header names the most
-        candidates (a same-page turnout block names none).'''
+        candidates (a same-page turnout block names none).
+
+        with_totals also returns the printed county totals (_county_totals) for the ruled_columns
+        reconcile confirm; the auto caller ignores them.'''
         wanted: set = {_norm(token) for line in candidate_context.splitlines()
                        for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
 
@@ -1654,6 +1698,8 @@ class VoteExtractor(dspy.Module):
             votes[(precinct, WRITE_IN_LABEL, '')] = {
                 store: _consolidate_write_in(parts['total'], parts['component'])
                 for store, parts in stores.items()}
+        if with_totals:
+            return votes, _county_totals(page_schemas)
         return votes
 
     def _extract_report_contest(self, file_path: str, pages: list[int], office: str,
