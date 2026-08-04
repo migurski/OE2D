@@ -30,6 +30,7 @@ tracing = ["cmpnd"]
 # Console-script names mirror the dotted module path (dots -> dashes).
 [project.scripts]
 oe2d-contests = "oe2d.contests:main"
+oe2d-contests-evaluate = "oe2d.contests.evaluate:main"
 oe2d-pages = "oe2d.pages:main"
 oe2d-pages-optimize = "oe2d.pages.optimize:main"
 oe2d-pages-evaluate = "oe2d.pages.evaluate:main"

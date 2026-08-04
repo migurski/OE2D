@@ -18,8 +18,10 @@ corresponds to original page source_pages[k-1].
 '''
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import urllib.request
 
 from .. import contests
 
@@ -27,6 +29,7 @@ _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspat
 _DATA_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'contests')
 _FIXTURES_PATH: str = os.path.join(_DATA_DIR, 'training-sample-excerpts.jsonl')
 _ORIGINALS_PATH: str = os.path.join(_DATA_DIR, 'training-full-documents.jsonl')
+_CACHE_DIR: str = os.path.join(_DATA_DIR, '.cache')
 
 
 def _load(path: str) -> list[dict]:
@@ -42,6 +45,19 @@ def load_fixtures(path: str = _FIXTURES_PATH) -> list[dict]:
 def load_originals(path: str = _ORIGINALS_PATH) -> list[dict]:
     '''Rows describing the full url-referenced documents (original coordinates).'''
     return _load(path)
+
+
+def fetch_original(row: dict) -> str:
+    '''Download a full-document row's source to a local cache (once) and return its path. Named by a
+    hash of the source URL, so the several gold rows sharing one document (Alameda's six targets)
+    download ONE copy.'''
+    os.makedirs(_CACHE_DIR, exist_ok=True)
+    url: str = row['source_url']
+    name: str = hashlib.sha1(url.encode()).hexdigest()[:16] + os.path.splitext(url)[1]
+    path: str = os.path.join(_CACHE_DIR, name)
+    if not os.path.exists(path):
+        urllib.request.urlretrieve(url, path)
+    return path
 
 
 def row_target(row: dict) -> contests.Target:
