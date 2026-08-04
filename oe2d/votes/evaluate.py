@@ -49,6 +49,18 @@ def build_target(student: str | None, model: str | None,
     return votes.build_extractor()            # shipped program (committed artifact or stock LM)
 
 
+def _interpreter(example) -> str:
+    '''Which of the two named predictors this contest exercises: the rows-family (a per-precinct/report
+    contest) runs interpret_rows, everything else runs interpret_columns. The gold record's
+    orientation and read_strategy decide it -- the same partition GEPA optimizes each predictor over,
+    so a sweep reports each interpreter's accuracy separately (they diverge, and one is a cheaper
+    model's easier target than the other).'''
+    read_strategy: str = getattr(example, 'read_strategy', '') or ''
+    orientation: str = getattr(example, 'orientation', '') or ''
+    return 'interpret_rows' if orientation == 'rows' or read_strategy.startswith('report_lines') \
+        else 'interpret_columns'
+
+
 def score_examples(program: votes.VoteExtractor, examples: list, detected: bool = False) -> list[dict]:
     '''Run the program on each example and score its rows against the gold. Returns one result dict
     per example (id, container, the metric dict, and got/gold counts). A failed extraction is
@@ -61,7 +73,8 @@ def score_examples(program: votes.VoteExtractor, examples: list, detected: bool 
         logger.info('scoring %d/%d %s ...', index, len(examples), getattr(example, '_id', '?'))
         record: dict = {'id': getattr(example, '_id', '?'),
                         'container': getattr(example, '_container', ''),
-                        'orientation': example.orientation}
+                        'orientation': example.orientation,
+                        'interpreter': _interpreter(example)}
         inputs: dict = dict(example.inputs())
         if detected:
             inputs['orientation'] = None
@@ -98,6 +111,18 @@ def print_report(results: list[dict]) -> None:
     if weighted:
         print('\nmacro-average over %d scored contest(s): wF1=%.3f  F1=%.3f'
               % (len(weighted), sum(weighted) / len(weighted), sum(plain) / len(plain)))
+        # per-interpreter breakdown: the two named predictors are optimized and priced separately, and
+        # a cheap model can match one while regressing the other, which a lumped macro would hide.
+        for interpreter in ('interpret_columns', 'interpret_rows'):
+            group: list[dict] = [r for r in results
+                                 if 'metric' in r and r.get('interpreter') == interpreter]
+            if group:
+                w: list[float] = [r['metric']['weighted_f1'] for r in group]
+                f: list[float] = [r['metric']['f1'] for r in group]
+                errs: int = sum('error' in r for r in results if r.get('interpreter') == interpreter)
+                print('  %-17s wF1=%.3f  F1=%.3f  over %d contest(s)%s'
+                      % (interpreter, sum(w) / len(w), sum(f) / len(f), len(group),
+                         '  (%d errored)' % errs if errs else ''))
     errors: int = sum('error' in r for r in results)
     if errors:
         print('%d contest(s) errored (see above).' % errors)
