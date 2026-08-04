@@ -18,12 +18,16 @@ corresponds to original page source_pages[k-1].
 '''
 from __future__ import annotations
 
+import collections
 import hashlib
 import json
 import os
 import urllib.request
 
+import dspy
+
 from .. import contests
+from . import metrics
 
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _DATA_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'contests')
@@ -73,6 +77,41 @@ def row_target(row: dict) -> contests.Target:
 def fixture_path(row: dict) -> str:
     '''Absolute path to a fixture row's local trimmed sample.'''
     return os.path.normpath(os.path.join(_DATA_DIR, row['fixture_path']))
+
+
+def load_examples(rows: list[dict] | None = None) -> list[dspy.Example]:
+    '''One dspy.Example per DOCUMENT (all its target contests), for GEPA/evaluate over the full
+    documents. Inputs are the local file path (downloaded) and the document's Targets; the gold rides
+    as `gold_targets` (per contest: label, page set, observed title) for the score_location metric.
+    Grouping by document matches how the locator runs -- classify once per document, the ReAct match
+    per target -- so a GEPA rollout is one document-run, not one redundant OCR per target. Pass `rows`
+    to build examples for a curated subset (only those documents are downloaded).'''
+    rows = rows if rows is not None else load_originals()
+    by_doc: dict[str, list[dict]] = collections.defaultdict(list)
+    for row in rows:
+        by_doc[row['source_url']].append(row)
+    examples: list[dspy.Example] = []
+    for url, group in by_doc.items():
+        gold_targets: list[dict] = [{'target': r['target'], 'pages': sorted(metrics.gold_pages(r)),
+                                     'observed_title': r.get('observed_title', '')} for r in group]
+        example: dspy.Example = dspy.Example(
+            file_path=fetch_original(group[0]),
+            targets=[row_target(r) for r in group],
+            gold_targets=gold_targets).with_inputs('file_path', 'targets')
+        example._id = url
+        examples.append(example)
+    return examples
+
+
+def split(examples: list[dspy.Example], val_fraction: float = 0.3) -> tuple[list, list]:
+    '''Deterministic train/val split BY DOCUMENT (an example is one document), so a document's
+    contests never straddle the split. Sorted by id, every round(1/val_fraction)-th document is
+    held out for validation.'''
+    stride: int = max(2, round(1 / val_fraction))
+    ordered: list = sorted(examples, key=lambda e: getattr(e, '_id', ''))
+    val: list = [e for i, e in enumerate(ordered) if i % stride == 0]
+    train: list = [e for i, e in enumerate(ordered) if i % stride != 0]
+    return train, val
 
 
 def fixture_request(name_substring: str) -> tuple[str, list[contests.Target], list[int] | None]:
