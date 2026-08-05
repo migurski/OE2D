@@ -18,9 +18,50 @@ consolidation. "Retain success" = hold the incumbent's page-set F1 on the gold.
   `datasets.fetch_original`, and the `oe2d-contests-evaluate` / `oe2d-contests-optimize` console
   scripts. Contests tests 25 pass. Commits `f388577` (evaluate), `1b2930e` (optimize).
 - **Fixtures sweep done** (the fast, offline, EASY signal). Results below.
-- **NOT yet done**: the full-documents evaluation of ANY model (including the incumbent), the two
-  planned GEPA runs, and the eval-data expansion. The decision below is blocked on the full-doc
-  numbers — fixtures are only the first filter.
+- **Full-documents evaluation DONE (2026-08-05)** on the enriched 106-target gold — the incumbent and
+  both Bedrock finalists. **Verdict: migrate to Haiku 4.5.** See "RESULTS" next.
+- **Eval-data expansion DONE**: votes gold translated into the contests set (60 -> 106 targets, commit
+  `eb6545d`); two dead CA URLs repaired (`8942d75`).
+- **NOT done / optional**: the two GEPA runs (now OPTIONAL upside, not required — Haiku stock already
+  clears the bar).
+
+## RESULTS — full documents (106-target enriched gold, 2026-08-05)
+
+Merged macro page-F1 over each model's scored targets (base run + a sequential re-score of the two
+repaired CA compound docs, so all three are on essentially the same set):
+
+| model | full-doc F1 | scored | parse errors | on Bedrock | fixtures (contrast) |
+|---|---|---|---|---|---|
+| **Haiku 4.5 stock** | **0.892** | 105 | **0** (1 transient throttle) | yes | 0.944 |
+| Kimi K2.5 stock | 0.865 | 87 | **19** | yes | 0.882 |
+| **incumbent Kimi-FW (the bar)** | **0.835** | 106 | 0 | no | 0.944 |
+
+**The fixtures badly overstated the incumbent.** Kimi-FW and Haiku *tied at 0.944* on the 2-4 page
+excerpts, but on full documents the incumbent is the WEAKEST of the three (0.835) while Haiku holds
+0.892. This is the handoff's own warning made real: the excerpts test "land on the right local pages,"
+not the hard full-document search over hundreds of titles.
+
+**Decision, both gates applied to the full set:**
+- **Gate 1 accuracy (>= incumbent 0.835):** Haiku 0.892 PASS (+5.7 pts, an UPGRADE not a lateral move);
+  K2.5 0.865 PASS-on-subset; incumbent = bar.
+- **Gate 2 reliability (parse errors ~ 0):** Haiku 0 PASS; **K2.5 19 FAIL**; incumbent 0 PASS.
+- **=> Migrate to Haiku 4.5.** It clears both gates on the hard set and is already on Bedrock, so the
+  migration is a strict improvement, not a "retain success" compromise. GEPA becomes optional upside.
+
+**K2.5's failure is document-reproducible, not flaky.** The 19 errors are ReAct-protocol non-compliance:
+the model emits `{"title": "..."}` (jumping to the answer) instead of the required
+`next_thought`/`next_tool_name`/`next_tool_args` control fields (NOT truncation — a K2.5 trace showed
+`HasTruncation: false`, 8.9k output tokens). Specific compound docs (San Joaquin) trigger it every run;
+Yolo it handled at 0.99. So `--max-tokens` won't help, and GEPA (which rewrites signature instructions,
+not the adapter's control-field protocol) is a long shot for it — see the per-predictor-split note below.
+
+**Two real full-doc weaknesses surfaced that fixtures hid:** (1) Haiku catastrophically missed San
+Joaquin President (recall 1/19 pages) though the incumbent got it 19/19 — a compound-doc recall gap
+worth watching if more such docs enter the gold. (2) One Haiku President target is still unscored (a
+transient Bedrock rate-limit during the 3-way parallel run; 105 not 106) — immaterial to the verdict.
+
+**To ship:** stock winner, so change `LM_KIMI_K2P7` -> the Haiku id in `build_locator` (no artifact
+needed). Left for Mike's go since it swaps the shipped default.
 
 ## What we measured (fixtures only — 24 excerpt targets, `--fixtures`)
 
