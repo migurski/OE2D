@@ -50,7 +50,7 @@ def main() -> None:
         description='GEPA-optimize the contest locator.')
     parser.add_argument('out', help='Where to save the optimized program JSON (the committed model '
                                     'lives at %s)' % contests.OPTIMIZED_MODEL_PATH)
-    parser.add_argument('--student', default=contests.LM_KIMI_K2P7,
+    parser.add_argument('--student', default=contests.LM_CLAUDE_HAIKU45,
                         help='litellm model id for the interpreter LM being optimized '
                              '(default: the shipped inference model)')
     parser.add_argument('--max-tokens', type=int, default=8192,

@@ -237,10 +237,13 @@ def contest_evidence(path: str, unit_count: int | None = None, page_budget: int 
     return evidence, unit_count
 
 
-# The task LM: Fireworks' Kimi K2, driving both of ContestLocator's predictors (classify,
-# match). Kept here beside the program, not in a shared config module, so the LM lives next
-# to what uses it. litellm reads FIREWORKS_AI_API_KEY.
-LM_KIMI_K2P7: str = 'fireworks_ai/accounts/fireworks/models/kimi-k2p7-code'
+# The task LM: Bedrock's Claude Haiku 4.5, driving both of ContestLocator's predictors (classify,
+# match). Migrated off Fireworks' Kimi K2 (2026-08-05) after the full-documents eval: on the 106-target
+# gold Haiku scored 0.892 vs Kimi-Fireworks' 0.835, with zero ReAct-parse errors (Kimi K2.5's Bedrock
+# sibling had 19) and ~1.9x the speed -- an upgrade on accuracy, reliability, and latency, and it
+# consolidates onto Bedrock. Kept here beside the program, not in a shared config module, so the LM
+# lives next to what uses it. litellm reads AWS creds (AWS_PROFILE / standard chain).
+LM_CLAUDE_HAIKU45: str = 'bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0'
 
 
 def _collapse_digits(text: str) -> str:
@@ -381,8 +384,9 @@ def build_locator() -> ContestLocator:
         locator.load(OPTIMIZED_MODEL_PATH)
     else:
         # temperature 0 for settled classification, with headroom so a verbatim-echo
-        # classify pass or a multi-step ReAct trace doesn't truncate.
-        locator.set_lm(dspy.LM(LM_KIMI_K2P7, temperature=0.0, max_tokens=8192))
+        # classify pass or a multi-step ReAct trace doesn't truncate. 8192 was validated
+        # clean (0 truncation/parse errors) across the full-documents eval.
+        locator.set_lm(dspy.LM(LM_CLAUDE_HAIKU45, temperature=0.0, max_tokens=8192))
     return locator
 
 
