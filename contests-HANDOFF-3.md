@@ -30,11 +30,22 @@ consolidation. "Retain success" = hold the incumbent's page-set F1 on the gold.
 Merged macro page-F1 over each model's scored targets (base run + a sequential re-score of the two
 repaired CA compound docs, so all three are on essentially the same set):
 
-| model | full-doc F1 | scored | parse errors | on Bedrock | fixtures (contrast) |
+| model | full-doc F1 | scored | parse errors | wall clock (42 docs) | on Bedrock |
 |---|---|---|---|---|---|
-| **Haiku 4.5 stock** | **0.892** | 105 | **0** (1 transient throttle) | yes | 0.944 |
-| Kimi K2.5 stock | 0.865 | 87 | **19** | yes | 0.882 |
-| **incumbent Kimi-FW (the bar)** | **0.835** | 106 | 0 | no | 0.944 |
+| **Haiku 4.5 stock** | **0.892** | 105 | **0** (1 transient throttle) | 8,021s / ~76s per target | yes |
+| Kimi K2.5 stock | 0.865 | 87 | **19** | 4,333s / ~41s per target | yes |
+| **incumbent Kimi-FW (the bar)** | **0.835** | 106 | 0 | 15,125s / ~143s per target | no |
+
+(Fixtures contrast: Kimi-FW 0.944, Haiku 0.944, K2.5 0.882 — the easy signal that overstated the incumbent.)
+
+**Wall clock factored in (framework criterion 5, latency).** The three ran concurrently, so absolute
+times are pessimistic (contended CPU for the uncached, model-independent OCR; Haiku+K2.5 contended on
+Bedrock) — but the ordering is robust and matches the fixtures. Since OCR is identical across runs, the
+wall-clock DIFFERENCES are essentially all LM: the incumbent's Fireworks ReAct loop is the slow part.
+Two takeaways: (1) **Haiku is ~1.9x FASTER than the incumbent it replaces**, so the migration is an
+upgrade on all three axes — accuracy, reliability, AND latency, not a trade. (2) The only faster option
+(K2.5, 3.5x) is the disqualified one; latency is a tiebreaker among gate-passers, and with Haiku the
+sole model clearing both gates there is no tie to break.
 
 **The fixtures badly overstated the incumbent.** Kimi-FW and Haiku *tied at 0.944* on the 2-4 page
 excerpts, but on full documents the incumbent is the WEAKEST of the three (0.835) while Haiku holds
