@@ -76,9 +76,9 @@ def score_documents(locator: contests.ContestLocator, rows: list[dict],
     started: float = time.monotonic()
     for index, (key, group) in enumerate(by_doc.items(), 1):
         logger.info('locating %d/%d %s (%d target(s)) ...', index, len(by_doc), key, len(group))
-        path: str = datasets.fixture_path(group[0]) if fixtures else datasets.fetch_original(group[0])
-        targets: list[contests.Target] = [datasets.row_target(row) for row in group]
         try:
+            path: str = datasets.fixture_path(group[0]) if fixtures else datasets.fetch_original(group[0])
+            targets: list[contests.Target] = [datasets.row_target(row) for row in group]
             prediction = locator(file_path=path, targets=targets)
             located: dict[str, contests.ContestLocation] = {loc.target: loc for loc in prediction.locations}
         except Exception as error:
@@ -141,6 +141,9 @@ def main() -> None:
                              'default is the full-documents gold (downloads via source_url)')
     parser.add_argument('--only', default=None,
                         help='Score only targets whose contest label contains this substring')
+    parser.add_argument('--doc', default=None,
+                        help='Score only documents whose source_url (or fixture_path) contains this '
+                             'substring -- for cheaply re-scoring a few documents')
     parser.add_argument('-v', '--verbose', action='store_true')
     args: argparse.Namespace = parser.parse_args()
 
@@ -151,6 +154,9 @@ def main() -> None:
     rows: list[dict] = datasets.load_fixtures() if args.fixtures else datasets.load_originals()
     if args.only:
         rows = [r for r in rows if args.only.lower() in r['target'].lower()]
+    if args.doc:
+        key: str = 'fixture_path' if args.fixtures else 'source_url'
+        rows = [r for r in rows if args.doc.lower() in r[key].lower()]
     if not rows:
         raise SystemExit('no gold rows to score')
 
