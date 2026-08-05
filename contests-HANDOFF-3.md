@@ -129,6 +129,14 @@ bar? That is the question the whole exercise turns on.
   the loop 3–4× faster than Haiku/Kimi.
 - **Fixtures are the EASY signal.** 2–4 page excerpts test only "land on the right local pages," not
   the hard full-document search over hundreds of titles. The decision MUST be made on full documents.
+- **Per-predictor model split is available (future, no decision yet).** The two predictors have very
+  different demands: `classify` is a plain `Predict` (single-shot classification) a smaller/cheaper
+  model could carry, while `match` is the ReAct agent that needs correct tool-calling. DSPy binds an LM
+  per predictor, so a migration could reserve the capable/tool-following model for `match` and put a
+  cheap one on `classify` — the contests analogue of the votes per-interpreter split. K2.5's failures
+  are precisely a `match`-side ReAct-protocol problem (it emitted `{"title": ...}` instead of the
+  next_thought/next_tool_name/next_tool_args control fields; not truncation), which is what makes this
+  split worth considering rather than one model for both.
 
 ## De-risking the decision: expand the eval gold from the votes set (do this before trusting GEPA)
 
