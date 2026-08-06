@@ -32,15 +32,15 @@ import dotenv
 import dspy
 import pdfplumber
 
-from .. import source_table
+from .. import config, source_table
 from . import signatures
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# One cache home under the caller's cwd, with a subdirectory per backend, so a run's caches sit
-# together (and clear together) instead of the LM cache landing in the home directory and Textract's
-# under a separate .cache. DSPY_CACHEDIR still wins for the LM cache if a caller sets it.
-CACHE_ROOT: str = os.path.join(os.getcwd(), 'oe2d-cache')
+# One cache home (config.CACHE_ROOT) with a subdirectory per backend, so a run's caches sit together
+# (and clear together) instead of the LM cache landing in the home directory and Textract's under a
+# separate .cache. DSPY_CACHEDIR still wins for the LM cache if a caller sets it.
+CACHE_ROOT: str = config.CACHE_ROOT
 TEXTRACT_CACHE_DIR: str = os.path.join(CACHE_ROOT, 'textract')
 DSPY_CACHE_DIR: str = os.environ.get('DSPY_CACHEDIR') or os.path.join(CACHE_ROOT, 'dspy')
 

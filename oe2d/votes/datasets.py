@@ -15,6 +15,8 @@ import urllib.request
 
 import dspy
 
+from .. import config
+
 # The forward()/metric contract: these inputs go into the extractor, .rows is the scored output.
 INPUT_FIELDS: tuple[str, ...] = (
     'file_path', 'pages', 'office', 'candidate_context', 'county', 'district',
@@ -23,7 +25,7 @@ INPUT_FIELDS: tuple[str, ...] = (
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _DATA_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'votes')
 _INDEX_PATH: str = os.path.join(_DATA_DIR, 'index.jsonl')
-_CACHE_DIR: str = os.path.join(_DATA_DIR, '.cache')
+_CACHE_DIR: str = config.SOURCE_CACHE_DIR
 
 
 def load_index(path: str = _INDEX_PATH) -> list[dict]:
@@ -68,15 +70,12 @@ def candidate_context(record: dict) -> str:
 
 
 def fetch_source(record: dict) -> str:
-    '''Download the record's source file to a local cache (once) and return its path. Named by a hash
-    of the SOURCE URL, not the contest id, so the several contests that share one source file (e.g.
-    Branch's four races) download and store ONE copy -- which also lets them share the content-keyed
-    Textract cache.'''
-    import hashlib
+    '''Download the record's source file to the shared source cache (once) and return its path. Named
+    by a readable slug of the file plus a hash of the SOURCE URL (config.source_cache_name), not the
+    contest id, so the several contests that share one source file (e.g. Branch's four races) download
+    and store ONE copy -- which also lets them share the content-keyed Textract cache.'''
     os.makedirs(_CACHE_DIR, exist_ok=True)
-    digest: str = hashlib.sha1(record['source_url'].encode()).hexdigest()[:16]
-    name: str = digest + os.path.splitext(record['source_url'])[1]
-    path: str = os.path.join(_CACHE_DIR, name)
+    path: str = os.path.join(_CACHE_DIR, config.source_cache_name(record['source_url']))
     if not os.path.exists(path):
         urllib.request.urlretrieve(record['source_url'], path)
     return path
