@@ -155,8 +155,8 @@ class PageAnalyzer(dspy.Module):
         super().__init__()
         self.analyze: dspy.Module = dspy.Predict(signatures.PageAnalysis)
 
-    def forward(self, image: dspy.Image, context: str = '') -> dspy.Prediction:
-        content = self.analyze(image=image, context=context)
+    def forward(self, image: dspy.Image, electoral_context: str = '') -> dspy.Prediction:
+        content = self.analyze(image=image, electoral_context=electoral_context)
         skew: float = deskew.detect_skew_pil(_image_to_pil(image))
         return dspy.Prediction(
             candidate_orientation=content.candidate_orientation,
@@ -200,13 +200,13 @@ def build_analyzer() -> PageAnalyzer:
     return analyzer
 
 
-def analyze_image(image_path: str, context: str = '') -> dict:
-    '''Run the analyzer on an already-rendered page image; return a plain dict. context is
-    optional external prose about the page/contest (e.g. the expected candidates) the analyzer
+def analyze_image(image_path: str, electoral_context: str = '') -> dict:
+    '''Run the analyzer on an already-rendered page image; return a plain dict. electoral_context
+    is optional external prose about the page/contest (e.g. the expected candidates) the analyzer
     uses to resolve ambiguity it cannot settle from the image alone -- notably the candidate axis.'''
     _instrument()
     analyzer: PageAnalyzer = build_analyzer()
-    prediction = analyzer(image=dspy.Image(image_path), context=context)
+    prediction = analyzer(image=dspy.Image(image_path), electoral_context=electoral_context)
     properties = PageProperties(
         candidate_orientation=prediction.candidate_orientation,
         contest_name_present=prediction.contest_name_present,
@@ -223,10 +223,10 @@ def analyze_image(image_path: str, context: str = '') -> dict:
     return properties.model_dump(mode='json')
 
 
-def analyze_page(path: str, page: int = 1, member: str | None = None, context: str = '') -> dict:
-    '''Analyze a page of a source file (rendering it first if it is not an image). context is
-    optional external prose passed through to the analyzer (see analyze_image).'''
-    return analyze_image(render_source(path, page, member), context=context)
+def analyze_page(path: str, page: int = 1, member: str | None = None, electoral_context: str = '') -> dict:
+    '''Analyze a page of a source file (rendering it first if it is not an image). electoral_context
+    is optional external prose passed through to the analyzer (see analyze_image).'''
+    return analyze_image(render_source(path, page, member), electoral_context=electoral_context)
 
 
 def main() -> None:
@@ -237,8 +237,8 @@ def main() -> None:
     parser.add_argument('page', type=int,
                         help='1-based page/sheet to render from a source file; pass 1 for a raw page image')
     parser.add_argument('--member', help='Zip member to render (for zip sources)')
-    parser.add_argument('--context', default='',
-                        help='External context prose about the page/contest (e.g. expected '
+    parser.add_argument('--electoral-context', default='',
+                        help='External electoral context prose about the page/contest (e.g. expected '
                              'candidates); @path reads it from a file')
     parser.add_argument('-v', '--verbose', action='store_true', help='log LM steps')
     args: argparse.Namespace = parser.parse_args()
@@ -247,11 +247,11 @@ def main() -> None:
         logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(message)s')
         logging.getLogger('dspy').setLevel(logging.INFO)
 
-    context: str = args.context
-    if context.startswith('@'):
-        with open(context[1:], encoding='utf-8') as handle:
-            context = handle.read()
-    print(json.dumps(analyze_page(args.path, args.page, args.member, context=context), indent=2))
+    electoral_context: str = args.electoral_context
+    if electoral_context.startswith('@'):
+        with open(electoral_context[1:], encoding='utf-8') as handle:
+            electoral_context = handle.read()
+    print(json.dumps(analyze_page(args.path, args.page, args.member, electoral_context=electoral_context), indent=2))
 
 
 if __name__ == '__main__':

@@ -92,7 +92,7 @@ class InterpretPrecinctPage(dspy.Signature):
     Return ONLY structure -- never read or return a vote number.
     '''
     office: str = dspy.InputField()
-    candidate_context: str = dspy.InputField(desc='the expected candidates, one per line as "Name (PARTY)" or just "Name"')
+    electoral_context: str = dspy.InputField(desc='the expected candidates, one per line as "Name (PARTY)" or just "Name"')
     grid: str = dspy.InputField(desc='raw cells of ONE sample page; one row per line as "<rownum>: cell0 | cell1 | ..."')
     precinct_schema: PrecinctPageSchema = dspy.OutputField()
 
@@ -130,7 +130,7 @@ class InterpretResultsPage(dspy.Signature):
     Return ONLY structure -- never read or return a vote number.
     '''
     office: str = dspy.InputField()
-    candidate_context: str = dspy.InputField(
+    electoral_context: str = dspy.InputField(
         desc='the expected candidates, one per line as "Name (PARTY)" or just "Name" when no party '
              'applies; match observed columns to these and echo the supplied name+party')
     grid: str = dspy.InputField(

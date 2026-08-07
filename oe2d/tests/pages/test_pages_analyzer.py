@@ -19,7 +19,7 @@ _IMAGE = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages', 'images',
 
 class _StubPredictor:
     '''Stand-in for the inner dspy.Predict: returns fixed content, no LM call.'''
-    def __call__(self, image, context=''):
+    def __call__(self, image, electoral_context=''):
         return dspy.Prediction(
             candidate_orientation='columns',
             contest_name_present=True,

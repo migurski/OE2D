@@ -1,7 +1,7 @@
 '''Load the vote-extraction gold set (oe2d-data/votes/).
 
 Each gold example is an index.jsonl record (metadata: office, district, source_url, the contest
-pages, container, geometry/schema features, checksums, candidate_context) plus a canonical
+pages, container, geometry/schema features, checksums, electoral_context) plus a canonical
 `<county>__<contest>__expected.csv` of the rows the extractor must reproduce. The numbers are
 copied from human-authored state-repo CSVs -- they are the ground truth, not re-derived from the
 PDFs. Sources live remotely (openelections-sources-*); fetch_source downloads and caches one.
@@ -19,7 +19,7 @@ from .. import config
 
 # The forward()/metric contract: these inputs go into the extractor, .rows is the scored output.
 INPUT_FIELDS: tuple[str, ...] = (
-    'file_path', 'pages', 'office', 'candidate_context', 'county', 'district',
+    'file_path', 'pages', 'office', 'electoral_context', 'county', 'district',
     'orientation', 'read_strategy')
 
 _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -49,7 +49,7 @@ def expected_rows(record: dict) -> list[dict]:
         return list(csv.DictReader(handle))
 
 
-def candidate_context(record: dict) -> str:
+def electoral_context(record: dict) -> str:
     '''The expected-candidate prose supplied to the interpreter, one "Name (PARTY)" line per
     distinct candidate. Stands in for what oe2d.contests provides from external race knowledge.
 
@@ -108,7 +108,7 @@ def record_to_example(record: dict) -> dspy.Example:
         'file_path': fetch_source(record),
         'pages': record['pages'],
         'office': record['office'],
-        'candidate_context': candidate_context(record),
+        'electoral_context': electoral_context(record),
         'county': record['county'],
         'district': district(record),
         'orientation': orientation(record),

@@ -19,7 +19,7 @@ def test_to_contest_row_maps_pages_candidates_and_provenance():
     row = from_votes.to_contest_row({
         'id': 'x-president', 'source_url': 'http://e/x.pdf', 'office': 'President',
         'district': None, 'observed_title': 'President/Vice-President',
-        'candidate_context': ['Harris', 'Trump'], 'pages': [12, 10, 11]})
+        'electoral_context': ['Harris', 'Trump'], 'pages': [12, 10, 11]})
     assert row['target'] == 'President'
     assert row['pages'] == [10, 11, 12]           # sorted
     assert row['range'] == [10, 12]               # min/max span

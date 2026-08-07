@@ -34,12 +34,12 @@ class MatchContestTitles(dspy.Signature):
     another. Each wording carries its own pages of votes, so you must return ALL of them. Keep
     these same-contest duplicates together; only DISTINGUISH near-duplicates that are genuinely
     DIFFERENT races -- a different district number, or a full-term vs partial/unexpired-term seat
-    -- and among those include only the ones the target refers to. Use the context (the race, its
-    candidates) to confirm a match. Return the matching titles verbatim as the tools reported
-    them; return none if the document has no such contest.
+    -- and among those include only the ones the target refers to. Use the electoral_context (the
+    race, its candidates) to confirm a match. Return the matching titles verbatim as the tools
+    reported them; return none if the document has no such contest.
     '''
     contest: str = dspy.InputField(desc='The target contest label to find')
-    context: str = dspy.InputField(desc='Free-form knowledge about the race and its candidates')
+    electoral_context: str = dspy.InputField(desc='Free-form knowledge about the race and its candidates')
     matching_titles: list[str] = dspy.OutputField(
         desc='The observed titles (verbatim) that are the target contest')
 

@@ -69,7 +69,7 @@ def row_target(row: dict) -> contests.Target:
     names: list[str] = [c for c in candidates if len(c) > 3]      # drop DEM/REP-style codes
     context: str = (f'{row["target"]} race; candidates include {", ".join(names)}'
                     if names else f'{row["target"]} race')
-    return contests.Target(contest=row['target'], context=context)
+    return contests.Target(contest=row['target'], electoral_context=context)
 
 
 def fixture_path(row: dict) -> str:

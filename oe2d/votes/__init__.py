@@ -86,7 +86,7 @@ ColumnX: typing.TypeAlias = list[float]
 # the rows but the precinct id and the vote-method label are in TWO SEPARATE columns (each row is one
 # precinct x one method, the id repeating down its methods), candidates in columns. walk_page's single
 # label column can't model it. The read is DETERMINISTIC (no LLM): read_matrix_page finds the header
-# row and candidate columns by matching the supplied candidate_context (as scope_flat_tables does),
+# row and candidate columns by matching the supplied electoral_context (as scope_flat_tables does),
 # the method column by a fixed vote-method vocabulary, and the precinct column as the id that repeats
 # down a precinct's method rows -- then groups the rows on the precinct id and moves the digits.
 ReadStrategy = typing.Literal['auto', 'ruled_scan', 'flat_tables', 'flat_grouped', 'flat_multi',
@@ -936,7 +936,7 @@ def _propose_read_strategy(orientation: str, scope: str, scanned: bool, ruled: b
 
 
 def detect_dispatch(file_path: str, page: int, contest_pages: list[int] | None = None,
-                    candidate_context: str = '') -> dict:
+                    electoral_context: str = '') -> dict:
     '''Choose how to read a contest from ONE sample page, via oe2d.pages (the image VLM) plus a
     deterministic text-layer check -- so dispatch comes from the page image, not a hand-set gold
     field. Returns {orientation, read_strategy, scanned, ruled_table}.
@@ -955,14 +955,14 @@ def detect_dispatch(file_path: str, page: int, contest_pages: list[int] | None =
     are known (more than one), a deterministic cross-page probe upgrades the proposal to flat_grouped;
     the grouped read is itself checksum-confirmed downstream, so a false upgrade self-corrects.'''
     from .. import pages
-    props: dict = pages.analyze_page(file_path, page, context=candidate_context)
+    props: dict = pages.analyze_page(file_path, page, electoral_context=electoral_context)
     scanned: bool = not _has_text_layer(file_path, page)
     ruled: bool = bool(props.get('ruled_table'))
     read_strategy: ReadStrategy = _propose_read_strategy(
         props['candidate_orientation'], props['precinct_scope'], scanned, ruled,
         props['contests_across'], props['precinct_rows'], props['value_columns'])
     if (read_strategy in ('ruled_scan', 'flat_tables') and contest_pages is not None
-            and _pages_split_candidates(file_path, contest_pages, candidate_context)):
+            and _pages_split_candidates(file_path, contest_pages, electoral_context)):
         read_strategy = 'flat_grouped'
     # A precinct-MATRIX page (precinct id and vote-method in separate columns, an Alameda-style SOVC)
     # reads as a flat columns page to the VLM -> auto, which mis-reads it. A dedicated vote-method
@@ -1169,7 +1169,7 @@ def _align_columns(grid: StringGrid, candidate_names: list[str], anchor_columns:
     return mapping
 
 
-def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
+def scope_flat_tables(tables: list[StringGrid], electoral_context: str,
                       schema_for: typing.Callable[[StringGrid], signatures.PageSchema],
                       column_x: list[ColumnX] | None = None) -> tuple[dict, dict]:
     '''Scope a scan's flat tables to one contest and read them, aligning each table's columns to the
@@ -1198,7 +1198,7 @@ def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
     '''
     if not tables:
         return {}, {}
-    wanted: set = {_norm(token) for line in candidate_context.splitlines()
+    wanted: set = {_norm(token) for line in electoral_context.splitlines()
                    for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
     header_match = lambda grid: sum(1 for token in wanted if grid and token in _norm(' '.join(grid[0])))
     anchor_index: int = max(range(len(tables)), key=lambda i: header_match(tables[i]))
@@ -1278,7 +1278,7 @@ def scope_flat_tables(tables: list[StringGrid], candidate_context: str,
     return votes, totals
 
 
-def join_flat_table_pages(pages_tables: list[list[StringGrid]], candidate_context: str,
+def join_flat_table_pages(pages_tables: list[list[StringGrid]], electoral_context: str,
                           schema_for: typing.Callable[[StringGrid], signatures.PageSchema],
                           pages_column_x: list[list[ColumnX]] | None = None) -> tuple[dict, dict]:
     '''Read a candidate-GROUP flat contest -- one whose candidate columns are split across pages that
@@ -1303,7 +1303,7 @@ def join_flat_table_pages(pages_tables: list[list[StringGrid]], candidate_contex
         # (ClearBallot); scope_flat_tables aligns by column x, so that block sits in a different x band
         # and is dropped without any special flag here.
         column_x = pages_column_x[page_index] if pages_column_x is not None else None
-        page_votes, page_totals = scope_flat_tables(tables, candidate_context, schema_for, column_x=column_x)
+        page_votes, page_totals = scope_flat_tables(tables, electoral_context, schema_for, column_x=column_x)
         for (precinct, candidate, party), buckets in page_votes.items():
             key: str = _precinct_key(precinct)
             label.setdefault(key, precinct)
@@ -1336,14 +1336,14 @@ def _grid_precincts(grid: StringGrid) -> set[str]:
             if is_label(cell(row, label_column))}
 
 
-def _candidate_tokens(candidate_context: str) -> set[str]:
+def _candidate_tokens(electoral_context: str) -> set[str]:
     '''Distinctive candidate-name tokens (longer than three chars) from the expected-candidate prose
     -- the same signal _extract_multi_grid uses to pick a mega-grid block.'''
-    return {_norm(token) for line in candidate_context.splitlines()
+    return {_norm(token) for line in electoral_context.splitlines()
             for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
 
 
-def _pages_split_candidates(file_path: str, contest_pages: list[int], candidate_context: str) -> bool:
+def _pages_split_candidates(file_path: str, contest_pages: list[int], electoral_context: str) -> bool:
     '''True when the contest's candidate columns are SPLIT across its pages -- a candidate-GROUP
     (flat_grouped) contest, which reads as an ordinary flat scan on page 1 because its later pages
     repeat the SAME precincts under DIFFERENT candidates (a SOVC too wide for one page). The tell is
@@ -1357,7 +1357,7 @@ def _pages_split_candidates(file_path: str, contest_pages: list[int], candidate_
     checksum still confirms it, so a false positive here (e.g. Gogebic, whose candidates also split
     but whose grid is really method-sub-rows) costs one grouped read that fails to reconcile and
     falls back, not a wrong answer.'''
-    wanted: set = _candidate_tokens(candidate_context)
+    wanted: set = _candidate_tokens(electoral_context)
     if len(contest_pages) < 2 or not wanted:
         return False
     grids: list[StringGrid | None] = []
@@ -1579,7 +1579,7 @@ class VoteExtractor(dspy.Module):
     _consolidate_write_in, the all-zero drop -- is deterministic Python that moves the digits, traced
     but OUTSIDE the GEPA objective (exactly like PageAnalyzer's skew and ContestLocator's tools).
 
-    forward(file_path, pages, office, candidate_context, county, district, orientation,
+    forward(file_path, pages, office, electoral_context, county, district, orientation,
     read_strategy) dispatches on READ MECHANICS (read_strategy) and CONTENT structure (orientation)
     -- kept orthogonal -- and returns dspy.Prediction(rows=<canonical CSV rows>, votes=<stitched
     mapping>). The LLM never reads or returns a number.
@@ -1591,13 +1591,13 @@ class VoteExtractor(dspy.Module):
         # rows (precinct-major): one precinct per page, candidates down rows, methods across columns.
         self.interpret_rows: dspy.Module = dspy.Predict(signatures.InterpretPrecinctPage)
 
-    def _columns_schema(self, office: str, candidate_context: str,
+    def _columns_schema(self, office: str, electoral_context: str,
                         rows: StringGrid) -> signatures.PageSchema:
         '''Interpret one contest-major page's grid into a PageSchema (the LLM step; no numbers).'''
-        return self.interpret_columns(office=office, candidate_context=candidate_context,
+        return self.interpret_columns(office=office, electoral_context=electoral_context,
                                       grid=grid_to_text(rows)).page_schema
 
-    def forward(self, file_path: str, pages: list[int], office: str, candidate_context: str,
+    def forward(self, file_path: str, pages: list[int], office: str, electoral_context: str,
                 county: str = '', district: str = '', orientation: str | None = None,
                 read_strategy: ReadStrategy | None = None) -> dspy.Prediction:
         '''Read -> interpret -> stitch -> canonical rows for one contest. orientation is CONTENT
@@ -1607,10 +1607,10 @@ class VoteExtractor(dspy.Module):
         from the image, not a caller-set field; pass a value to override. Returns rows + the raw
         stitched votes mapping.'''
         if orientation is None or read_strategy is None:
-            detected: dict = detect_dispatch(file_path, pages[0], pages, candidate_context)
+            detected: dict = detect_dispatch(file_path, pages[0], pages, electoral_context)
             orientation = orientation or detected['orientation']
             read_strategy = read_strategy or detected['read_strategy']
-        votes: dict = self._read_votes(file_path, pages, office, candidate_context,
+        votes: dict = self._read_votes(file_path, pages, office, electoral_context,
                                        orientation, read_strategy)
         # Keep an all-zero precinct only where it is a genuine roster member that cast ballots but no
         # votes in THIS contest (an Electionware per-precinct report: Bay's Midland P2 straight party).
@@ -1626,7 +1626,7 @@ class VoteExtractor(dspy.Module):
                                          drop_all_zero=not keep_all_zero)
         return dspy.Prediction(rows=rows, votes=votes)
 
-    def _read_votes(self, file_path: str, pages: list[int], office: str, candidate_context: str,
+    def _read_votes(self, file_path: str, pages: list[int], office: str, electoral_context: str,
                     orientation: str, read_strategy: ReadStrategy) -> dict:
         '''Run the chosen read, CONFIRMING a ruled_scan with the printed-total checksum and falling
         back to the auto read when it does not reconcile. A ruled scan whose rules are faint/broken
@@ -1635,31 +1635,31 @@ class VoteExtractor(dspy.Module):
         equal the county-total row; that mismatch drops us to the cheap auto read (which the reader
         self-detects for a scan). huron's clean flat table reconciles and stays on TABLES.'''
         if read_strategy == 'flat_grouped':
-            votes, totals = self._extract_grouped_tables(file_path, pages, office, candidate_context)
+            votes, totals = self._extract_grouped_tables(file_path, pages, office, electoral_context)
             if _reconciles(votes, totals):
                 return votes
             logger.info('flat-grouped read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy in ('ruled_scan', 'flat_tables'):
-            votes, totals = self._extract_scanned_tables(file_path, pages, office, candidate_context)
+            votes, totals = self._extract_scanned_tables(file_path, pages, office, electoral_context)
             if _reconciles(votes, totals):
                 return votes
             logger.info('flat-tables read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy == 'flat_multi':
-            votes, totals = self._extract_multi_grid(file_path, pages, office, candidate_context)
+            votes, totals = self._extract_multi_grid(file_path, pages, office, electoral_context)
             if _reconciles(votes, totals):
                 return votes
             logger.info('flat-multi (mega-grid) read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy == 'precinct_matrix':
-            votes, totals = self._extract_matrix_contest(file_path, pages, office, candidate_context)
+            votes, totals = self._extract_matrix_contest(file_path, pages, office, electoral_context)
             if totals and not _reconciles(votes, totals, strict=True):
                 logger.info('precinct-matrix read did not reconcile with the Contest Total row '
                             '(%d candidate column(s))', len(totals))
             return votes
         if read_strategy == 'ruled_columns':
-            votes, totals = self._extract_contest(file_path, pages, office, candidate_context,
+            votes, totals = self._extract_contest(file_path, pages, office, electoral_context,
                                                   via_tables=True, with_totals=True)
             if _reconciles(votes, totals, strict=True):
                 return votes
@@ -1670,7 +1670,7 @@ class VoteExtractor(dspy.Module):
             logger.info('ruled-columns read did not reconcile with printed county totals '
                         '(%d candidate column(s)); falling back to auto/cheap read', len(totals))
         if read_strategy in ('report_lines_methods', 'report_lines_total'):
-            votes = self._extract_report_contest(file_path, pages, office, candidate_context, read_strategy)
+            votes = self._extract_report_contest(file_path, pages, office, electoral_context, read_strategy)
             if votes:
                 return votes
             # The geometry report reader recognized no blocks -- the page is a per-precinct report
@@ -1681,11 +1681,11 @@ class VoteExtractor(dspy.Module):
             logger.info('report-lines read found no report blocks; falling back to the auto '
                         'per-precinct read')
         if orientation == 'rows':
-            return self._extract_precinct_contest(file_path, pages, office, candidate_context)
-        return self._extract_contest(file_path, pages, office, candidate_context)
+            return self._extract_precinct_contest(file_path, pages, office, electoral_context)
+        return self._extract_contest(file_path, pages, office, electoral_context)
 
     def _extract_contest(self, file_path: str, pages: list[int], office: str,
-                         candidate_context: str, via_tables: bool = False,
+                         electoral_context: str, via_tables: bool = False,
                          with_totals: bool = False) -> 'dict | tuple[dict, dict]':
         '''Read the contest's pages and stitch them into votes[(precinct, candidate, party)][bucket].
 
@@ -1703,7 +1703,7 @@ class VoteExtractor(dspy.Module):
 
         with_totals also returns the printed county totals (_county_totals) for the ruled_columns
         reconcile confirm; the auto caller ignores them.'''
-        wanted: set = {_norm(token) for line in candidate_context.splitlines()
+        wanted: set = {_norm(token) for line in electoral_context.splitlines()
                        for token in re.split(r'\s*\(', line)[0].split() if len(token) > 3}
 
         def page_grid(page: int) -> StringGrid:
@@ -1719,7 +1719,7 @@ class VoteExtractor(dspy.Module):
         page_schemas: list[tuple] = []
         for page in pages:
             rows: StringGrid = page_grid(page)
-            schema: signatures.PageSchema = self._columns_schema(office, candidate_context, rows)
+            schema: signatures.PageSchema = self._columns_schema(office, electoral_context, rows)
             page_schemas.append((schema, rows))
 
         # A first walk with each page's own skip labels, to learn the document's real precinct labels.
@@ -1816,14 +1816,14 @@ class VoteExtractor(dspy.Module):
         return votes
 
     def _extract_report_contest(self, file_path: str, pages: list[int], office: str,
-                                candidate_context: str, read_strategy: str) -> dict:
+                                electoral_context: str, read_strategy: str) -> dict:
         '''Extract a Dominion per-precinct report contest (read_report_blocks) in the read_strategy's
         grammar ('report_lines_methods' -> method columns, 'report_lines_total' -> single Total). A
         report page stacks several contests, so on each page pick the block whose choice rows name the
         most expected candidates, then run the same precinct-page schema-learn/apply as the text-grid
         reader over those picked grids.'''
         grammar: str = 'total' if read_strategy == 'report_lines_total' else 'methods'
-        wanted: set = {_norm(token) for line in candidate_context.splitlines()
+        wanted: set = {_norm(token) for line in electoral_context.splitlines()
                        for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
 
         def read_grid(page: int) -> StringGrid:
@@ -1834,11 +1834,11 @@ class VoteExtractor(dspy.Module):
                                         if any(token in _norm(row[0]) for row in grid[2:]))
             return max(blocks, key=lambda block: names_in(block[1]))[1]
 
-        return self._extract_precinct_contest(file_path, pages, office, candidate_context, read_grid,
+        return self._extract_precinct_contest(file_path, pages, office, electoral_context, read_grid,
                                               choices_only=True)
 
     def _extract_precinct_contest(self, file_path: str, pages: list[int], office: str,
-                                  candidate_context: str, read_grid=None,
+                                  electoral_context: str, read_grid=None,
                                   choices_only: bool = False) -> dict:
         '''Extract a candidates-as-rows contest whose precincts are one-per-page (precinct in the page
         header, methods across columns). The document's pages are structurally identical, so interpret
@@ -1856,7 +1856,7 @@ class VoteExtractor(dspy.Module):
             read_grid = lambda page: read_text_grid(file_path, page)
         sample: StringGrid = read_grid(pages[0])
         schema: signatures.PrecinctPageSchema = self.interpret_rows(
-            office=office, candidate_context=candidate_context, grid=grid_to_text(sample)).precinct_schema
+            office=office, electoral_context=electoral_context, grid=grid_to_text(sample)).precinct_schema
         if choices_only:                                  # backfill any choice row the interpreter dropped
             covered: set = {role.row_index for role in schema.candidate_rows}
             for index in range(len(sample)):
@@ -1911,7 +1911,7 @@ class VoteExtractor(dspy.Module):
         return votes
 
     def _extract_scanned_tables(self, file_path: str, pages: list[int], office: str,
-                                candidate_context: str) -> tuple[dict, dict]:
+                                electoral_context: str) -> tuple[dict, dict]:
         '''Read the contest's pages as flat tables (read_flat_tables, Textract) and hand them to
         scope_flat_tables with the interpreter bound as the schema resolver and the per-table column
         x-centres for geometric alignment. The scoping and digit-moving live in that standalone
@@ -1921,11 +1921,11 @@ class VoteExtractor(dspy.Module):
         tables: list[StringGrid] = [grid for grid, _x in read]
         column_x: list[ColumnX] = [x for _grid, x in read]
         return scope_flat_tables(
-            tables, candidate_context,
-            lambda anchor: self._columns_schema(office, candidate_context, anchor), column_x=column_x)
+            tables, electoral_context,
+            lambda anchor: self._columns_schema(office, electoral_context, anchor), column_x=column_x)
 
     def _extract_multi_grid(self, file_path: str, pages: list[int], office: str,
-                            candidate_context: str) -> tuple[dict, dict]:
+                            electoral_context: str) -> tuple[dict, dict]:
         '''Read one contest out of a mega-grid -- a single wide table holding several contests
         side-by-side that share the precinct rows. segment_multi_grid cuts the columns into one flat
         sub-table per contest (deterministic, from the printed party-header restarts); we pick the
@@ -1939,9 +1939,9 @@ class VoteExtractor(dspy.Module):
         blocks: list[dict] = segment_multi_grid(grid, column_x)
         if not blocks:
             return {}, {}
-        names_wanted: set = {_norm(token) for line in candidate_context.splitlines()
+        names_wanted: set = {_norm(token) for line in electoral_context.splitlines()
                              for token in re.split(r'\s*\(', line.lstrip('- '))[0].split() if len(token) > 3}
-        party_wanted: set = {_norm(code) for line in candidate_context.splitlines()
+        party_wanted: set = {_norm(code) for line in electoral_context.splitlines()
                              for code in re.findall(r'\(([^)]+)\)', line)}
 
         def block_score(block: dict) -> int:
@@ -1956,12 +1956,12 @@ class VoteExtractor(dspy.Module):
         block: dict = max(blocks, key=block_score)
         logger.info('mega-grid: %d blocks, chose %r for %s', len(blocks), block['title'] or '(straight party)', office)
         return scope_flat_tables(
-            [block['grid']], candidate_context,
-            lambda anchor: self._columns_schema(office, candidate_context, anchor),
+            [block['grid']], electoral_context,
+            lambda anchor: self._columns_schema(office, electoral_context, anchor),
             column_x=[block['column_x']])
 
     def _extract_grouped_tables(self, file_path: str, pages: list[int], office: str,
-                                candidate_context: str) -> tuple[dict, dict]:
+                                electoral_context: str) -> tuple[dict, dict]:
         '''Read a candidate-GROUP flat contest (candidate columns split across pages that repeat the
         same precincts) via join_flat_table_pages: one read_flat_tables per page, joined by precinct.
         Like _extract_scanned_tables, this only supplies the Textract read (grids + column x-centres)
@@ -1970,18 +1970,18 @@ class VoteExtractor(dspy.Module):
         pages_tables: list[list[StringGrid]] = [[grid for grid, _x in page] for page in read]
         pages_column_x: list[list[ColumnX]] = [[x for _grid, x in page] for page in read]
         return join_flat_table_pages(
-            pages_tables, candidate_context,
-            lambda anchor: self._columns_schema(office, candidate_context, anchor),
+            pages_tables, electoral_context,
+            lambda anchor: self._columns_schema(office, electoral_context, anchor),
             pages_column_x=pages_column_x)
 
     def _extract_matrix_contest(self, file_path: str, pages: list[int], office: str,
-                                candidate_context: str) -> tuple[dict, dict]:
+                                electoral_context: str) -> tuple[dict, dict]:
         '''Read a precinct-MATRIX contest (precinct id and vote-method label in separate columns). The
         SHARED interpret_columns (unchanged) reads one structurally-identical page for the candidate
         columns and the document's method terminology; read_matrix_page does the deterministic
         precinct-column detection and row-grouping. One LLM call per document, then digit-moving.'''
         schema: signatures.PageSchema = self._columns_schema(
-            office, candidate_context, read_page_grid(file_path, pages[0]))
+            office, electoral_context, read_page_grid(file_path, pages[0]))
         votes: dict = {}
         totals: dict = {}
         for page in pages:
@@ -2007,7 +2007,7 @@ def build_extractor() -> VoteExtractor:
     return extractor
 
 
-def extract(file_path: str, pages: list[int], office: str, candidate_context: str,
+def extract(file_path: str, pages: list[int], office: str, electoral_context: str,
             county: str = '', district: str = '', orientation: str | None = None,
             read_strategy: ReadStrategy | None = None,
             extractor: VoteExtractor | None = None) -> dict:
@@ -2017,7 +2017,7 @@ def extract(file_path: str, pages: list[int], office: str, candidate_context: st
     dspy.Prediction; this keeps the historic function-style entry point for scripts.'''
     extractor = extractor or build_extractor()
     return extractor(file_path=file_path, pages=pages, office=office,
-                     candidate_context=candidate_context, county=county, district=district,
+                     electoral_context=electoral_context, county=county, district=district,
                      orientation=orientation, read_strategy=read_strategy).votes
 
 
@@ -2097,7 +2097,7 @@ def main() -> None:
     parser.add_argument('--office', required=True, help='OE office label, e.g. President')
     parser.add_argument('--district', default='', help='District, when the office has one')
     parser.add_argument('--county', required=True, help='County name (no "County" suffix)')
-    parser.add_argument('--context', default='',
+    parser.add_argument('--electoral-context', default='',
                         help='Expected candidates as "Name (PARTY)" lines; @path to read from a file')
     parser.add_argument('--orientation', default=None, choices=('columns', 'rows'),
                         help='CONTENT structure override; default: detected from the page via oe2d.pages')
@@ -2115,7 +2115,7 @@ def main() -> None:
 
     extractor: VoteExtractor = build_extractor()             # instruments cmpnd once
     prediction = extractor(file_path=args.path, pages=_parse_pages(args.pages), office=args.office,
-                           candidate_context=resolve_context(args.context), county=args.county,
+                           electoral_context=resolve_context(args.electoral_context), county=args.county,
                            district=args.district, orientation=args.orientation,
                            read_strategy=args.read_strategy)
     writer = csv.DictWriter(sys.stdout, CANON_COLUMNS)

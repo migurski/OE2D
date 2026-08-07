@@ -13,7 +13,7 @@ program then maps each target label to the document's own title wording (the jud
 term vs partial/unexpired), and the pages carrying the matched titles are the answer.
 
 Usage: oe2d-contests file.pdf --target President --target "U.S. Senate (full term)" \
-           --context "presidential race, Harris vs Trump; the full-term Senate seat"
+           --electoral-context "presidential race, Harris vs Trump; the full-term Senate seat"
        oe2d-contests --titles file.pdf        # list the document's contest titles
        oe2d-contests --gold barry             # run a labeled fixture
 '''
@@ -42,7 +42,7 @@ OPTIMIZED_MODEL_PATH: str = os.path.join(
 class Target(pydantic.BaseModel):
     '''A contest to find, plus knowledge that aids finding and interpreting it.'''
     contest: str
-    context: str = pydantic.Field(
+    electoral_context: str = pydantic.Field(
         default='',
         description='Free-form knowledge about the race and its candidates, e.g. '
                     '"presidential race between Trump and Harris, third-party Stein and Oliver"')
@@ -335,7 +335,7 @@ class ContestLocator(dspy.Module):
         # The LLM is required: a failed match call propagates (an unavailable LM is fatal).
         # An empty result means the contest is not in the document -- trust the LLM, no
         # heuristic fallback.
-        prediction = self.match(contest=target.contest, context=target.context)
+        prediction = self.match(contest=target.contest, electoral_context=target.electoral_context)
         return [t for t in prediction.matching_titles
                 if any(t.strip() == e.title.strip() for e in self._evidence)]
 
@@ -400,13 +400,13 @@ def locate(file_path: str, targets: list[Target],
             else dict(location) for location in prediction.locations]
 
 
-def parse_target(spec: str, context: str = '') -> Target:
-    '''Parse a CLI target: a contest label ("President"), sharing the run-wide context.'''
-    return Target(contest=spec.strip(), context=context)
+def parse_target(spec: str, electoral_context: str = '') -> Target:
+    '''Parse a CLI target: a contest label ("President"), sharing the run-wide electoral context.'''
+    return Target(contest=spec.strip(), electoral_context=electoral_context)
 
 
 def resolve_context(spec: str) -> str:
-    '''Resolve a --context value. An @-prefixed value reads the named file (curl-style,
+    '''Resolve a --electoral-context value. An @-prefixed value reads the named file (curl-style,
     for long prose kept in a file); any other value is used verbatim.'''
     if not spec.startswith('@'):
         return spec
@@ -414,7 +414,7 @@ def resolve_context(spec: str) -> str:
         with open(spec[1:], encoding='utf-8') as handle:
             return handle.read()
     except OSError as error:
-        raise SystemExit(f'cannot read --context file {spec[1:]!r}: {error}')
+        raise SystemExit(f'cannot read --electoral-context file {spec[1:]!r}: {error}')
 
 
 def _safe_filename(label: str) -> str:
@@ -485,7 +485,7 @@ def main() -> None:
     parser.add_argument('--target', action='append', default=[],
                         help='Repeatable contest label, e.g. --target President '
                              '--target "U.S. Senate (full term)"')
-    parser.add_argument('--context', default='',
+    parser.add_argument('--electoral-context', default='',
                         help='Free-form prose about the races and candidates, shared by all '
                              '--target contests (the LLM uses it to interpret the titles). '
                              'Use @path to read the prose from a file')
@@ -521,8 +521,8 @@ def main() -> None:
     else:
         if not args.path or not args.target:
             parser.error('give a path and at least one --target, or use --gold')
-        context: str = resolve_context(args.context)
-        path, targets = args.path, [parse_target(spec, context) for spec in args.target]
+        electoral_context: str = resolve_context(args.electoral_context)
+        path, targets = args.path, [parse_target(spec, electoral_context) for spec in args.target]
 
     if args.titles:
         _instrument()

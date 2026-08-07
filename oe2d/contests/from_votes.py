@@ -50,7 +50,7 @@ def to_contest_row(votes_row: dict) -> dict:
         'source_url': votes_row['source_url'],
         'target': target_label(votes_row['office'], votes_row.get('district')),
         'observed_title': votes_row.get('observed_title', ''),
-        'candidates': list(votes_row.get('candidate_context', [])),
+        'candidates': list(votes_row.get('electoral_context', [])),
         'unit_type': 'page',
         'range': [pages[0], pages[-1]],
         'pages': pages,

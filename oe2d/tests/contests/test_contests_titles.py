@@ -131,9 +131,9 @@ def test_locator_uses_llm_chosen_titles(monkeypatch):
     # classify keeps the surfaced strings (the LLM cull is exercised in its own test).
     loc.classify = lambda candidates: types.SimpleNamespace(contest_titles=list(candidates))
     # LLM maps "U.S. House" to the Congress title a literal string match could not.
-    loc.match = lambda contest, context: types.SimpleNamespace(
+    loc.match = lambda contest, electoral_context: types.SimpleNamespace(
         matching_titles=['Representative in Congress 1st District (Vote for 1)'])
-    target = contests.Target(contest='U.S. House', context='House race, Bergman vs Barr')
+    target = contests.Target(contest='U.S. House', electoral_context='House race, Bergman vs Barr')
     pred = loc(file_path='x.pdf', targets=[target], unit_count=6)
     assert pred.locations[0].pages == [2, 3]             # Congress title -> next title - 1, as a page set
 
