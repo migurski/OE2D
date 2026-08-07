@@ -76,8 +76,10 @@ class InterpretPrecinctPage(dspy.Signature):
     the major candidates but can omit minor-party or independent ones); capture EVERY candidate row
     the contest actually has, not just the listed ones. For a row that MATCHES a listed candidate,
     return the matched EXPECTED name and party. For a candidate row that matches NO listed candidate,
-    keep its observed label verbatim with a blank party -- it is a legitimate candidate the list
-    omitted, not automatically a write-in. Do NOT read party off the document. Exclude the statistics
+    return the candidate's OWN name only, cleaned the same way a listed match is -- drop a running mate
+    (any text after a "/" or "and") and drop any party code shown as a prefix or suffix -- with a blank
+    party. It is a legitimate candidate the list omitted, not automatically a write-in. Do NOT read
+    party off the document. Exclude the statistics
     block (Registered Voters, Ballots Cast) and grand-total rows (e.g. "Total Votes Cast", "Contest
     Totals").
 
@@ -124,9 +126,12 @@ class InterpretResultsPage(dspy.Signature):
     page actually has, however many, not just the ones on the list. For a column that MATCHES a listed
     candidate (headers may show a running mate, party, or garbled/reversed fragments -- match on the
     recognizable name) return that candidate's name and party EXACTLY as supplied. For a candidate
-    column that matches NO listed candidate, keep its observed label verbatim with a blank party -- it
-    is a legitimate candidate the list simply omitted, NOT automatically a write-in. Do NOT read the
-    party off the document. Set write_in=true on ANY write-in column (a
+    column that matches NO listed candidate, return the candidate's OWN name only, cleaned the same
+    way a listed match is -- drop a running mate (any text after a "/" or "and": "Cornel West / Melina
+    Abdullah" -> "Cornel West") and drop any party code shown as a prefix or suffix ("NPA Cornel West"
+    -> "Cornel West", "Randall Terry ... - UST" -> "Randall Terry") -- with a blank party. Such a
+    column is a legitimate candidate the list simply omitted, NOT automatically a write-in. Do NOT read
+    the party off the document. Set write_in=true on ANY write-in column (a
     named/qualified write-in, an unresolved/scattered write-in, or a write-in total -- "Qualified
     Write In", "Unresolved Write-In", "Write-In Totals", "Not Assigned", etc.); they are consolidated
     into one write-in row downstream, so flag them all. Additionally set write_in_total=true ONLY on a
