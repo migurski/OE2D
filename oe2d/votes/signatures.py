@@ -78,8 +78,9 @@ class InterpretPrecinctPage(dspy.Signature):
     return the matched EXPECTED name and party. For a candidate row that matches NO listed candidate,
     return the candidate's OWN name only, cleaned the same way a listed match is -- drop a running mate
     (any text after a "/" or "and") and drop any party code shown as a prefix or suffix -- with a blank
-    party. It is a legitimate candidate the list omitted, not automatically a write-in. Do NOT read
-    party off the document. Exclude the statistics
+    party. A row like this in the MAIN candidate block is a legitimate candidate the list omitted --
+    NOT a write-in. But a NAMED row the page places in a WRITE-IN SECTION is a write-in, not a
+    candidate (see Write-in rows). Do NOT read party off the document. Exclude the statistics
     block (Registered Voters, Ballots Cast) and grand-total rows (e.g. "Total Votes Cast", "Contest
     Totals").
 
@@ -88,13 +89,19 @@ class InterpretPrecinctPage(dspy.Signature):
     - Vote-integrity rows: use the canonical single-word spelling "Overvotes" or "Undervotes" even
       when the grid splits or punctuates the label ("Ov | ervotes:" -> "Overvotes"); rejoin split
       words and drop trailing punctuation.
-    - Write-in rows: set write_in=true on ANY write-in (a named/qualified write-in, an
-      unresolved/scattered write-in, or a write-in total -- "Qualified Write In", "Unresolved
-      Write-In", "Write-In Totals", "Not Assigned", etc.); they are consolidated into one write-in
-      row downstream, so flag them all. Additionally set write_in_total=true ONLY on a row that is an
-      explicit AGGREGATE write-in total (labeled like "Write-In Totals" / "Total Write-Ins") -- NOT
-      on a bare scattered "Write-in" row and NOT on a named qualified write-in candidate; those are
-      components. When a real total row is present it is used, otherwise the components are summed.
+    - Write-in rows: the DOCUMENT'S STRUCTURE decides write-in status, NOT the expected list. A row is
+      a write-in when the page marks it as one -- under a "Write-in" / "Qualified Write-In Candidates"
+      heading, carrying a "Write-in:" label, or sitting in the trailing block of names (frequently all
+      zero) that follows the ballot candidates. Set write_in=true on EVERY entry in that write-in
+      section EVEN WHEN IT NAMES A REAL PERSON (e.g. a slate of qualified write-in candidates like
+      "Brian Carroll", "Jesse Ventura"), plus any unresolved/scattered write-in or write-in total
+      ("Qualified Write In", "Unresolved Write-In", "Write-In Totals", "Not Assigned", etc.). They are
+      consolidated into ONE write-in row downstream, so flag them all. A minor-party candidate in the
+      MAIN candidate block (especially one carrying a ballot party) is NOT a write-in. Additionally set
+      write_in_total=true ONLY on a row that is an explicit AGGREGATE write-in total (labeled like
+      "Write-In Totals" / "Total Write-Ins") -- NOT on a bare scattered "Write-in" row and NOT on a
+      named qualified write-in candidate; those are components. When a real total row is present it is
+      used, otherwise the components are summed.
 
     Return ONLY structure -- never read or return a vote number.
     '''
