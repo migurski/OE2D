@@ -1,602 +1,602 @@
 county,precinct,office,district,party,candidate,votes,election_day,early_voting,absentee_mail,provisional
 Nevada,CP01,President,,DEM,Joe Biden,92,0,2,89,1
 Nevada,CP01,President,,REP,Donald Trump,45,2,2,40,1
-Nevada,CP01,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP01,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP01,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP01,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP01,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP01,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP02,President,,DEM,Joe Biden,398,2,6,387,3
 Nevada,CP02,President,,REP,Donald Trump,256,11,9,236,0
-Nevada,CP02,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP02,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP02,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP02,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP02,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP02,President,,LIB,Jo Jorgensen,6,1,0,5,0
 Nevada,CP03,President,,DEM,Joe Biden,1725,48,56,1604,17
 Nevada,CP03,President,,REP,Donald Trump,1095,76,71,929,19
-Nevada,CP03,President,,PFP,Gloria laRiva,10,0,0,10,0
-Nevada,CP03,President,,AIP,Rocky de la Fuente Guerra,12,1,1,9,1
+Nevada,CP03,President,,PFP,Gloria La Riva,10,0,0,10,0
+Nevada,CP03,President,,AIP,Rocky De La Fuente Guerra,12,1,1,9,1
 Nevada,CP03,President,,GRN,Howie Hawkins,21,0,1,17,3
 Nevada,CP03,President,,LIB,Jo Jorgensen,35,5,1,28,1
 Nevada,CP04,President,,DEM,Joe Biden,17,0,1,16,0
 Nevada,CP04,President,,REP,Donald Trump,14,0,3,11,0
-Nevada,CP04,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP04,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP04,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP04,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP04,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP04,President,,LIB,Jo Jorgensen,2,0,0,1,1
 Nevada,CP05,President,,DEM,Joe Biden,3,1,1,1,0
 Nevada,CP05,President,,REP,Donald Trump,3,0,0,3,0
-Nevada,CP05,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP05,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP05,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP05,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP05,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP05,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP06,President,,DEM,Joe Biden,540,15,20,502,3
 Nevada,CP06,President,,REP,Donald Trump,413,35,46,323,9
-Nevada,CP06,President,,PFP,Gloria laRiva,4,0,0,3,1
-Nevada,CP06,President,,AIP,Rocky de la Fuente Guerra,6,2,0,3,1
+Nevada,CP06,President,,PFP,Gloria La Riva,4,0,0,3,1
+Nevada,CP06,President,,AIP,Rocky De La Fuente Guerra,6,2,0,3,1
 Nevada,CP06,President,,GRN,Howie Hawkins,5,0,0,5,0
 Nevada,CP06,President,,LIB,Jo Jorgensen,10,0,1,8,1
 Nevada,CP07,President,,DEM,Joe Biden,889,16,27,842,4
 Nevada,CP07,President,,REP,Donald Trump,289,17,17,252,3
-Nevada,CP07,President,,PFP,Gloria laRiva,5,0,1,4,0
-Nevada,CP07,President,,AIP,Rocky de la Fuente Guerra,6,0,0,6,0
+Nevada,CP07,President,,PFP,Gloria La Riva,5,0,1,4,0
+Nevada,CP07,President,,AIP,Rocky De La Fuente Guerra,6,0,0,6,0
 Nevada,CP07,President,,GRN,Howie Hawkins,5,0,0,5,0
 Nevada,CP07,President,,LIB,Jo Jorgensen,16,2,0,14,0
 Nevada,CP08,President,,DEM,Joe Biden,763,8,14,735,6
 Nevada,CP08,President,,REP,Donald Trump,169,12,17,138,2
-Nevada,CP08,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP08,President,,AIP,Rocky de la Fuente Guerra,4,1,0,3,0
+Nevada,CP08,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP08,President,,AIP,Rocky De La Fuente Guerra,4,1,0,3,0
 Nevada,CP08,President,,GRN,Howie Hawkins,18,4,0,14,0
 Nevada,CP08,President,,LIB,Jo Jorgensen,9,0,0,9,0
 Nevada,CP09,President,,DEM,Joe Biden,1904,62,108,1689,45
 Nevada,CP09,President,,REP,Donald Trump,487,38,53,380,16
-Nevada,CP09,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP09,President,,AIP,Rocky de la Fuente Guerra,6,0,0,5,1
+Nevada,CP09,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP09,President,,AIP,Rocky De La Fuente Guerra,6,0,0,5,1
 Nevada,CP09,President,,GRN,Howie Hawkins,20,3,1,16,0
 Nevada,CP09,President,,LIB,Jo Jorgensen,33,5,0,25,3
 Nevada,CP10,President,,DEM,Joe Biden,1534,65,80,1345,44
 Nevada,CP10,President,,REP,Donald Trump,479,34,38,395,12
-Nevada,CP10,President,,PFP,Gloria laRiva,5,0,1,3,1
-Nevada,CP10,President,,AIP,Rocky de la Fuente Guerra,10,3,0,7,0
+Nevada,CP10,President,,PFP,Gloria La Riva,5,0,1,3,1
+Nevada,CP10,President,,AIP,Rocky De La Fuente Guerra,10,3,0,7,0
 Nevada,CP10,President,,GRN,Howie Hawkins,12,3,0,8,1
 Nevada,CP10,President,,LIB,Jo Jorgensen,27,1,1,25,0
 Nevada,CP11,President,,DEM,Joe Biden,1916,65,70,1740,41
 Nevada,CP11,President,,REP,Donald Trump,573,42,46,472,13
-Nevada,CP11,President,,PFP,Gloria laRiva,9,0,0,9,0
-Nevada,CP11,President,,AIP,Rocky de la Fuente Guerra,9,1,0,8,0
+Nevada,CP11,President,,PFP,Gloria La Riva,9,0,0,9,0
+Nevada,CP11,President,,AIP,Rocky De La Fuente Guerra,9,1,0,8,0
 Nevada,CP11,President,,GRN,Howie Hawkins,14,0,1,13,0
 Nevada,CP11,President,,LIB,Jo Jorgensen,27,2,2,21,2
 Nevada,CP12,President,,DEM,Joe Biden,1467,40,49,1363,15
 Nevada,CP12,President,,REP,Donald Trump,429,31,26,365,7
-Nevada,CP12,President,,PFP,Gloria laRiva,3,0,0,3,0
-Nevada,CP12,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP12,President,,PFP,Gloria La Riva,3,0,0,3,0
+Nevada,CP12,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP12,President,,GRN,Howie Hawkins,12,0,1,11,0
 Nevada,CP12,President,,LIB,Jo Jorgensen,30,1,3,26,0
 Nevada,CP13,President,,DEM,Joe Biden,622,18,26,568,10
 Nevada,CP13,President,,REP,Donald Trump,230,18,22,185,5
-Nevada,CP13,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP13,President,,AIP,Rocky de la Fuente Guerra,5,0,0,5,0
+Nevada,CP13,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP13,President,,AIP,Rocky De La Fuente Guerra,5,0,0,5,0
 Nevada,CP13,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP13,President,,LIB,Jo Jorgensen,14,2,0,12,0
 Nevada,CP14,President,,DEM,Joe Biden,284,8,7,266,3
 Nevada,CP14,President,,REP,Donald Trump,272,18,17,235,2
-Nevada,CP14,President,,PFP,Gloria laRiva,4,1,0,3,0
-Nevada,CP14,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP14,President,,PFP,Gloria La Riva,4,1,0,3,0
+Nevada,CP14,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP14,President,,GRN,Howie Hawkins,4,0,0,4,0
 Nevada,CP14,President,,LIB,Jo Jorgensen,4,0,0,4,0
 Nevada,CP15,President,,DEM,Joe Biden,919,26,28,854,11
 Nevada,CP15,President,,REP,Donald Trump,591,38,50,482,21
-Nevada,CP15,President,,PFP,Gloria laRiva,6,1,0,4,1
-Nevada,CP15,President,,AIP,Rocky de la Fuente Guerra,2,1,0,1,0
+Nevada,CP15,President,,PFP,Gloria La Riva,6,1,0,4,1
+Nevada,CP15,President,,AIP,Rocky De La Fuente Guerra,2,1,0,1,0
 Nevada,CP15,President,,GRN,Howie Hawkins,13,0,0,13,0
 Nevada,CP15,President,,LIB,Jo Jorgensen,31,3,2,24,2
 Nevada,CP16,President,,DEM,Joe Biden,3,0,0,3,0
 Nevada,CP16,President,,REP,Donald Trump,3,0,2,1,0
-Nevada,CP16,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP16,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP16,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP16,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP16,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP16,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP17,President,,DEM,Joe Biden,74,1,0,73,0
 Nevada,CP17,President,,REP,Donald Trump,72,1,5,65,1
-Nevada,CP17,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP17,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP17,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP17,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP17,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP17,President,,LIB,Jo Jorgensen,6,1,0,5,0
 Nevada,CP18,President,,DEM,Joe Biden,811,18,17,769,7
 Nevada,CP18,President,,REP,Donald Trump,1084,74,106,889,15
-Nevada,CP18,President,,PFP,Gloria laRiva,5,0,0,5,0
-Nevada,CP18,President,,AIP,Rocky de la Fuente Guerra,6,0,0,6,0
+Nevada,CP18,President,,PFP,Gloria La Riva,5,0,0,5,0
+Nevada,CP18,President,,AIP,Rocky De La Fuente Guerra,6,0,0,6,0
 Nevada,CP18,President,,GRN,Howie Hawkins,3,0,1,2,0
 Nevada,CP18,President,,LIB,Jo Jorgensen,31,0,2,29,0
 Nevada,CP19,President,,DEM,Joe Biden,982,22,31,925,4
 Nevada,CP19,President,,REP,Donald Trump,1445,121,103,1208,13
-Nevada,CP19,President,,PFP,Gloria laRiva,5,1,0,4,0
-Nevada,CP19,President,,AIP,Rocky de la Fuente Guerra,10,0,0,10,0
+Nevada,CP19,President,,PFP,Gloria La Riva,5,1,0,4,0
+Nevada,CP19,President,,AIP,Rocky De La Fuente Guerra,10,0,0,10,0
 Nevada,CP19,President,,GRN,Howie Hawkins,11,0,0,10,1
 Nevada,CP19,President,,LIB,Jo Jorgensen,32,2,1,28,1
 Nevada,CP20,President,,DEM,Joe Biden,639,13,16,602,8
 Nevada,CP20,President,,REP,Donald Trump,953,87,75,779,12
-Nevada,CP20,President,,PFP,Gloria laRiva,7,0,0,7,0
-Nevada,CP20,President,,AIP,Rocky de la Fuente Guerra,5,0,0,5,0
+Nevada,CP20,President,,PFP,Gloria La Riva,7,0,0,7,0
+Nevada,CP20,President,,AIP,Rocky De La Fuente Guerra,5,0,0,5,0
 Nevada,CP20,President,,GRN,Howie Hawkins,7,1,0,6,0
 Nevada,CP20,President,,LIB,Jo Jorgensen,19,1,0,18,0
 Nevada,CP21,President,,DEM,Joe Biden,54,0,4,50,0
 Nevada,CP21,President,,REP,Donald Trump,84,3,10,70,1
-Nevada,CP21,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP21,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP21,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP21,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP21,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP21,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP22,President,,DEM,Joe Biden,91,3,2,86,0
 Nevada,CP22,President,,REP,Donald Trump,77,0,5,71,1
-Nevada,CP22,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP22,President,,AIP,Rocky de la Fuente Guerra,4,1,0,3,0
+Nevada,CP22,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP22,President,,AIP,Rocky De La Fuente Guerra,4,1,0,3,0
 Nevada,CP22,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP22,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP23,President,,DEM,Joe Biden,22,0,0,22,0
 Nevada,CP23,President,,REP,Donald Trump,19,2,0,17,0
-Nevada,CP23,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP23,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP23,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP23,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP23,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP23,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP24,President,,DEM,Joe Biden,185,2,7,176,0
 Nevada,CP24,President,,REP,Donald Trump,228,19,9,198,2
-Nevada,CP24,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP24,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP24,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP24,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP24,President,,GRN,Howie Hawkins,3,1,0,2,0
 Nevada,CP24,President,,LIB,Jo Jorgensen,9,0,0,9,0
 Nevada,CP25,President,,DEM,Joe Biden,99,2,3,93,1
 Nevada,CP25,President,,REP,Donald Trump,66,1,4,61,0
-Nevada,CP25,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP25,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP25,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP25,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP25,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP25,President,,LIB,Jo Jorgensen,5,0,0,5,0
 Nevada,CP26,President,,DEM,Joe Biden,360,5,8,345,2
 Nevada,CP26,President,,REP,Donald Trump,349,18,21,306,4
-Nevada,CP26,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP26,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP26,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP26,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP26,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP26,President,,LIB,Jo Jorgensen,13,0,0,13,0
 Nevada,CP27,President,,DEM,Joe Biden,840,24,19,790,7
 Nevada,CP27,President,,REP,Donald Trump,1061,52,63,934,12
-Nevada,CP27,President,,PFP,Gloria laRiva,4,0,0,4,0
-Nevada,CP27,President,,AIP,Rocky de la Fuente Guerra,8,1,0,6,1
+Nevada,CP27,President,,PFP,Gloria La Riva,4,0,0,4,0
+Nevada,CP27,President,,AIP,Rocky De La Fuente Guerra,8,1,0,6,1
 Nevada,CP27,President,,GRN,Howie Hawkins,7,0,0,7,0
 Nevada,CP27,President,,LIB,Jo Jorgensen,32,0,0,32,0
 Nevada,CP28,President,,DEM,Joe Biden,745,14,18,708,5
 Nevada,CP28,President,,REP,Donald Trump,835,43,37,749,6
-Nevada,CP28,President,,PFP,Gloria laRiva,3,0,0,3,0
-Nevada,CP28,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP28,President,,PFP,Gloria La Riva,3,0,0,3,0
+Nevada,CP28,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP28,President,,GRN,Howie Hawkins,9,0,0,9,0
 Nevada,CP28,President,,LIB,Jo Jorgensen,20,1,1,18,0
 Nevada,CP29,President,,DEM,Joe Biden,642,10,21,608,3
 Nevada,CP29,President,,REP,Donald Trump,758,32,37,677,12
-Nevada,CP29,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP29,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP29,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP29,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP29,President,,GRN,Howie Hawkins,6,0,0,6,0
 Nevada,CP29,President,,LIB,Jo Jorgensen,23,1,1,21,0
 Nevada,CP30,President,,DEM,Joe Biden,273,11,7,254,1
 Nevada,CP30,President,,REP,Donald Trump,203,9,7,181,6
-Nevada,CP30,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP30,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP30,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP30,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP30,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP30,President,,LIB,Jo Jorgensen,6,0,0,6,0
 Nevada,CP31,President,,DEM,Joe Biden,164,4,11,148,1
 Nevada,CP31,President,,REP,Donald Trump,229,9,10,207,3
-Nevada,CP31,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP31,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP31,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP31,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP31,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP31,President,,LIB,Jo Jorgensen,9,0,0,9,0
 Nevada,CP32,President,,DEM,Joe Biden,16,1,0,15,0
 Nevada,CP32,President,,REP,Donald Trump,15,0,3,12,0
-Nevada,CP32,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP32,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP32,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP32,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP32,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP32,President,,LIB,Jo Jorgensen,1,0,0,1,0
 Nevada,CP33,President,,DEM,Joe Biden,735,21,19,686,9
 Nevada,CP33,President,,REP,Donald Trump,1074,75,50,938,11
-Nevada,CP33,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP33,President,,AIP,Rocky de la Fuente Guerra,10,0,1,9,0
+Nevada,CP33,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP33,President,,AIP,Rocky De La Fuente Guerra,10,0,1,9,0
 Nevada,CP33,President,,GRN,Howie Hawkins,15,1,1,13,0
 Nevada,CP33,President,,LIB,Jo Jorgensen,30,2,0,28,0
 Nevada,CP34,President,,DEM,Joe Biden,849,22,33,788,6
 Nevada,CP34,President,,REP,Donald Trump,945,54,62,818,11
-Nevada,CP34,President,,PFP,Gloria laRiva,11,0,0,11,0
-Nevada,CP34,President,,AIP,Rocky de la Fuente Guerra,7,1,0,6,0
+Nevada,CP34,President,,PFP,Gloria La Riva,11,0,0,11,0
+Nevada,CP34,President,,AIP,Rocky De La Fuente Guerra,7,1,0,6,0
 Nevada,CP34,President,,GRN,Howie Hawkins,7,0,1,6,0
 Nevada,CP34,President,,LIB,Jo Jorgensen,27,1,0,25,1
 Nevada,CP35,President,,DEM,Joe Biden,1135,17,23,1090,5
 Nevada,CP35,President,,REP,Donald Trump,1047,42,53,945,7
-Nevada,CP35,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP35,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP35,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP35,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP35,President,,GRN,Howie Hawkins,4,0,0,3,1
 Nevada,CP35,President,,LIB,Jo Jorgensen,25,1,1,23,0
 Nevada,CP36,President,,DEM,Joe Biden,695,10,16,662,7
 Nevada,CP36,President,,REP,Donald Trump,803,42,49,705,7
-Nevada,CP36,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP36,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP36,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP36,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP36,President,,GRN,Howie Hawkins,4,0,1,3,0
 Nevada,CP36,President,,LIB,Jo Jorgensen,25,2,0,22,1
 Nevada,CP37,President,,DEM,Joe Biden,6,0,0,6,0
 Nevada,CP37,President,,REP,Donald Trump,10,0,0,10,0
-Nevada,CP37,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP37,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP37,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP37,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP37,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP37,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP38,President,,DEM,Joe Biden,11,0,1,10,0
 Nevada,CP38,President,,REP,Donald Trump,10,0,0,10,0
-Nevada,CP38,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP38,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP38,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP38,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP38,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP38,President,,LIB,Jo Jorgensen,1,0,0,1,0
 Nevada,CP39,President,,DEM,Joe Biden,155,2,1,149,3
 Nevada,CP39,President,,REP,Donald Trump,138,6,2,128,2
-Nevada,CP39,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP39,President,,AIP,Rocky de la Fuente Guerra,2,0,0,2,0
+Nevada,CP39,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP39,President,,AIP,Rocky De La Fuente Guerra,2,0,0,2,0
 Nevada,CP39,President,,GRN,Howie Hawkins,3,0,0,3,0
 Nevada,CP39,President,,LIB,Jo Jorgensen,2,0,0,2,0
 Nevada,CP40,President,,DEM,Joe Biden,838,17,21,794,6
 Nevada,CP40,President,,REP,Donald Trump,633,37,49,536,11
-Nevada,CP40,President,,PFP,Gloria laRiva,5,0,0,5,0
-Nevada,CP40,President,,AIP,Rocky de la Fuente Guerra,3,1,0,2,0
+Nevada,CP40,President,,PFP,Gloria La Riva,5,0,0,5,0
+Nevada,CP40,President,,AIP,Rocky De La Fuente Guerra,3,1,0,2,0
 Nevada,CP40,President,,GRN,Howie Hawkins,8,0,0,7,1
 Nevada,CP40,President,,LIB,Jo Jorgensen,23,3,0,19,1
 Nevada,CP41,President,,DEM,Joe Biden,139,0,2,137,0
 Nevada,CP41,President,,REP,Donald Trump,74,0,1,73,0
-Nevada,CP41,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP41,President,,AIP,Rocky de la Fuente Guerra,4,0,0,4,0
+Nevada,CP41,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP41,President,,AIP,Rocky De La Fuente Guerra,4,0,0,4,0
 Nevada,CP41,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP41,President,,LIB,Jo Jorgensen,4,0,0,4,0
 Nevada,CP42,President,,DEM,Joe Biden,268,6,8,253,1
 Nevada,CP42,President,,REP,Donald Trump,272,9,13,249,1
-Nevada,CP42,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP42,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP42,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP42,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP42,President,,GRN,Howie Hawkins,4,1,0,3,0
 Nevada,CP42,President,,LIB,Jo Jorgensen,5,0,1,4,0
 Nevada,CP43,President,,DEM,Joe Biden,87,0,4,83,0
 Nevada,CP43,President,,REP,Donald Trump,79,2,5,72,0
-Nevada,CP43,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP43,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP43,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP43,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP43,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP43,President,,LIB,Jo Jorgensen,3,1,0,2,0
 Nevada,CP44,President,,DEM,Joe Biden,162,5,6,149,2
 Nevada,CP44,President,,REP,Donald Trump,175,9,11,150,5
-Nevada,CP44,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP44,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP44,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP44,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP44,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP44,President,,LIB,Jo Jorgensen,10,0,0,10,0
 Nevada,CP45,President,,DEM,Joe Biden,788,17,19,742,10
 Nevada,CP45,President,,REP,Donald Trump,820,39,50,724,7
-Nevada,CP45,President,,PFP,Gloria laRiva,4,0,0,3,1
-Nevada,CP45,President,,AIP,Rocky de la Fuente Guerra,2,0,0,2,0
+Nevada,CP45,President,,PFP,Gloria La Riva,4,0,0,3,1
+Nevada,CP45,President,,AIP,Rocky De La Fuente Guerra,2,0,0,2,0
 Nevada,CP45,President,,GRN,Howie Hawkins,8,1,0,7,0
 Nevada,CP45,President,,LIB,Jo Jorgensen,23,0,0,23,0
 Nevada,CP46,President,,DEM,Joe Biden,201,2,5,192,2
 Nevada,CP46,President,,REP,Donald Trump,205,5,14,186,0
-Nevada,CP46,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP46,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP46,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP46,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP46,President,,GRN,Howie Hawkins,3,0,0,3,0
 Nevada,CP46,President,,LIB,Jo Jorgensen,6,0,0,6,0
 Nevada,CP47,President,,DEM,Joe Biden,2,0,0,2,0
 Nevada,CP47,President,,REP,Donald Trump,2,0,0,1,1
-Nevada,CP47,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP47,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP47,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP47,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP47,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP47,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP48,President,,DEM,Joe Biden,12,0,1,11,0
 Nevada,CP48,President,,REP,Donald Trump,12,0,1,11,0
-Nevada,CP48,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP48,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP48,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP48,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP48,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP48,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP49,President,,DEM,Joe Biden,333,5,13,307,8
 Nevada,CP49,President,,REP,Donald Trump,292,8,18,260,6
-Nevada,CP49,President,,PFP,Gloria laRiva,4,0,0,4,0
-Nevada,CP49,President,,AIP,Rocky de la Fuente Guerra,2,0,0,2,0
+Nevada,CP49,President,,PFP,Gloria La Riva,4,0,0,4,0
+Nevada,CP49,President,,AIP,Rocky De La Fuente Guerra,2,0,0,2,0
 Nevada,CP49,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP49,President,,LIB,Jo Jorgensen,9,0,0,9,0
 Nevada,CP50,President,,DEM,Joe Biden,895,14,20,855,6
 Nevada,CP50,President,,REP,Donald Trump,921,42,48,821,10
-Nevada,CP50,President,,PFP,Gloria laRiva,4,0,0,4,0
-Nevada,CP50,President,,AIP,Rocky de la Fuente Guerra,4,0,0,4,0
+Nevada,CP50,President,,PFP,Gloria La Riva,4,0,0,4,0
+Nevada,CP50,President,,AIP,Rocky De La Fuente Guerra,4,0,0,4,0
 Nevada,CP50,President,,GRN,Howie Hawkins,11,0,1,10,0
 Nevada,CP50,President,,LIB,Jo Jorgensen,39,5,0,34,0
 Nevada,CP51,President,,DEM,Joe Biden,284,7,12,263,2
 Nevada,CP51,President,,REP,Donald Trump,230,17,8,202,3
-Nevada,CP51,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP51,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP51,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP51,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP51,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP51,President,,LIB,Jo Jorgensen,7,0,0,7,0
 Nevada,CP52,President,,DEM,Joe Biden,397,8,9,377,3
 Nevada,CP52,President,,REP,Donald Trump,408,24,26,349,9
-Nevada,CP52,President,,PFP,Gloria laRiva,1,1,0,0,0
-Nevada,CP52,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP52,President,,PFP,Gloria La Riva,1,1,0,0,0
+Nevada,CP52,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP52,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP52,President,,LIB,Jo Jorgensen,11,0,1,10,0
 Nevada,CP53,President,,DEM,Joe Biden,194,2,6,184,2
 Nevada,CP53,President,,REP,Donald Trump,152,8,4,139,1
-Nevada,CP53,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP53,President,,AIP,Rocky de la Fuente Guerra,2,0,0,2,0
+Nevada,CP53,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP53,President,,AIP,Rocky De La Fuente Guerra,2,0,0,2,0
 Nevada,CP53,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP53,President,,LIB,Jo Jorgensen,9,0,0,8,1
 Nevada,CP54,President,,DEM,Joe Biden,4,0,2,2,0
 Nevada,CP54,President,,REP,Donald Trump,2,0,2,0,0
-Nevada,CP54,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP54,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP54,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP54,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP54,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP54,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP55,President,,DEM,Joe Biden,219,3,1,214,1
 Nevada,CP55,President,,REP,Donald Trump,191,10,10,170,1
-Nevada,CP55,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP55,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP55,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP55,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP55,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP55,President,,LIB,Jo Jorgensen,7,1,0,6,0
 Nevada,CP56,President,,DEM,Joe Biden,34,0,1,32,1
 Nevada,CP56,President,,REP,Donald Trump,15,0,3,12,0
-Nevada,CP56,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP56,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP56,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP56,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP56,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP56,President,,LIB,Jo Jorgensen,1,0,0,1,0
 Nevada,CP57,President,,DEM,Joe Biden,368,9,7,352,0
 Nevada,CP57,President,,REP,Donald Trump,339,21,20,295,3
-Nevada,CP57,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP57,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP57,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP57,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP57,President,,GRN,Howie Hawkins,3,0,0,3,0
 Nevada,CP57,President,,LIB,Jo Jorgensen,12,0,0,12,0
 Nevada,CP58,President,,DEM,Joe Biden,75,4,4,67,0
 Nevada,CP58,President,,REP,Donald Trump,52,2,5,43,2
-Nevada,CP58,President,,PFP,Gloria laRiva,1,1,0,0,0
-Nevada,CP58,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP58,President,,PFP,Gloria La Riva,1,1,0,0,0
+Nevada,CP58,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP58,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP58,President,,LIB,Jo Jorgensen,3,0,1,2,0
 Nevada,CP59,President,,DEM,Joe Biden,114,2,5,106,1
 Nevada,CP59,President,,REP,Donald Trump,96,2,2,91,1
-Nevada,CP59,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP59,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP59,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP59,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP59,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP59,President,,LIB,Jo Jorgensen,6,0,0,6,0
 Nevada,CP60,President,,DEM,Joe Biden,60,1,1,58,0
 Nevada,CP60,President,,REP,Donald Trump,65,0,3,58,4
-Nevada,CP60,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP60,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP60,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP60,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP60,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP60,President,,LIB,Jo Jorgensen,2,0,0,2,0
 Nevada,CP62,President,,DEM,Joe Biden,56,0,4,52,0
 Nevada,CP62,President,,REP,Donald Trump,25,3,3,19,0
-Nevada,CP62,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP62,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP62,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP62,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP62,President,,GRN,Howie Hawkins,2,0,0,2,0
 Nevada,CP62,President,,LIB,Jo Jorgensen,1,0,0,1,0
 Nevada,CP63,President,,DEM,Joe Biden,80,3,6,69,2
 Nevada,CP63,President,,REP,Donald Trump,79,9,4,65,1
-Nevada,CP63,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP63,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP63,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP63,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP63,President,,GRN,Howie Hawkins,2,1,0,1,0
 Nevada,CP63,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP64,President,,DEM,Joe Biden,324,3,5,314,2
 Nevada,CP64,President,,REP,Donald Trump,237,19,12,204,2
-Nevada,CP64,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP64,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP64,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP64,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP64,President,,GRN,Howie Hawkins,3,0,0,3,0
 Nevada,CP64,President,,LIB,Jo Jorgensen,5,1,0,4,0
 Nevada,CP65,President,,DEM,Joe Biden,1087,4,28,1045,10
 Nevada,CP65,President,,REP,Donald Trump,642,18,44,577,3
-Nevada,CP65,President,,PFP,Gloria laRiva,3,0,0,2,1
-Nevada,CP65,President,,AIP,Rocky de la Fuente Guerra,6,0,0,6,0
+Nevada,CP65,President,,PFP,Gloria La Riva,3,0,0,2,1
+Nevada,CP65,President,,AIP,Rocky De La Fuente Guerra,6,0,0,6,0
 Nevada,CP65,President,,GRN,Howie Hawkins,5,0,0,5,0
 Nevada,CP65,President,,LIB,Jo Jorgensen,26,2,0,24,0
 Nevada,CP66,President,,DEM,Joe Biden,1098,27,32,1029,10
 Nevada,CP66,President,,REP,Donald Trump,513,18,34,458,3
-Nevada,CP66,President,,PFP,Gloria laRiva,2,0,1,1,0
-Nevada,CP66,President,,AIP,Rocky de la Fuente Guerra,6,1,0,5,0
+Nevada,CP66,President,,PFP,Gloria La Riva,2,0,1,1,0
+Nevada,CP66,President,,AIP,Rocky De La Fuente Guerra,6,1,0,5,0
 Nevada,CP66,President,,GRN,Howie Hawkins,7,1,0,6,0
 Nevada,CP66,President,,LIB,Jo Jorgensen,19,1,1,16,1
 Nevada,CP67,President,,DEM,Joe Biden,452,4,13,433,2
 Nevada,CP67,President,,REP,Donald Trump,172,6,10,151,5
-Nevada,CP67,President,,PFP,Gloria laRiva,4,0,0,4,0
-Nevada,CP67,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP67,President,,PFP,Gloria La Riva,4,0,0,4,0
+Nevada,CP67,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP67,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP67,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP68,President,,DEM,Joe Biden,1395,15,29,1340,11
 Nevada,CP68,President,,REP,Donald Trump,680,31,35,608,6
-Nevada,CP68,President,,PFP,Gloria laRiva,3,0,0,3,0
-Nevada,CP68,President,,AIP,Rocky de la Fuente Guerra,7,0,0,7,0
+Nevada,CP68,President,,PFP,Gloria La Riva,3,0,0,3,0
+Nevada,CP68,President,,AIP,Rocky De La Fuente Guerra,7,0,0,7,0
 Nevada,CP68,President,,GRN,Howie Hawkins,19,0,1,18,0
 Nevada,CP68,President,,LIB,Jo Jorgensen,17,1,0,16,0
 Nevada,CP69,President,,DEM,Joe Biden,41,0,2,38,1
 Nevada,CP69,President,,REP,Donald Trump,24,2,2,20,0
-Nevada,CP69,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP69,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP69,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP69,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP69,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP69,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP70,President,,DEM,Joe Biden,828,27,29,767,5
 Nevada,CP70,President,,REP,Donald Trump,683,42,39,596,6
-Nevada,CP70,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP70,President,,AIP,Rocky de la Fuente Guerra,3,0,0,3,0
+Nevada,CP70,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP70,President,,AIP,Rocky De La Fuente Guerra,3,0,0,3,0
 Nevada,CP70,President,,GRN,Howie Hawkins,14,0,0,14,0
 Nevada,CP70,President,,LIB,Jo Jorgensen,23,1,0,22,0
 Nevada,CP71,President,,DEM,Joe Biden,30,0,4,26,0
 Nevada,CP71,President,,REP,Donald Trump,14,1,0,13,0
-Nevada,CP71,President,,PFP,Gloria laRiva,2,0,0,1,1
-Nevada,CP71,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP71,President,,PFP,Gloria La Riva,2,0,0,1,1
+Nevada,CP71,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP71,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP71,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP72,President,,DEM,Joe Biden,1010,58,22,920,10
 Nevada,CP72,President,,REP,Donald Trump,266,40,10,208,8
-Nevada,CP72,President,,PFP,Gloria laRiva,5,0,0,5,0
-Nevada,CP72,President,,AIP,Rocky de la Fuente Guerra,2,1,0,1,0
+Nevada,CP72,President,,PFP,Gloria La Riva,5,0,0,5,0
+Nevada,CP72,President,,AIP,Rocky De La Fuente Guerra,2,1,0,1,0
 Nevada,CP72,President,,GRN,Howie Hawkins,15,2,0,12,1
 Nevada,CP72,President,,LIB,Jo Jorgensen,18,4,0,14,0
 Nevada,CP73,President,,DEM,Joe Biden,52,1,0,47,4
 Nevada,CP73,President,,REP,Donald Trump,53,4,1,45,3
-Nevada,CP73,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP73,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP73,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP73,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP73,President,,GRN,Howie Hawkins,2,0,0,1,1
 Nevada,CP73,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP75,President,,DEM,Joe Biden,0,0,0,0,0
 Nevada,CP75,President,,REP,Donald Trump,1,0,0,0,1
-Nevada,CP75,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP75,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP75,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP75,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP75,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP75,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP76,President,,DEM,Joe Biden,197,8,4,178,7
 Nevada,CP76,President,,REP,Donald Trump,108,4,5,95,4
-Nevada,CP76,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP76,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP76,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP76,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP76,President,,GRN,Howie Hawkins,3,0,0,3,0
 Nevada,CP76,President,,LIB,Jo Jorgensen,9,3,0,6,0
 Nevada,CP77,President,,DEM,Joe Biden,29,2,0,26,1
 Nevada,CP77,President,,REP,Donald Trump,37,0,0,36,1
-Nevada,CP77,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP77,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP77,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP77,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP77,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP77,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP78,President,,DEM,Joe Biden,50,0,0,50,0
 Nevada,CP78,President,,REP,Donald Trump,8,0,1,7,0
-Nevada,CP78,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP78,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP78,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP78,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP78,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP78,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP79,President,,DEM,Joe Biden,5,0,1,4,0
 Nevada,CP79,President,,REP,Donald Trump,3,0,0,3,0
-Nevada,CP79,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP79,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP79,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP79,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP79,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP79,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP80,President,,DEM,Joe Biden,14,1,2,10,1
 Nevada,CP80,President,,REP,Donald Trump,12,0,0,11,1
-Nevada,CP80,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP80,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP80,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP80,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP80,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP80,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP84,President,,DEM,Joe Biden,0,0,0,0,0
 Nevada,CP84,President,,REP,Donald Trump,1,1,0,0,0
-Nevada,CP84,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP84,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP84,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP84,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP84,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP84,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP86,President,,DEM,Joe Biden,22,0,1,21,0
 Nevada,CP86,President,,REP,Donald Trump,29,1,2,26,0
-Nevada,CP86,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP86,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP86,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP86,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP86,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP86,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP87,President,,DEM,Joe Biden,5,0,0,5,0
 Nevada,CP87,President,,REP,Donald Trump,4,0,1,1,2
-Nevada,CP87,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP87,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP87,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP87,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP87,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP87,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP88,President,,DEM,Joe Biden,7,0,0,7,0
 Nevada,CP88,President,,REP,Donald Trump,1,0,0,1,0
-Nevada,CP88,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP88,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP88,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP88,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP88,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP88,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP89,President,,DEM,Joe Biden,58,1,1,56,0
 Nevada,CP89,President,,REP,Donald Trump,50,0,1,49,0
-Nevada,CP89,President,,PFP,Gloria laRiva,2,0,1,1,0
-Nevada,CP89,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP89,President,,PFP,Gloria La Riva,2,0,1,1,0
+Nevada,CP89,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP89,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP89,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP90,President,,DEM,Joe Biden,0,0,0,0,0
 Nevada,CP90,President,,REP,Donald Trump,1,0,0,1,0
-Nevada,CP90,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP90,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP90,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP90,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP90,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP90,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP92,President,,DEM,Joe Biden,53,1,3,49,0
 Nevada,CP92,President,,REP,Donald Trump,59,7,5,47,0
-Nevada,CP92,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP92,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP92,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP92,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP92,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP92,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP94,President,,DEM,Joe Biden,104,3,3,96,2
 Nevada,CP94,President,,REP,Donald Trump,139,1,11,125,2
-Nevada,CP94,President,,PFP,Gloria laRiva,2,0,0,2,0
-Nevada,CP94,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP94,President,,PFP,Gloria La Riva,2,0,0,2,0
+Nevada,CP94,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP94,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP94,President,,LIB,Jo Jorgensen,4,0,0,4,0
 Nevada,CP95,President,,DEM,Joe Biden,211,2,1,208,0
 Nevada,CP95,President,,REP,Donald Trump,290,17,22,245,6
-Nevada,CP95,President,,PFP,Gloria laRiva,1,0,0,0,1
-Nevada,CP95,President,,AIP,Rocky de la Fuente Guerra,2,0,0,2,0
+Nevada,CP95,President,,PFP,Gloria La Riva,1,0,0,0,1
+Nevada,CP95,President,,AIP,Rocky De La Fuente Guerra,2,0,0,2,0
 Nevada,CP95,President,,GRN,Howie Hawkins,3,0,0,3,0
 Nevada,CP95,President,,LIB,Jo Jorgensen,10,1,1,8,0
 Nevada,CP96,President,,DEM,Joe Biden,0,0,0,0,0
 Nevada,CP96,President,,REP,Donald Trump,1,1,0,0,0
-Nevada,CP96,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP96,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP96,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP96,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP96,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP96,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP98,President,,DEM,Joe Biden,58,1,2,55,0
 Nevada,CP98,President,,REP,Donald Trump,78,6,3,68,1
-Nevada,CP98,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP98,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP98,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP98,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP98,President,,GRN,Howie Hawkins,1,0,0,1,0
 Nevada,CP98,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP99,President,,DEM,Joe Biden,5,0,0,5,0
 Nevada,CP99,President,,REP,Donald Trump,3,0,0,2,1
-Nevada,CP99,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP99,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP99,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP99,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP99,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP99,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP101,President,,DEM,Joe Biden,229,3,7,218,1
 Nevada,CP101,President,,REP,Donald Trump,234,15,14,204,1
-Nevada,CP101,President,,PFP,Gloria laRiva,1,0,0,1,0
-Nevada,CP101,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP101,President,,PFP,Gloria La Riva,1,0,0,1,0
+Nevada,CP101,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP101,President,,GRN,Howie Hawkins,3,1,0,2,0
 Nevada,CP101,President,,LIB,Jo Jorgensen,8,1,0,7,0
 Nevada,CP102,President,,DEM,Joe Biden,23,0,2,21,0
 Nevada,CP102,President,,REP,Donald Trump,14,2,0,12,0
-Nevada,CP102,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP102,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP102,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP102,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP102,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP102,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP103,President,,DEM,Joe Biden,110,2,2,106,0
 Nevada,CP103,President,,REP,Donald Trump,67,2,4,60,1
-Nevada,CP103,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP103,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP103,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP103,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP103,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP103,President,,LIB,Jo Jorgensen,3,0,0,3,0
 Nevada,CP104,President,,DEM,Joe Biden,12,1,0,11,0
 Nevada,CP104,President,,REP,Donald Trump,13,0,0,13,0
-Nevada,CP104,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP104,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP104,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP104,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP104,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP104,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP105,President,,DEM,Joe Biden,536,12,17,504,3
 Nevada,CP105,President,,REP,Donald Trump,327,12,20,288,7
-Nevada,CP105,President,,PFP,Gloria laRiva,3,0,1,2,0
-Nevada,CP105,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP105,President,,PFP,Gloria La Riva,3,0,1,2,0
+Nevada,CP105,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP105,President,,GRN,Howie Hawkins,5,1,0,3,1
 Nevada,CP105,President,,LIB,Jo Jorgensen,17,1,2,14,0
 Nevada,CP107,President,,DEM,Joe Biden,1,0,0,1,0
 Nevada,CP107,President,,REP,Donald Trump,3,0,0,3,0
-Nevada,CP107,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP107,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP107,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP107,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP107,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP107,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP108,President,,DEM,Joe Biden,7,0,0,7,0
 Nevada,CP108,President,,REP,Donald Trump,5,0,0,5,0
-Nevada,CP108,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP108,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP108,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP108,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP108,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP108,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP109,President,,DEM,Joe Biden,19,0,0,19,0
 Nevada,CP109,President,,REP,Donald Trump,8,0,1,7,0
-Nevada,CP109,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP109,President,,AIP,Rocky de la Fuente Guerra,1,0,0,1,0
+Nevada,CP109,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP109,President,,AIP,Rocky De La Fuente Guerra,1,0,0,1,0
 Nevada,CP109,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP109,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP110,President,,DEM,Joe Biden,16,0,0,16,0
 Nevada,CP110,President,,REP,Donald Trump,4,0,0,3,1
-Nevada,CP110,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP110,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP110,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP110,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP110,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP110,President,,LIB,Jo Jorgensen,1,1,0,0,0
 Nevada,CP111,President,,DEM,Joe Biden,2,0,0,1,1
 Nevada,CP111,President,,REP,Donald Trump,3,1,0,2,0
-Nevada,CP111,President,,PFP,Gloria laRiva,0,0,0,0,0
-Nevada,CP111,President,,AIP,Rocky de la Fuente Guerra,0,0,0,0,0
+Nevada,CP111,President,,PFP,Gloria La Riva,0,0,0,0,0
+Nevada,CP111,President,,AIP,Rocky De La Fuente Guerra,0,0,0,0,0
 Nevada,CP111,President,,GRN,Howie Hawkins,0,0,0,0,0
 Nevada,CP111,President,,LIB,Jo Jorgensen,0,0,0,0,0
 Nevada,CP01,President,,,Write-ins,0,0,0,0,0
