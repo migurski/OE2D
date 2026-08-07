@@ -1,4 +1,4 @@
-Candidates for president were Kamala Harris (DEM), Donald Trump (REP), Jill Stein (GRN), Robert F. Kennedy Jr. (IND), and Chase Oliver (LIB)
-Candidates for U.S. Senate were Elissa Slotkin (DEM), Mike Rogers (REP), Joseph Solis-Mullen (LIB), Douglas Marsh (GRN), Dave Stein (CST), and Doug Dern (NLP)
-Candidates for U.S. House District 9 were Lisa McClain (REP), Clinton St. Mosley (DEM), Jim Walkowicz (WC), and Kevin Vayko (LIB)
-Candidates for U.S. House District 10 were John James (REP), Carl Marlinga (DEM), Liz Hakola (WC), and Mike Salibo (LIB)
+Candidates for president were Kamala Harris (DEM), Donald Trump (REP), Jill Stein (GRN), Robert F. Kennedy Jr. (NLP), and Chase Oliver (LIB)
+Candidates for U.S. Senate were Elissa Slotkin (DEM), Mike Rogers (REP), Joseph Solis-Mullen (LIB), Douglas Marsh (GRN), Dave Stein (UST), and Doug Dern (NLP)
+Candidates for U.S. House District 9 were Lisa McClain (REP), Clinton St. Mosley (DEM), Jim Walkowicz (WCP), and Kevin Vayko (LIB)
+Candidates for U.S. House District 10 were John James (REP), Carl Marlinga (DEM), Liz Hakola (WCP), and Mike Salibo (LIB)
