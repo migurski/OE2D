@@ -11,3 +11,5 @@ contests-review/
 tmp/
 .cache/
 oe2d-cache/
+*.md
+*.txt
