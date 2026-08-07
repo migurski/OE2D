@@ -43,14 +43,27 @@ def target_label(office: str, district) -> str:
     return '%s District %s' % (office, district) if has_district(district) else office
 
 
+def context_prose(target: str, candidates: list[str]) -> str:
+    '''Render a candidate list into the free-form electoral-context prose a caller supplies
+    ("Candidates for <office> were A, B, and C"), matching how context arrives in real life.'''
+    names: list[str] = [c for c in candidates if len(c) > 3]      # drop bare party codes
+    label: str = 'president' if target == 'President' else target
+    if not names:
+        return '%s race' % target
+    joined: str = (names[0] if len(names) == 1 else '%s and %s' % (names[0], names[1]) if len(names) == 2
+                   else '%s, and %s' % (', '.join(names[:-1]), names[-1]))
+    return 'Candidates for %s were %s' % (label, joined)
+
+
 def to_contest_row(votes_row: dict) -> dict:
     '''One votes index record -> one contests full-document gold row.'''
     pages: list[int] = sorted(votes_row['pages'])
+    target: str = target_label(votes_row['office'], votes_row.get('district'))
     return {
         'source_url': votes_row['source_url'],
-        'target': target_label(votes_row['office'], votes_row.get('district')),
+        'target': target,
         'observed_title': votes_row.get('observed_title', ''),
-        'candidates': list(votes_row.get('electoral_context', [])),
+        'electoral_context': context_prose(target, list(votes_row.get('electoral_context', []))),
         'unit_type': 'page',
         'range': [pages[0], pages[-1]],
         'pages': pages,

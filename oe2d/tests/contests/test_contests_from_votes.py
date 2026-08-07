@@ -23,7 +23,7 @@ def test_to_contest_row_maps_pages_candidates_and_provenance():
     assert row['target'] == 'President'
     assert row['pages'] == [10, 11, 12]           # sorted
     assert row['range'] == [10, 12]               # min/max span
-    assert row['candidates'] == ['Harris', 'Trump']
+    assert row['electoral_context'] == 'Candidates for president were Harris and Trump'
     assert row['observed_title'] == 'President/Vice-President'
     assert row['provenance'] == 'votes'
 

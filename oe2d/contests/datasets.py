@@ -63,13 +63,11 @@ def fetch_original(row: dict) -> str:
 
 
 def row_target(row: dict) -> contests.Target:
-    '''The Target (contest label + free-form context) for a gold row (either set). The gold
-    candidate names are folded into the context prose the LLM reads to interpret the title.'''
-    candidates: list[str] = list(row.get('candidates', []))
-    names: list[str] = [c for c in candidates if len(c) > 3]      # drop DEM/REP-style codes
-    context: str = (f'{row["target"]} race; candidates include {", ".join(names)}'
-                    if names else f'{row["target"]} race')
-    return contests.Target(contest=row['target'], electoral_context=context)
+    '''The Target (contest label + free-form electoral context) for a gold row (either set). The gold
+    stores electoral_context as the free-form prose a caller supplies in real life ("Candidates for
+    <office> were ..."), so pass it through unchanged rather than synthesizing a stand-in.'''
+    return contests.Target(contest=row['target'],
+                           electoral_context=row.get('electoral_context') or f'{row["target"]} race')
 
 
 def fixture_path(row: dict) -> str:
