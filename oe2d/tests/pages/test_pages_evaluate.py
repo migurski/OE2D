@@ -9,7 +9,7 @@ class _StubProgram:
     def __init__(self, **fields):
         self._fields = fields
 
-    def __call__(self, image):
+    def __call__(self, image, electoral_context=''):
         return dspy.Prediction(**self._fields)
 
 

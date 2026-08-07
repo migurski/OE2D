@@ -51,13 +51,20 @@ def expected_rows(record: dict) -> list[dict]:
 
 def electoral_context(record: dict) -> str:
     '''The expected-candidate prose supplied to the interpreter, one "Name (PARTY)" line per
-    distinct candidate. Stands in for what oe2d.contests provides from external race knowledge.
+    distinct candidate.
+
+    Prefer the record's stored `electoral_context` strings -- the real production context looked up
+    from the candidates/ directory (federal races) or period sources (older cycles). Fall back to
+    DERIVING the list from the expected-answer CSV when a record has none; that baseline is idealized
+    (it always names exactly the candidates in the answer), so a stored real-world list is what the
+    eval and production actually use.
 
     Deliberately does NOT string-classify rows into candidate vs write-in/vote-integrity -- that
-    is language interpretation, which is the LLM's job, not Python's. Every distinct label is
-    listed; the interpreter matches columns/rows to these (echoing the supplied name+party) and
-    keeps anything unmatched verbatim, so listing a special here is harmless. (In production the
-    list comes from oe2d.contests and naturally contains only the real candidates.)'''
+    is language interpretation, the LLM's job, not Python's.'''
+    stored = record.get('electoral_context')
+    if stored:
+        items: list[str] = stored if isinstance(stored, list) else [stored]
+        return 'Expected candidates in this contest:\n' + '\n'.join('- ' + s for s in items)
     lines: list[str] = []
     seen: set[str] = set()
     for row in expected_rows(record):

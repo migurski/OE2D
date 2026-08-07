@@ -40,13 +40,15 @@ def _predict_all(program: dspy.Module, examples: list, num_threads: int) -> list
         last_log: float = started
         predictions: list = []
         for index, example in enumerate(examples, 1):
-            predictions.append(program(image=example.image))
+            predictions.append(program(image=example.image,
+                                       electoral_context=getattr(example, 'electoral_context', '')))
             now: float = time.monotonic()
             if now - last_log >= 10:        # progress at most every ~10s, adapts to speed
                 logger.info('  ...%d/%d (%.0fs elapsed)', index, len(examples), now - started)
                 last_log = now
         return predictions
-    pairs = [(program, dspy.Example(image=e.image).with_inputs('image')) for e in examples]
+    pairs = [(program, dspy.Example(image=e.image, electoral_context=getattr(e, 'electoral_context', ''))
+              .with_inputs('image', 'electoral_context')) for e in examples]
     runner = dspy.Parallel(num_threads=num_threads, max_errors=1,
                            provide_traceback=True, disable_progress_bar=True)
     return runner(pairs)

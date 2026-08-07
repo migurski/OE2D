@@ -28,7 +28,7 @@ _REPO_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspat
 _PAGES_DIR: str = os.path.join(_REPO_ROOT, 'oe2d-data', 'pages')
 _LABELS_PATH: str = os.path.join(_PAGES_DIR, 'training-page-images.jsonl')
 
-INPUT_FIELDS: tuple[str, ...] = ('image',)
+INPUT_FIELDS: tuple[str, ...] = ('image', 'electoral_context')
 
 
 def load_records(labels_path: str = _LABELS_PATH) -> list[dict]:
@@ -53,7 +53,8 @@ def record_to_example(record: dict) -> dspy.Example:
     A null precinct_orientation in the gold data is normalized to 'none' to match
     the signature's Literal, which has no null member.
     '''
-    fields: dict = {'image': dspy.Image(image_path(record))}
+    fields: dict = {'image': dspy.Image(image_path(record)),
+                    'electoral_context': record.get('electoral_context', '')}
     for name in pages.CONTENT_FIELDS:
         value = record.get(name)
         if name == 'precinct_orientation' and value is None:
