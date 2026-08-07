@@ -385,8 +385,11 @@ def build_locator() -> ContestLocator:
     else:
         # temperature 0 for settled classification, with headroom so a verbatim-echo
         # classify pass or a multi-step ReAct trace doesn't truncate. 8192 was validated
-        # clean (0 truncation/parse errors) across the full-documents eval.
-        locator.set_lm(dspy.LM(LM_CLAUDE_HAIKU45, temperature=0.0, max_tokens=8192))
+        # clean (0 truncation/parse errors) across the full-documents eval. num_retries rides
+        # out Bedrock throttling (429/ThrottlingException) with litellm's exponential backoff --
+        # the ReAct tool loop bursts many calls per target, so a locate must not fail on a transient
+        # throttle.
+        locator.set_lm(dspy.LM(LM_CLAUDE_HAIKU45, temperature=0.0, max_tokens=8192, num_retries=16))
     return locator
 
 

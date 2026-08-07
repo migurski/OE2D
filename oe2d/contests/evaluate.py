@@ -40,7 +40,7 @@ def load_locator(student: str | None, model: str | None) -> contests.ContestLoca
         return locator
     if student:
         locator = contests.ContestLocator()
-        locator.set_lm(dspy.LM(student, temperature=0.0, max_tokens=8192))
+        locator.set_lm(dspy.LM(student, temperature=0.0, max_tokens=8192, num_retries=16))
         return locator
     return contests.build_locator()
 
