@@ -1,201 +1,201 @@
 county,precinct,office,district,party,candidate,votes,election_day,early_voting,absentee_mail,provisional
-Nevada,CP01,State Senate,1,DEM,PAMELA DAWN SWARTZ,81,0,2,78,1
-Nevada,CP01,State Senate,1,REP,BRIAN DAHLE,57,2,2,52,1
-Nevada,CP02,State Senate,1,DEM,PAMELA DAWN SWARTZ,355,3,5,344,3
-Nevada,CP02,State Senate,1,REP,BRIAN DAHLE,299,10,10,279,0
-Nevada,CP03,State Senate,1,DEM,PAMELA DAWN SWARTZ,1679,53,56,1549,21
-Nevada,CP03,State Senate,1,REP,BRIAN DAHLE,1176,74,73,1011,18
-Nevada,CP04,State Senate,1,DEM,PAMELA DAWN SWARTZ,17,0,2,15,0
-Nevada,CP04,State Senate,1,REP,BRIAN DAHLE,16,0,2,13,1
-Nevada,CP05,State Senate,1,DEM,PAMELA DAWN SWARTZ,3,0,1,2,0
-Nevada,CP05,State Senate,1,REP,BRIAN DAHLE,3,1,0,2,0
-Nevada,CP06,State Senate,1,DEM,PAMELA DAWN SWARTZ,544,22,20,496,6
-Nevada,CP06,State Senate,1,REP,BRIAN DAHLE,404,28,42,327,7
-Nevada,CP07,State Senate,1,DEM,PAMELA DAWN SWARTZ,870,17,26,823,4
-Nevada,CP07,State Senate,1,REP,BRIAN DAHLE,333,15,16,299,3
-Nevada,CP08,State Senate,1,DEM,PAMELA DAWN SWARTZ,761,11,14,731,5
-Nevada,CP08,State Senate,1,REP,BRIAN DAHLE,191,11,15,163,2
-Nevada,CP09,State Senate,1,DEM,PAMELA DAWN SWARTZ,1719,59,102,1518,40
-Nevada,CP09,State Senate,1,REP,BRIAN DAHLE,692,44,57,569,22
-Nevada,CP10,State Senate,1,DEM,PAMELA DAWN SWARTZ,1401,61,80,1217,43
-Nevada,CP10,State Senate,1,REP,BRIAN DAHLE,632,42,40,536,14
-Nevada,CP11,State Senate,1,DEM,PAMELA DAWN SWARTZ,1705,59,64,1548,34
-Nevada,CP11,State Senate,1,REP,BRIAN DAHLE,798,48,54,677,19
-Nevada,CP12,State Senate,1,DEM,PAMELA DAWN SWARTZ,1295,33,45,1202,15
-Nevada,CP12,State Senate,1,REP,BRIAN DAHLE,596,36,32,522,6
-Nevada,CP13,State Senate,1,DEM,PAMELA DAWN SWARTZ,561,19,24,511,7
-Nevada,CP13,State Senate,1,REP,BRIAN DAHLE,299,18,23,253,5
-Nevada,CP14,State Senate,1,DEM,PAMELA DAWN SWARTZ,272,9,8,253,2
-Nevada,CP14,State Senate,1,REP,BRIAN DAHLE,286,19,17,248,2
-Nevada,CP15,State Senate,1,DEM,PAMELA DAWN SWARTZ,905,30,32,830,13
-Nevada,CP15,State Senate,1,REP,BRIAN DAHLE,632,38,49,528,17
-Nevada,CP16,State Senate,1,DEM,PAMELA DAWN SWARTZ,3,0,0,3,0
-Nevada,CP16,State Senate,1,REP,BRIAN DAHLE,3,0,2,1,0
-Nevada,CP17,State Senate,1,DEM,PAMELA DAWN SWARTZ,74,1,0,73,0
-Nevada,CP17,State Senate,1,REP,BRIAN DAHLE,78,2,5,70,1
-Nevada,CP18,State Senate,1,DEM,PAMELA DAWN SWARTZ,686,15,16,648,7
-Nevada,CP18,State Senate,1,REP,BRIAN DAHLE,1218,74,109,1022,13
-Nevada,CP19,State Senate,1,DEM,PAMELA DAWN SWARTZ,899,22,30,844,3
-Nevada,CP19,State Senate,1,REP,BRIAN DAHLE,1561,121,105,1322,13
-Nevada,CP20,State Senate,1,DEM,PAMELA DAWN SWARTZ,604,13,14,568,9
-Nevada,CP20,State Senate,1,REP,BRIAN DAHLE,1006,88,74,833,11
-Nevada,CP21,State Senate,1,DEM,PAMELA DAWN SWARTZ,56,0,4,52,0
-Nevada,CP21,State Senate,1,REP,BRIAN DAHLE,87,3,10,73,1
-Nevada,CP22,State Senate,1,DEM,PAMELA DAWN SWARTZ,83,2,2,79,0
-Nevada,CP22,State Senate,1,REP,BRIAN DAHLE,91,1,5,84,1
-Nevada,CP23,State Senate,1,DEM,PAMELA DAWN SWARTZ,15,0,0,15,0
-Nevada,CP23,State Senate,1,REP,BRIAN DAHLE,23,2,0,21,0
-Nevada,CP24,State Senate,1,DEM,PAMELA DAWN SWARTZ,170,2,5,163,0
-Nevada,CP24,State Senate,1,REP,BRIAN DAHLE,249,18,10,219,2
-Nevada,CP25,State Senate,1,DEM,PAMELA DAWN SWARTZ,89,2,3,83,1
-Nevada,CP25,State Senate,1,REP,BRIAN DAHLE,73,1,4,68,0
-Nevada,CP26,State Senate,1,DEM,PAMELA DAWN SWARTZ,326,6,6,312,2
-Nevada,CP26,State Senate,1,REP,BRIAN DAHLE,402,17,22,359,4
-Nevada,CP27,State Senate,1,DEM,PAMELA DAWN SWARTZ,778,21,19,731,7
-Nevada,CP27,State Senate,1,REP,BRIAN DAHLE,1156,51,62,1031,12
-Nevada,CP28,State Senate,1,DEM,PAMELA DAWN SWARTZ,683,13,19,646,5
-Nevada,CP28,State Senate,1,REP,BRIAN DAHLE,912,44,37,826,5
-Nevada,CP29,State Senate,1,DEM,PAMELA DAWN SWARTZ,590,12,18,558,2
-Nevada,CP29,State Senate,1,REP,BRIAN DAHLE,814,30,41,732,11
-Nevada,CP30,State Senate,1,DEM,PAMELA DAWN SWARTZ,259,10,6,242,1
-Nevada,CP30,State Senate,1,REP,BRIAN DAHLE,224,10,8,201,5
-Nevada,CP31,State Senate,1,DEM,PAMELA DAWN SWARTZ,156,2,10,143,1
-Nevada,CP31,State Senate,1,REP,BRIAN DAHLE,242,9,11,219,3
-Nevada,CP32,State Senate,1,DEM,PAMELA DAWN SWARTZ,16,1,0,15,0
-Nevada,CP32,State Senate,1,REP,BRIAN DAHLE,16,0,3,13,0
-Nevada,CP33,State Senate,1,DEM,PAMELA DAWN SWARTZ,701,24,19,650,8
-Nevada,CP33,State Senate,1,REP,BRIAN DAHLE,1148,74,51,1013,10
-Nevada,CP34,State Senate,1,DEM,PAMELA DAWN SWARTZ,818,23,35,754,6
-Nevada,CP34,State Senate,1,REP,BRIAN DAHLE,1006,52,61,882,11
-Nevada,CP35,State Senate,1,DEM,PAMELA DAWN SWARTZ,996,16,23,952,5
-Nevada,CP35,State Senate,1,REP,BRIAN DAHLE,1207,41,54,1104,8
-Nevada,CP36,State Senate,1,DEM,PAMELA DAWN SWARTZ,622,12,15,589,6
-Nevada,CP36,State Senate,1,REP,BRIAN DAHLE,894,40,49,798,7
-Nevada,CP37,State Senate,1,DEM,PAMELA DAWN SWARTZ,4,0,0,4,0
-Nevada,CP37,State Senate,1,REP,BRIAN DAHLE,12,0,0,12,0
-Nevada,CP38,State Senate,1,DEM,PAMELA DAWN SWARTZ,10,0,1,9,0
-Nevada,CP38,State Senate,1,REP,BRIAN DAHLE,11,0,0,11,0
-Nevada,CP39,State Senate,1,DEM,PAMELA DAWN SWARTZ,142,2,1,136,3
-Nevada,CP39,State Senate,1,REP,BRIAN DAHLE,153,6,2,143,2
-Nevada,CP40,State Senate,1,DEM,PAMELA DAWN SWARTZ,817,17,24,769,7
-Nevada,CP40,State Senate,1,REP,BRIAN DAHLE,683,38,46,588,11
-Nevada,CP41,State Senate,1,DEM,PAMELA DAWN SWARTZ,132,0,2,130,0
-Nevada,CP41,State Senate,1,REP,BRIAN DAHLE,91,0,1,90,0
-Nevada,CP42,State Senate,1,DEM,PAMELA DAWN SWARTZ,231,6,6,218,1
-Nevada,CP42,State Senate,1,REP,BRIAN DAHLE,311,8,16,286,1
-Nevada,CP43,State Senate,1,DEM,PAMELA DAWN SWARTZ,82,0,4,78,0
-Nevada,CP43,State Senate,1,REP,BRIAN DAHLE,93,3,5,85,0
-Nevada,CP44,State Senate,1,DEM,PAMELA DAWN SWARTZ,153,4,6,141,2
-Nevada,CP44,State Senate,1,REP,BRIAN DAHLE,182,8,11,160,3
-Nevada,CP45,State Senate,1,DEM,PAMELA DAWN SWARTZ,723,17,19,676,11
-Nevada,CP45,State Senate,1,REP,BRIAN DAHLE,896,41,50,800,5
-Nevada,CP46,State Senate,1,DEM,PAMELA DAWN SWARTZ,183,2,4,175,2
-Nevada,CP46,State Senate,1,REP,BRIAN DAHLE,229,5,15,209,0
-Nevada,CP47,State Senate,1,DEM,PAMELA DAWN SWARTZ,1,0,0,1,0
-Nevada,CP47,State Senate,1,REP,BRIAN DAHLE,3,0,0,2,1
-Nevada,CP48,State Senate,1,DEM,PAMELA DAWN SWARTZ,9,0,1,8,0
-Nevada,CP48,State Senate,1,REP,BRIAN DAHLE,15,0,1,14,0
-Nevada,CP49,State Senate,1,DEM,PAMELA DAWN SWARTZ,323,5,12,302,4
-Nevada,CP49,State Senate,1,REP,BRIAN DAHLE,311,8,19,276,8
-Nevada,CP50,State Senate,1,DEM,PAMELA DAWN SWARTZ,864,16,19,823,6
-Nevada,CP50,State Senate,1,REP,BRIAN DAHLE,996,44,48,895,9
-Nevada,CP51,State Senate,1,DEM,PAMELA DAWN SWARTZ,269,6,12,249,2
-Nevada,CP51,State Senate,1,REP,BRIAN DAHLE,246,16,8,219,3
-Nevada,CP52,State Senate,1,DEM,PAMELA DAWN SWARTZ,368,9,10,346,3
-Nevada,CP52,State Senate,1,REP,BRIAN DAHLE,442,22,26,388,6
-Nevada,CP53,State Senate,1,DEM,PAMELA DAWN SWARTZ,181,3,6,170,2
-Nevada,CP53,State Senate,1,REP,BRIAN DAHLE,174,7,4,162,1
-Nevada,CP54,State Senate,1,DEM,PAMELA DAWN SWARTZ,3,0,2,1,0
-Nevada,CP54,State Senate,1,REP,BRIAN DAHLE,2,0,2,0,0
-Nevada,CP55,State Senate,1,DEM,PAMELA DAWN SWARTZ,216,5,2,207,2
-Nevada,CP55,State Senate,1,REP,BRIAN DAHLE,204,10,9,184,1
-Nevada,CP56,State Senate,1,DEM,PAMELA DAWN SWARTZ,31,0,1,29,1
-Nevada,CP56,State Senate,1,REP,BRIAN DAHLE,18,0,3,15,0
-Nevada,CP57,State Senate,1,DEM,PAMELA DAWN SWARTZ,339,9,7,323,0
-Nevada,CP57,State Senate,1,REP,BRIAN DAHLE,375,20,18,334,3
-Nevada,CP58,State Senate,1,DEM,PAMELA DAWN SWARTZ,75,4,4,67,0
-Nevada,CP58,State Senate,1,REP,BRIAN DAHLE,53,2,5,45,1
-Nevada,CP59,State Senate,1,DEM,PAMELA DAWN SWARTZ,111,2,5,103,1
-Nevada,CP59,State Senate,1,REP,BRIAN DAHLE,103,2,2,98,1
-Nevada,CP60,State Senate,1,DEM,PAMELA DAWN SWARTZ,56,1,1,54,0
-Nevada,CP60,State Senate,1,REP,BRIAN DAHLE,69,0,3,62,4
-Nevada,CP62,State Senate,1,DEM,PAMELA DAWN SWARTZ,60,2,4,54,0
-Nevada,CP62,State Senate,1,REP,BRIAN DAHLE,26,2,3,21,0
-Nevada,CP63,State Senate,1,DEM,PAMELA DAWN SWARTZ,77,3,6,66,2
-Nevada,CP63,State Senate,1,REP,BRIAN DAHLE,87,9,4,73,1
-Nevada,CP64,State Senate,1,DEM,PAMELA DAWN SWARTZ,302,2,5,293,2
-Nevada,CP64,State Senate,1,REP,BRIAN DAHLE,258,19,12,225,2
-Nevada,CP65,State Senate,1,DEM,PAMELA DAWN SWARTZ,1004,5,25,964,10
-Nevada,CP65,State Senate,1,REP,BRIAN DAHLE,754,20,43,688,3
-Nevada,CP66,State Senate,1,DEM,PAMELA DAWN SWARTZ,1050,28,31,982,9
-Nevada,CP66,State Senate,1,REP,BRIAN DAHLE,589,18,38,528,5
-Nevada,CP67,State Senate,1,DEM,PAMELA DAWN SWARTZ,444,3,14,426,1
-Nevada,CP67,State Senate,1,REP,BRIAN DAHLE,182,6,9,162,5
-Nevada,CP68,State Senate,1,DEM,PAMELA DAWN SWARTZ,1323,14,30,1271,8
-Nevada,CP68,State Senate,1,REP,BRIAN DAHLE,792,29,35,721,7
-Nevada,CP69,State Senate,1,DEM,PAMELA DAWN SWARTZ,44,1,1,41,1
-Nevada,CP69,State Senate,1,REP,BRIAN DAHLE,25,1,2,22,0
-Nevada,CP70,State Senate,1,DEM,PAMELA DAWN SWARTZ,805,26,31,742,6
-Nevada,CP70,State Senate,1,REP,BRIAN DAHLE,729,39,37,649,4
-Nevada,CP71,State Senate,1,DEM,PAMELA DAWN SWARTZ,32,0,3,29,0
-Nevada,CP71,State Senate,1,REP,BRIAN DAHLE,13,1,0,11,1
-Nevada,CP72,State Senate,1,DEM,PAMELA DAWN SWARTZ,1003,61,21,910,11
-Nevada,CP72,State Senate,1,REP,BRIAN DAHLE,290,39,9,234,8
-Nevada,CP73,State Senate,1,DEM,PAMELA DAWN SWARTZ,49,1,0,43,5
-Nevada,CP73,State Senate,1,REP,BRIAN DAHLE,56,4,1,49,2
-Nevada,CP75,State Senate,1,DEM,PAMELA DAWN SWARTZ,0,0,0,0,0
-Nevada,CP75,State Senate,1,REP,BRIAN DAHLE,1,0,0,0,1
-Nevada,CP76,State Senate,1,DEM,PAMELA DAWN SWARTZ,182,8,4,163,7
-Nevada,CP76,State Senate,1,REP,BRIAN DAHLE,129,5,5,116,3
-Nevada,CP77,State Senate,1,DEM,PAMELA DAWN SWARTZ,27,1,0,25,1
-Nevada,CP77,State Senate,1,REP,BRIAN DAHLE,39,0,0,38,1
-Nevada,CP78,State Senate,1,DEM,PAMELA DAWN SWARTZ,49,0,0,49,0
-Nevada,CP78,State Senate,1,REP,BRIAN DAHLE,11,0,1,10,0
-Nevada,CP79,State Senate,1,DEM,PAMELA DAWN SWARTZ,4,0,1,3,0
-Nevada,CP79,State Senate,1,REP,BRIAN DAHLE,3,0,0,3,0
-Nevada,CP80,State Senate,1,DEM,PAMELA DAWN SWARTZ,12,0,2,9,1
-Nevada,CP80,State Senate,1,REP,BRIAN DAHLE,14,0,0,13,1
-Nevada,CP84,State Senate,1,DEM,PAMELA DAWN SWARTZ,0,0,0,0,0
-Nevada,CP84,State Senate,1,REP,BRIAN DAHLE,1,1,0,0,0
-Nevada,CP86,State Senate,1,DEM,PAMELA DAWN SWARTZ,23,0,1,22,0
-Nevada,CP86,State Senate,1,REP,BRIAN DAHLE,28,1,2,25,0
-Nevada,CP87,State Senate,1,DEM,PAMELA DAWN SWARTZ,5,0,0,5,0
-Nevada,CP87,State Senate,1,REP,BRIAN DAHLE,4,0,1,1,2
-Nevada,CP88,State Senate,1,DEM,PAMELA DAWN SWARTZ,6,0,0,6,0
-Nevada,CP88,State Senate,1,REP,BRIAN DAHLE,3,0,0,3,0
-Nevada,CP89,State Senate,1,DEM,PAMELA DAWN SWARTZ,53,1,2,50,0
-Nevada,CP89,State Senate,1,REP,BRIAN DAHLE,63,0,1,62,0
-Nevada,CP90,State Senate,1,DEM,PAMELA DAWN SWARTZ,0,0,0,0,0
-Nevada,CP90,State Senate,1,REP,BRIAN DAHLE,1,0,0,1,0
-Nevada,CP92,State Senate,1,DEM,PAMELA DAWN SWARTZ,52,1,3,48,0
-Nevada,CP92,State Senate,1,REP,BRIAN DAHLE,62,7,5,50,0
-Nevada,CP94,State Senate,1,DEM,PAMELA DAWN SWARTZ,98,3,3,90,2
-Nevada,CP94,State Senate,1,REP,BRIAN DAHLE,147,2,10,133,2
-Nevada,CP95,State Senate,1,DEM,PAMELA DAWN SWARTZ,201,2,1,198,0
-Nevada,CP95,State Senate,1,REP,BRIAN DAHLE,309,16,23,265,5
-Nevada,CP96,State Senate,1,DEM,PAMELA DAWN SWARTZ,0,0,0,0,0
-Nevada,CP96,State Senate,1,REP,BRIAN DAHLE,1,1,0,0,0
-Nevada,CP98,State Senate,1,DEM,PAMELA DAWN SWARTZ,54,3,2,48,1
-Nevada,CP98,State Senate,1,REP,BRIAN DAHLE,82,4,3,75,0
-Nevada,CP99,State Senate,1,DEM,PAMELA DAWN SWARTZ,4,0,0,4,0
-Nevada,CP99,State Senate,1,REP,BRIAN DAHLE,4,0,0,3,1
-Nevada,CP101,State Senate,1,DEM,PAMELA DAWN SWARTZ,216,3,8,205,0
-Nevada,CP101,State Senate,1,REP,BRIAN DAHLE,260,14,13,232,1
-Nevada,CP102,State Senate,1,DEM,PAMELA DAWN SWARTZ,21,0,2,19,0
-Nevada,CP102,State Senate,1,REP,BRIAN DAHLE,15,2,0,13,0
-Nevada,CP103,State Senate,1,DEM,PAMELA DAWN SWARTZ,101,2,2,97,0
-Nevada,CP103,State Senate,1,REP,BRIAN DAHLE,80,2,4,73,1
-Nevada,CP104,State Senate,1,DEM,PAMELA DAWN SWARTZ,12,1,0,11,0
-Nevada,CP104,State Senate,1,REP,BRIAN DAHLE,13,0,0,13,0
-Nevada,CP105,State Senate,1,DEM,PAMELA DAWN SWARTZ,522,11,19,489,3
-Nevada,CP105,State Senate,1,REP,BRIAN DAHLE,370,15,21,326,8
-Nevada,CP107,State Senate,1,DEM,PAMELA DAWN SWARTZ,2,0,0,2,0
-Nevada,CP107,State Senate,1,REP,BRIAN DAHLE,3,0,0,3,0
-Nevada,CP108,State Senate,1,DEM,PAMELA DAWN SWARTZ,6,0,0,6,0
-Nevada,CP108,State Senate,1,REP,BRIAN DAHLE,4,0,0,4,0
-Nevada,CP109,State Senate,1,DEM,PAMELA DAWN SWARTZ,15,0,0,15,0
-Nevada,CP109,State Senate,1,REP,BRIAN DAHLE,11,0,1,10,0
-Nevada,CP110,State Senate,1,DEM,PAMELA DAWN SWARTZ,14,1,0,13,0
-Nevada,CP110,State Senate,1,REP,BRIAN DAHLE,7,0,0,6,1
-Nevada,CP111,State Senate,1,DEM,PAMELA DAWN SWARTZ,2,0,0,1,1
-Nevada,CP111,State Senate,1,REP,BRIAN DAHLE,2,1,0,1,0
+Nevada,CP01,State Senate,1,DEM,Pamela Dawn Swartz,81,0,2,78,1
+Nevada,CP01,State Senate,1,REP,Brian Dahle,57,2,2,52,1
+Nevada,CP02,State Senate,1,DEM,Pamela Dawn Swartz,355,3,5,344,3
+Nevada,CP02,State Senate,1,REP,Brian Dahle,299,10,10,279,0
+Nevada,CP03,State Senate,1,DEM,Pamela Dawn Swartz,1679,53,56,1549,21
+Nevada,CP03,State Senate,1,REP,Brian Dahle,1176,74,73,1011,18
+Nevada,CP04,State Senate,1,DEM,Pamela Dawn Swartz,17,0,2,15,0
+Nevada,CP04,State Senate,1,REP,Brian Dahle,16,0,2,13,1
+Nevada,CP05,State Senate,1,DEM,Pamela Dawn Swartz,3,0,1,2,0
+Nevada,CP05,State Senate,1,REP,Brian Dahle,3,1,0,2,0
+Nevada,CP06,State Senate,1,DEM,Pamela Dawn Swartz,544,22,20,496,6
+Nevada,CP06,State Senate,1,REP,Brian Dahle,404,28,42,327,7
+Nevada,CP07,State Senate,1,DEM,Pamela Dawn Swartz,870,17,26,823,4
+Nevada,CP07,State Senate,1,REP,Brian Dahle,333,15,16,299,3
+Nevada,CP08,State Senate,1,DEM,Pamela Dawn Swartz,761,11,14,731,5
+Nevada,CP08,State Senate,1,REP,Brian Dahle,191,11,15,163,2
+Nevada,CP09,State Senate,1,DEM,Pamela Dawn Swartz,1719,59,102,1518,40
+Nevada,CP09,State Senate,1,REP,Brian Dahle,692,44,57,569,22
+Nevada,CP10,State Senate,1,DEM,Pamela Dawn Swartz,1401,61,80,1217,43
+Nevada,CP10,State Senate,1,REP,Brian Dahle,632,42,40,536,14
+Nevada,CP11,State Senate,1,DEM,Pamela Dawn Swartz,1705,59,64,1548,34
+Nevada,CP11,State Senate,1,REP,Brian Dahle,798,48,54,677,19
+Nevada,CP12,State Senate,1,DEM,Pamela Dawn Swartz,1295,33,45,1202,15
+Nevada,CP12,State Senate,1,REP,Brian Dahle,596,36,32,522,6
+Nevada,CP13,State Senate,1,DEM,Pamela Dawn Swartz,561,19,24,511,7
+Nevada,CP13,State Senate,1,REP,Brian Dahle,299,18,23,253,5
+Nevada,CP14,State Senate,1,DEM,Pamela Dawn Swartz,272,9,8,253,2
+Nevada,CP14,State Senate,1,REP,Brian Dahle,286,19,17,248,2
+Nevada,CP15,State Senate,1,DEM,Pamela Dawn Swartz,905,30,32,830,13
+Nevada,CP15,State Senate,1,REP,Brian Dahle,632,38,49,528,17
+Nevada,CP16,State Senate,1,DEM,Pamela Dawn Swartz,3,0,0,3,0
+Nevada,CP16,State Senate,1,REP,Brian Dahle,3,0,2,1,0
+Nevada,CP17,State Senate,1,DEM,Pamela Dawn Swartz,74,1,0,73,0
+Nevada,CP17,State Senate,1,REP,Brian Dahle,78,2,5,70,1
+Nevada,CP18,State Senate,1,DEM,Pamela Dawn Swartz,686,15,16,648,7
+Nevada,CP18,State Senate,1,REP,Brian Dahle,1218,74,109,1022,13
+Nevada,CP19,State Senate,1,DEM,Pamela Dawn Swartz,899,22,30,844,3
+Nevada,CP19,State Senate,1,REP,Brian Dahle,1561,121,105,1322,13
+Nevada,CP20,State Senate,1,DEM,Pamela Dawn Swartz,604,13,14,568,9
+Nevada,CP20,State Senate,1,REP,Brian Dahle,1006,88,74,833,11
+Nevada,CP21,State Senate,1,DEM,Pamela Dawn Swartz,56,0,4,52,0
+Nevada,CP21,State Senate,1,REP,Brian Dahle,87,3,10,73,1
+Nevada,CP22,State Senate,1,DEM,Pamela Dawn Swartz,83,2,2,79,0
+Nevada,CP22,State Senate,1,REP,Brian Dahle,91,1,5,84,1
+Nevada,CP23,State Senate,1,DEM,Pamela Dawn Swartz,15,0,0,15,0
+Nevada,CP23,State Senate,1,REP,Brian Dahle,23,2,0,21,0
+Nevada,CP24,State Senate,1,DEM,Pamela Dawn Swartz,170,2,5,163,0
+Nevada,CP24,State Senate,1,REP,Brian Dahle,249,18,10,219,2
+Nevada,CP25,State Senate,1,DEM,Pamela Dawn Swartz,89,2,3,83,1
+Nevada,CP25,State Senate,1,REP,Brian Dahle,73,1,4,68,0
+Nevada,CP26,State Senate,1,DEM,Pamela Dawn Swartz,326,6,6,312,2
+Nevada,CP26,State Senate,1,REP,Brian Dahle,402,17,22,359,4
+Nevada,CP27,State Senate,1,DEM,Pamela Dawn Swartz,778,21,19,731,7
+Nevada,CP27,State Senate,1,REP,Brian Dahle,1156,51,62,1031,12
+Nevada,CP28,State Senate,1,DEM,Pamela Dawn Swartz,683,13,19,646,5
+Nevada,CP28,State Senate,1,REP,Brian Dahle,912,44,37,826,5
+Nevada,CP29,State Senate,1,DEM,Pamela Dawn Swartz,590,12,18,558,2
+Nevada,CP29,State Senate,1,REP,Brian Dahle,814,30,41,732,11
+Nevada,CP30,State Senate,1,DEM,Pamela Dawn Swartz,259,10,6,242,1
+Nevada,CP30,State Senate,1,REP,Brian Dahle,224,10,8,201,5
+Nevada,CP31,State Senate,1,DEM,Pamela Dawn Swartz,156,2,10,143,1
+Nevada,CP31,State Senate,1,REP,Brian Dahle,242,9,11,219,3
+Nevada,CP32,State Senate,1,DEM,Pamela Dawn Swartz,16,1,0,15,0
+Nevada,CP32,State Senate,1,REP,Brian Dahle,16,0,3,13,0
+Nevada,CP33,State Senate,1,DEM,Pamela Dawn Swartz,701,24,19,650,8
+Nevada,CP33,State Senate,1,REP,Brian Dahle,1148,74,51,1013,10
+Nevada,CP34,State Senate,1,DEM,Pamela Dawn Swartz,818,23,35,754,6
+Nevada,CP34,State Senate,1,REP,Brian Dahle,1006,52,61,882,11
+Nevada,CP35,State Senate,1,DEM,Pamela Dawn Swartz,996,16,23,952,5
+Nevada,CP35,State Senate,1,REP,Brian Dahle,1207,41,54,1104,8
+Nevada,CP36,State Senate,1,DEM,Pamela Dawn Swartz,622,12,15,589,6
+Nevada,CP36,State Senate,1,REP,Brian Dahle,894,40,49,798,7
+Nevada,CP37,State Senate,1,DEM,Pamela Dawn Swartz,4,0,0,4,0
+Nevada,CP37,State Senate,1,REP,Brian Dahle,12,0,0,12,0
+Nevada,CP38,State Senate,1,DEM,Pamela Dawn Swartz,10,0,1,9,0
+Nevada,CP38,State Senate,1,REP,Brian Dahle,11,0,0,11,0
+Nevada,CP39,State Senate,1,DEM,Pamela Dawn Swartz,142,2,1,136,3
+Nevada,CP39,State Senate,1,REP,Brian Dahle,153,6,2,143,2
+Nevada,CP40,State Senate,1,DEM,Pamela Dawn Swartz,817,17,24,769,7
+Nevada,CP40,State Senate,1,REP,Brian Dahle,683,38,46,588,11
+Nevada,CP41,State Senate,1,DEM,Pamela Dawn Swartz,132,0,2,130,0
+Nevada,CP41,State Senate,1,REP,Brian Dahle,91,0,1,90,0
+Nevada,CP42,State Senate,1,DEM,Pamela Dawn Swartz,231,6,6,218,1
+Nevada,CP42,State Senate,1,REP,Brian Dahle,311,8,16,286,1
+Nevada,CP43,State Senate,1,DEM,Pamela Dawn Swartz,82,0,4,78,0
+Nevada,CP43,State Senate,1,REP,Brian Dahle,93,3,5,85,0
+Nevada,CP44,State Senate,1,DEM,Pamela Dawn Swartz,153,4,6,141,2
+Nevada,CP44,State Senate,1,REP,Brian Dahle,182,8,11,160,3
+Nevada,CP45,State Senate,1,DEM,Pamela Dawn Swartz,723,17,19,676,11
+Nevada,CP45,State Senate,1,REP,Brian Dahle,896,41,50,800,5
+Nevada,CP46,State Senate,1,DEM,Pamela Dawn Swartz,183,2,4,175,2
+Nevada,CP46,State Senate,1,REP,Brian Dahle,229,5,15,209,0
+Nevada,CP47,State Senate,1,DEM,Pamela Dawn Swartz,1,0,0,1,0
+Nevada,CP47,State Senate,1,REP,Brian Dahle,3,0,0,2,1
+Nevada,CP48,State Senate,1,DEM,Pamela Dawn Swartz,9,0,1,8,0
+Nevada,CP48,State Senate,1,REP,Brian Dahle,15,0,1,14,0
+Nevada,CP49,State Senate,1,DEM,Pamela Dawn Swartz,323,5,12,302,4
+Nevada,CP49,State Senate,1,REP,Brian Dahle,311,8,19,276,8
+Nevada,CP50,State Senate,1,DEM,Pamela Dawn Swartz,864,16,19,823,6
+Nevada,CP50,State Senate,1,REP,Brian Dahle,996,44,48,895,9
+Nevada,CP51,State Senate,1,DEM,Pamela Dawn Swartz,269,6,12,249,2
+Nevada,CP51,State Senate,1,REP,Brian Dahle,246,16,8,219,3
+Nevada,CP52,State Senate,1,DEM,Pamela Dawn Swartz,368,9,10,346,3
+Nevada,CP52,State Senate,1,REP,Brian Dahle,442,22,26,388,6
+Nevada,CP53,State Senate,1,DEM,Pamela Dawn Swartz,181,3,6,170,2
+Nevada,CP53,State Senate,1,REP,Brian Dahle,174,7,4,162,1
+Nevada,CP54,State Senate,1,DEM,Pamela Dawn Swartz,3,0,2,1,0
+Nevada,CP54,State Senate,1,REP,Brian Dahle,2,0,2,0,0
+Nevada,CP55,State Senate,1,DEM,Pamela Dawn Swartz,216,5,2,207,2
+Nevada,CP55,State Senate,1,REP,Brian Dahle,204,10,9,184,1
+Nevada,CP56,State Senate,1,DEM,Pamela Dawn Swartz,31,0,1,29,1
+Nevada,CP56,State Senate,1,REP,Brian Dahle,18,0,3,15,0
+Nevada,CP57,State Senate,1,DEM,Pamela Dawn Swartz,339,9,7,323,0
+Nevada,CP57,State Senate,1,REP,Brian Dahle,375,20,18,334,3
+Nevada,CP58,State Senate,1,DEM,Pamela Dawn Swartz,75,4,4,67,0
+Nevada,CP58,State Senate,1,REP,Brian Dahle,53,2,5,45,1
+Nevada,CP59,State Senate,1,DEM,Pamela Dawn Swartz,111,2,5,103,1
+Nevada,CP59,State Senate,1,REP,Brian Dahle,103,2,2,98,1
+Nevada,CP60,State Senate,1,DEM,Pamela Dawn Swartz,56,1,1,54,0
+Nevada,CP60,State Senate,1,REP,Brian Dahle,69,0,3,62,4
+Nevada,CP62,State Senate,1,DEM,Pamela Dawn Swartz,60,2,4,54,0
+Nevada,CP62,State Senate,1,REP,Brian Dahle,26,2,3,21,0
+Nevada,CP63,State Senate,1,DEM,Pamela Dawn Swartz,77,3,6,66,2
+Nevada,CP63,State Senate,1,REP,Brian Dahle,87,9,4,73,1
+Nevada,CP64,State Senate,1,DEM,Pamela Dawn Swartz,302,2,5,293,2
+Nevada,CP64,State Senate,1,REP,Brian Dahle,258,19,12,225,2
+Nevada,CP65,State Senate,1,DEM,Pamela Dawn Swartz,1004,5,25,964,10
+Nevada,CP65,State Senate,1,REP,Brian Dahle,754,20,43,688,3
+Nevada,CP66,State Senate,1,DEM,Pamela Dawn Swartz,1050,28,31,982,9
+Nevada,CP66,State Senate,1,REP,Brian Dahle,589,18,38,528,5
+Nevada,CP67,State Senate,1,DEM,Pamela Dawn Swartz,444,3,14,426,1
+Nevada,CP67,State Senate,1,REP,Brian Dahle,182,6,9,162,5
+Nevada,CP68,State Senate,1,DEM,Pamela Dawn Swartz,1323,14,30,1271,8
+Nevada,CP68,State Senate,1,REP,Brian Dahle,792,29,35,721,7
+Nevada,CP69,State Senate,1,DEM,Pamela Dawn Swartz,44,1,1,41,1
+Nevada,CP69,State Senate,1,REP,Brian Dahle,25,1,2,22,0
+Nevada,CP70,State Senate,1,DEM,Pamela Dawn Swartz,805,26,31,742,6
+Nevada,CP70,State Senate,1,REP,Brian Dahle,729,39,37,649,4
+Nevada,CP71,State Senate,1,DEM,Pamela Dawn Swartz,32,0,3,29,0
+Nevada,CP71,State Senate,1,REP,Brian Dahle,13,1,0,11,1
+Nevada,CP72,State Senate,1,DEM,Pamela Dawn Swartz,1003,61,21,910,11
+Nevada,CP72,State Senate,1,REP,Brian Dahle,290,39,9,234,8
+Nevada,CP73,State Senate,1,DEM,Pamela Dawn Swartz,49,1,0,43,5
+Nevada,CP73,State Senate,1,REP,Brian Dahle,56,4,1,49,2
+Nevada,CP75,State Senate,1,DEM,Pamela Dawn Swartz,0,0,0,0,0
+Nevada,CP75,State Senate,1,REP,Brian Dahle,1,0,0,0,1
+Nevada,CP76,State Senate,1,DEM,Pamela Dawn Swartz,182,8,4,163,7
+Nevada,CP76,State Senate,1,REP,Brian Dahle,129,5,5,116,3
+Nevada,CP77,State Senate,1,DEM,Pamela Dawn Swartz,27,1,0,25,1
+Nevada,CP77,State Senate,1,REP,Brian Dahle,39,0,0,38,1
+Nevada,CP78,State Senate,1,DEM,Pamela Dawn Swartz,49,0,0,49,0
+Nevada,CP78,State Senate,1,REP,Brian Dahle,11,0,1,10,0
+Nevada,CP79,State Senate,1,DEM,Pamela Dawn Swartz,4,0,1,3,0
+Nevada,CP79,State Senate,1,REP,Brian Dahle,3,0,0,3,0
+Nevada,CP80,State Senate,1,DEM,Pamela Dawn Swartz,12,0,2,9,1
+Nevada,CP80,State Senate,1,REP,Brian Dahle,14,0,0,13,1
+Nevada,CP84,State Senate,1,DEM,Pamela Dawn Swartz,0,0,0,0,0
+Nevada,CP84,State Senate,1,REP,Brian Dahle,1,1,0,0,0
+Nevada,CP86,State Senate,1,DEM,Pamela Dawn Swartz,23,0,1,22,0
+Nevada,CP86,State Senate,1,REP,Brian Dahle,28,1,2,25,0
+Nevada,CP87,State Senate,1,DEM,Pamela Dawn Swartz,5,0,0,5,0
+Nevada,CP87,State Senate,1,REP,Brian Dahle,4,0,1,1,2
+Nevada,CP88,State Senate,1,DEM,Pamela Dawn Swartz,6,0,0,6,0
+Nevada,CP88,State Senate,1,REP,Brian Dahle,3,0,0,3,0
+Nevada,CP89,State Senate,1,DEM,Pamela Dawn Swartz,53,1,2,50,0
+Nevada,CP89,State Senate,1,REP,Brian Dahle,63,0,1,62,0
+Nevada,CP90,State Senate,1,DEM,Pamela Dawn Swartz,0,0,0,0,0
+Nevada,CP90,State Senate,1,REP,Brian Dahle,1,0,0,1,0
+Nevada,CP92,State Senate,1,DEM,Pamela Dawn Swartz,52,1,3,48,0
+Nevada,CP92,State Senate,1,REP,Brian Dahle,62,7,5,50,0
+Nevada,CP94,State Senate,1,DEM,Pamela Dawn Swartz,98,3,3,90,2
+Nevada,CP94,State Senate,1,REP,Brian Dahle,147,2,10,133,2
+Nevada,CP95,State Senate,1,DEM,Pamela Dawn Swartz,201,2,1,198,0
+Nevada,CP95,State Senate,1,REP,Brian Dahle,309,16,23,265,5
+Nevada,CP96,State Senate,1,DEM,Pamela Dawn Swartz,0,0,0,0,0
+Nevada,CP96,State Senate,1,REP,Brian Dahle,1,1,0,0,0
+Nevada,CP98,State Senate,1,DEM,Pamela Dawn Swartz,54,3,2,48,1
+Nevada,CP98,State Senate,1,REP,Brian Dahle,82,4,3,75,0
+Nevada,CP99,State Senate,1,DEM,Pamela Dawn Swartz,4,0,0,4,0
+Nevada,CP99,State Senate,1,REP,Brian Dahle,4,0,0,3,1
+Nevada,CP101,State Senate,1,DEM,Pamela Dawn Swartz,216,3,8,205,0
+Nevada,CP101,State Senate,1,REP,Brian Dahle,260,14,13,232,1
+Nevada,CP102,State Senate,1,DEM,Pamela Dawn Swartz,21,0,2,19,0
+Nevada,CP102,State Senate,1,REP,Brian Dahle,15,2,0,13,0
+Nevada,CP103,State Senate,1,DEM,Pamela Dawn Swartz,101,2,2,97,0
+Nevada,CP103,State Senate,1,REP,Brian Dahle,80,2,4,73,1
+Nevada,CP104,State Senate,1,DEM,Pamela Dawn Swartz,12,1,0,11,0
+Nevada,CP104,State Senate,1,REP,Brian Dahle,13,0,0,13,0
+Nevada,CP105,State Senate,1,DEM,Pamela Dawn Swartz,522,11,19,489,3
+Nevada,CP105,State Senate,1,REP,Brian Dahle,370,15,21,326,8
+Nevada,CP107,State Senate,1,DEM,Pamela Dawn Swartz,2,0,0,2,0
+Nevada,CP107,State Senate,1,REP,Brian Dahle,3,0,0,3,0
+Nevada,CP108,State Senate,1,DEM,Pamela Dawn Swartz,6,0,0,6,0
+Nevada,CP108,State Senate,1,REP,Brian Dahle,4,0,0,4,0
+Nevada,CP109,State Senate,1,DEM,Pamela Dawn Swartz,15,0,0,15,0
+Nevada,CP109,State Senate,1,REP,Brian Dahle,11,0,1,10,0
+Nevada,CP110,State Senate,1,DEM,Pamela Dawn Swartz,14,1,0,13,0
+Nevada,CP110,State Senate,1,REP,Brian Dahle,7,0,0,6,1
+Nevada,CP111,State Senate,1,DEM,Pamela Dawn Swartz,2,0,0,1,1
+Nevada,CP111,State Senate,1,REP,Brian Dahle,2,1,0,1,0

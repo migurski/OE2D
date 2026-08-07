@@ -1,201 +1,201 @@
 county,precinct,office,district,party,candidate,votes,election_day,early_voting,absentee_mail,provisional
-Nevada,CP01,State Assembly,1,DEM,ELIZABETH L BETANCOURT,90,0,2,87,1
-Nevada,CP01,State Assembly,1,REP,MEGAN DAHLE,48,2,2,43,1
-Nevada,CP02,State Assembly,1,DEM,ELIZABETH L BETANCOURT,367,4,6,354,3
-Nevada,CP02,State Assembly,1,REP,MEGAN DAHLE,286,10,9,267,0
-Nevada,CP03,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1699,57,57,1566,19
-Nevada,CP03,State Assembly,1,REP,MEGAN DAHLE,1142,71,70,984,17
-Nevada,CP04,State Assembly,1,DEM,ELIZABETH L BETANCOURT,18,0,1,16,1
-Nevada,CP04,State Assembly,1,REP,MEGAN DAHLE,15,0,3,12,0
-Nevada,CP05,State Assembly,1,DEM,ELIZABETH L BETANCOURT,2,0,1,1,0
-Nevada,CP05,State Assembly,1,REP,MEGAN DAHLE,4,1,0,3,0
-Nevada,CP06,State Assembly,1,DEM,ELIZABETH L BETANCOURT,549,19,21,503,6
-Nevada,CP06,State Assembly,1,REP,MEGAN DAHLE,400,31,40,322,7
-Nevada,CP07,State Assembly,1,DEM,ELIZABETH L BETANCOURT,888,16,27,841,4
-Nevada,CP07,State Assembly,1,REP,MEGAN DAHLE,315,17,15,280,3
-Nevada,CP08,State Assembly,1,DEM,ELIZABETH L BETANCOURT,766,9,14,738,5
-Nevada,CP08,State Assembly,1,REP,MEGAN DAHLE,186,13,15,157,1
-Nevada,CP09,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1818,60,104,1610,44
-Nevada,CP09,State Assembly,1,REP,MEGAN DAHLE,593,40,54,482,17
-Nevada,CP10,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1460,62,77,1277,44
-Nevada,CP10,State Assembly,1,REP,MEGAN DAHLE,570,40,44,474,12
-Nevada,CP11,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1813,64,63,1651,35
-Nevada,CP11,State Assembly,1,REP,MEGAN DAHLE,681,42,54,566,19
-Nevada,CP12,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1384,39,48,1282,15
-Nevada,CP12,State Assembly,1,REP,MEGAN DAHLE,520,30,29,456,5
-Nevada,CP13,State Assembly,1,DEM,ELIZABETH L BETANCOURT,597,20,23,546,8
-Nevada,CP13,State Assembly,1,REP,MEGAN DAHLE,259,17,24,213,5
-Nevada,CP14,State Assembly,1,DEM,ELIZABETH L BETANCOURT,285,9,10,265,1
-Nevada,CP14,State Assembly,1,REP,MEGAN DAHLE,271,19,15,235,2
-Nevada,CP15,State Assembly,1,DEM,ELIZABETH L BETANCOURT,923,29,32,848,14
-Nevada,CP15,State Assembly,1,REP,MEGAN DAHLE,612,37,49,508,18
-Nevada,CP16,State Assembly,1,DEM,ELIZABETH L BETANCOURT,2,0,0,2,0
-Nevada,CP16,State Assembly,1,REP,MEGAN DAHLE,4,0,2,2,0
-Nevada,CP17,State Assembly,1,DEM,ELIZABETH L BETANCOURT,75,1,0,74,0
-Nevada,CP17,State Assembly,1,REP,MEGAN DAHLE,75,2,5,67,1
-Nevada,CP18,State Assembly,1,DEM,ELIZABETH L BETANCOURT,744,17,17,705,5
-Nevada,CP18,State Assembly,1,REP,MEGAN DAHLE,1161,72,105,969,15
-Nevada,CP19,State Assembly,1,DEM,ELIZABETH L BETANCOURT,936,24,35,874,3
-Nevada,CP19,State Assembly,1,REP,MEGAN DAHLE,1522,118,100,1291,13
-Nevada,CP20,State Assembly,1,DEM,ELIZABETH L BETANCOURT,632,16,14,594,8
-Nevada,CP20,State Assembly,1,REP,MEGAN DAHLE,980,85,73,810,12
-Nevada,CP21,State Assembly,1,DEM,ELIZABETH L BETANCOURT,61,0,4,57,0
-Nevada,CP21,State Assembly,1,REP,MEGAN DAHLE,82,3,10,68,1
-Nevada,CP22,State Assembly,1,DEM,ELIZABETH L BETANCOURT,92,3,2,87,0
-Nevada,CP22,State Assembly,1,REP,MEGAN DAHLE,82,0,5,76,1
-Nevada,CP23,State Assembly,1,DEM,ELIZABETH L BETANCOURT,16,0,0,16,0
-Nevada,CP23,State Assembly,1,REP,MEGAN DAHLE,22,2,0,20,0
-Nevada,CP24,State Assembly,1,DEM,ELIZABETH L BETANCOURT,179,4,6,169,0
-Nevada,CP24,State Assembly,1,REP,MEGAN DAHLE,244,16,9,217,2
-Nevada,CP25,State Assembly,1,DEM,ELIZABETH L BETANCOURT,94,2,3,88,1
-Nevada,CP25,State Assembly,1,REP,MEGAN DAHLE,69,1,4,64,0
-Nevada,CP26,State Assembly,1,DEM,ELIZABETH L BETANCOURT,349,5,6,336,2
-Nevada,CP26,State Assembly,1,REP,MEGAN DAHLE,377,18,21,334,4
-Nevada,CP27,State Assembly,1,DEM,ELIZABETH L BETANCOURT,801,21,18,755,7
-Nevada,CP27,State Assembly,1,REP,MEGAN DAHLE,1127,51,61,1003,12
-Nevada,CP28,State Assembly,1,DEM,ELIZABETH L BETANCOURT,701,12,17,667,5
-Nevada,CP28,State Assembly,1,REP,MEGAN DAHLE,885,45,37,798,5
-Nevada,CP29,State Assembly,1,DEM,ELIZABETH L BETANCOURT,625,10,18,596,1
-Nevada,CP29,State Assembly,1,REP,MEGAN DAHLE,784,32,41,700,11
-Nevada,CP30,State Assembly,1,DEM,ELIZABETH L BETANCOURT,273,11,6,254,2
-Nevada,CP30,State Assembly,1,REP,MEGAN DAHLE,207,9,8,186,4
-Nevada,CP31,State Assembly,1,DEM,ELIZABETH L BETANCOURT,168,4,11,152,1
-Nevada,CP31,State Assembly,1,REP,MEGAN DAHLE,228,7,10,210,1
-Nevada,CP32,State Assembly,1,DEM,ELIZABETH L BETANCOURT,16,1,0,15,0
-Nevada,CP32,State Assembly,1,REP,MEGAN DAHLE,16,0,3,13,0
-Nevada,CP33,State Assembly,1,DEM,ELIZABETH L BETANCOURT,746,24,21,693,8
-Nevada,CP33,State Assembly,1,REP,MEGAN DAHLE,1103,75,49,970,9
-Nevada,CP34,State Assembly,1,DEM,ELIZABETH L BETANCOURT,845,21,36,781,7
-Nevada,CP34,State Assembly,1,REP,MEGAN DAHLE,969,53,59,847,10
-Nevada,CP35,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1049,14,24,1005,6
-Nevada,CP35,State Assembly,1,REP,MEGAN DAHLE,1144,40,52,1045,7
-Nevada,CP36,State Assembly,1,DEM,ELIZABETH L BETANCOURT,662,14,15,628,5
-Nevada,CP36,State Assembly,1,REP,MEGAN DAHLE,851,38,49,757,7
-Nevada,CP37,State Assembly,1,DEM,ELIZABETH L BETANCOURT,4,0,0,4,0
-Nevada,CP37,State Assembly,1,REP,MEGAN DAHLE,12,0,0,12,0
-Nevada,CP38,State Assembly,1,DEM,ELIZABETH L BETANCOURT,10,0,1,9,0
-Nevada,CP38,State Assembly,1,REP,MEGAN DAHLE,11,0,0,11,0
-Nevada,CP39,State Assembly,1,DEM,ELIZABETH L BETANCOURT,148,2,1,142,3
-Nevada,CP39,State Assembly,1,REP,MEGAN DAHLE,150,6,2,140,2
-Nevada,CP40,State Assembly,1,DEM,ELIZABETH L BETANCOURT,830,19,22,781,8
-Nevada,CP40,State Assembly,1,REP,MEGAN DAHLE,660,35,47,568,10
-Nevada,CP41,State Assembly,1,DEM,ELIZABETH L BETANCOURT,135,0,3,132,0
-Nevada,CP41,State Assembly,1,REP,MEGAN DAHLE,86,0,0,86,0
-Nevada,CP42,State Assembly,1,DEM,ELIZABETH L BETANCOURT,257,7,8,241,1
-Nevada,CP42,State Assembly,1,REP,MEGAN DAHLE,288,8,14,265,1
-Nevada,CP43,State Assembly,1,DEM,ELIZABETH L BETANCOURT,80,0,4,76,0
-Nevada,CP43,State Assembly,1,REP,MEGAN DAHLE,92,3,5,84,0
-Nevada,CP44,State Assembly,1,DEM,ELIZABETH L BETANCOURT,158,5,6,146,1
-Nevada,CP44,State Assembly,1,REP,MEGAN DAHLE,178,8,11,156,3
-Nevada,CP45,State Assembly,1,DEM,ELIZABETH L BETANCOURT,749,15,18,707,9
-Nevada,CP45,State Assembly,1,REP,MEGAN DAHLE,859,41,50,761,7
-Nevada,CP46,State Assembly,1,DEM,ELIZABETH L BETANCOURT,200,2,5,192,1
-Nevada,CP46,State Assembly,1,REP,MEGAN DAHLE,213,5,14,193,1
-Nevada,CP47,State Assembly,1,DEM,ELIZABETH L BETANCOURT,2,0,0,2,0
-Nevada,CP47,State Assembly,1,REP,MEGAN DAHLE,2,0,0,1,1
-Nevada,CP48,State Assembly,1,DEM,ELIZABETH L BETANCOURT,9,0,1,8,0
-Nevada,CP48,State Assembly,1,REP,MEGAN DAHLE,15,0,1,14,0
-Nevada,CP49,State Assembly,1,DEM,ELIZABETH L BETANCOURT,327,5,12,304,6
-Nevada,CP49,State Assembly,1,REP,MEGAN DAHLE,308,8,19,275,6
-Nevada,CP50,State Assembly,1,DEM,ELIZABETH L BETANCOURT,891,18,19,847,7
-Nevada,CP50,State Assembly,1,REP,MEGAN DAHLE,965,41,47,869,8
-Nevada,CP51,State Assembly,1,DEM,ELIZABETH L BETANCOURT,280,7,12,259,2
-Nevada,CP51,State Assembly,1,REP,MEGAN DAHLE,241,17,8,213,3
-Nevada,CP52,State Assembly,1,DEM,ELIZABETH L BETANCOURT,386,7,12,366,1
-Nevada,CP52,State Assembly,1,REP,MEGAN DAHLE,423,24,26,366,7
-Nevada,CP53,State Assembly,1,DEM,ELIZABETH L BETANCOURT,193,3,6,183,1
-Nevada,CP53,State Assembly,1,REP,MEGAN DAHLE,163,7,4,150,2
-Nevada,CP54,State Assembly,1,DEM,ELIZABETH L BETANCOURT,4,0,3,1,0
-Nevada,CP54,State Assembly,1,REP,MEGAN DAHLE,1,0,1,0,0
-Nevada,CP55,State Assembly,1,DEM,ELIZABETH L BETANCOURT,215,5,1,208,1
-Nevada,CP55,State Assembly,1,REP,MEGAN DAHLE,205,10,10,183,2
-Nevada,CP56,State Assembly,1,DEM,ELIZABETH L BETANCOURT,33,0,1,31,1
-Nevada,CP56,State Assembly,1,REP,MEGAN DAHLE,16,0,3,13,0
-Nevada,CP57,State Assembly,1,DEM,ELIZABETH L BETANCOURT,359,9,7,342,1
-Nevada,CP57,State Assembly,1,REP,MEGAN DAHLE,355,20,18,315,2
-Nevada,CP58,State Assembly,1,DEM,ELIZABETH L BETANCOURT,77,3,4,70,0
-Nevada,CP58,State Assembly,1,REP,MEGAN DAHLE,53,3,5,44,1
-Nevada,CP59,State Assembly,1,DEM,ELIZABETH L BETANCOURT,117,2,5,109,1
-Nevada,CP59,State Assembly,1,REP,MEGAN DAHLE,97,2,1,93,1
-Nevada,CP60,State Assembly,1,DEM,ELIZABETH L BETANCOURT,60,1,1,58,0
-Nevada,CP60,State Assembly,1,REP,MEGAN DAHLE,65,0,3,58,4
-Nevada,CP62,State Assembly,1,DEM,ELIZABETH L BETANCOURT,60,2,4,54,0
-Nevada,CP62,State Assembly,1,REP,MEGAN DAHLE,26,2,3,21,0
-Nevada,CP63,State Assembly,1,DEM,ELIZABETH L BETANCOURT,77,4,6,65,2
-Nevada,CP63,State Assembly,1,REP,MEGAN DAHLE,88,8,4,75,1
-Nevada,CP64,State Assembly,1,DEM,ELIZABETH L BETANCOURT,319,5,7,305,2
-Nevada,CP64,State Assembly,1,REP,MEGAN DAHLE,244,18,10,214,2
-Nevada,CP65,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1041,5,27,1000,9
-Nevada,CP65,State Assembly,1,REP,MEGAN DAHLE,711,20,41,647,3
-Nevada,CP66,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1078,28,34,1007,9
-Nevada,CP66,State Assembly,1,REP,MEGAN DAHLE,564,19,35,504,6
-Nevada,CP67,State Assembly,1,DEM,ELIZABETH L BETANCOURT,447,4,13,430,0
-Nevada,CP67,State Assembly,1,REP,MEGAN DAHLE,177,4,10,157,6
-Nevada,CP68,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1361,14,30,1308,9
-Nevada,CP68,State Assembly,1,REP,MEGAN DAHLE,752,29,34,683,6
-Nevada,CP69,State Assembly,1,DEM,ELIZABETH L BETANCOURT,42,1,1,39,1
-Nevada,CP69,State Assembly,1,REP,MEGAN DAHLE,26,1,2,23,0
-Nevada,CP70,State Assembly,1,DEM,ELIZABETH L BETANCOURT,824,23,30,766,5
-Nevada,CP70,State Assembly,1,REP,MEGAN DAHLE,703,41,37,620,5
-Nevada,CP71,State Assembly,1,DEM,ELIZABETH L BETANCOURT,32,0,3,29,0
-Nevada,CP71,State Assembly,1,REP,MEGAN DAHLE,13,1,0,11,1
-Nevada,CP72,State Assembly,1,DEM,ELIZABETH L BETANCOURT,1023,63,21,928,11
-Nevada,CP72,State Assembly,1,REP,MEGAN DAHLE,267,36,9,214,8
-Nevada,CP73,State Assembly,1,DEM,ELIZABETH L BETANCOURT,53,1,0,47,5
-Nevada,CP73,State Assembly,1,REP,MEGAN DAHLE,52,4,1,45,2
-Nevada,CP75,State Assembly,1,DEM,ELIZABETH L BETANCOURT,0,0,0,0,0
-Nevada,CP75,State Assembly,1,REP,MEGAN DAHLE,1,0,0,0,1
-Nevada,CP76,State Assembly,1,DEM,ELIZABETH L BETANCOURT,191,8,4,171,8
-Nevada,CP76,State Assembly,1,REP,MEGAN DAHLE,122,5,5,110,2
-Nevada,CP77,State Assembly,1,DEM,ELIZABETH L BETANCOURT,32,2,0,29,1
-Nevada,CP77,State Assembly,1,REP,MEGAN DAHLE,35,0,0,34,1
-Nevada,CP78,State Assembly,1,DEM,ELIZABETH L BETANCOURT,50,0,0,50,0
-Nevada,CP78,State Assembly,1,REP,MEGAN DAHLE,11,0,1,10,0
-Nevada,CP79,State Assembly,1,DEM,ELIZABETH L BETANCOURT,5,0,1,4,0
-Nevada,CP79,State Assembly,1,REP,MEGAN DAHLE,3,0,0,3,0
-Nevada,CP80,State Assembly,1,DEM,ELIZABETH L BETANCOURT,13,0,2,10,1
-Nevada,CP80,State Assembly,1,REP,MEGAN DAHLE,13,0,0,12,1
-Nevada,CP84,State Assembly,1,DEM,ELIZABETH L BETANCOURT,0,0,0,0,0
-Nevada,CP84,State Assembly,1,REP,MEGAN DAHLE,1,1,0,0,0
-Nevada,CP86,State Assembly,1,DEM,ELIZABETH L BETANCOURT,24,0,1,23,0
-Nevada,CP86,State Assembly,1,REP,MEGAN DAHLE,27,1,2,24,0
-Nevada,CP87,State Assembly,1,DEM,ELIZABETH L BETANCOURT,5,0,0,5,0
-Nevada,CP87,State Assembly,1,REP,MEGAN DAHLE,4,0,1,1,2
-Nevada,CP88,State Assembly,1,DEM,ELIZABETH L BETANCOURT,5,0,0,5,0
-Nevada,CP88,State Assembly,1,REP,MEGAN DAHLE,4,0,0,4,0
-Nevada,CP89,State Assembly,1,DEM,ELIZABETH L BETANCOURT,55,1,2,52,0
-Nevada,CP89,State Assembly,1,REP,MEGAN DAHLE,61,0,1,60,0
-Nevada,CP90,State Assembly,1,DEM,ELIZABETH L BETANCOURT,0,0,0,0,0
-Nevada,CP90,State Assembly,1,REP,MEGAN DAHLE,1,0,0,1,0
-Nevada,CP92,State Assembly,1,DEM,ELIZABETH L BETANCOURT,56,2,3,51,0
-Nevada,CP92,State Assembly,1,REP,MEGAN DAHLE,58,6,5,47,0
-Nevada,CP94,State Assembly,1,DEM,ELIZABETH L BETANCOURT,107,3,3,99,2
-Nevada,CP94,State Assembly,1,REP,MEGAN DAHLE,138,2,10,124,2
-Nevada,CP95,State Assembly,1,DEM,ELIZABETH L BETANCOURT,214,1,1,212,0
-Nevada,CP95,State Assembly,1,REP,MEGAN DAHLE,294,17,23,250,4
-Nevada,CP96,State Assembly,1,DEM,ELIZABETH L BETANCOURT,0,0,0,0,0
-Nevada,CP96,State Assembly,1,REP,MEGAN DAHLE,1,1,0,0,0
-Nevada,CP98,State Assembly,1,DEM,ELIZABETH L BETANCOURT,52,2,2,48,0
-Nevada,CP98,State Assembly,1,REP,MEGAN DAHLE,84,5,3,75,1
-Nevada,CP99,State Assembly,1,DEM,ELIZABETH L BETANCOURT,5,0,0,5,0
-Nevada,CP99,State Assembly,1,REP,MEGAN DAHLE,3,0,0,2,1
-Nevada,CP101,State Assembly,1,DEM,ELIZABETH L BETANCOURT,229,4,8,217,0
-Nevada,CP101,State Assembly,1,REP,MEGAN DAHLE,249,14,13,221,1
-Nevada,CP102,State Assembly,1,DEM,ELIZABETH L BETANCOURT,21,0,2,19,0
-Nevada,CP102,State Assembly,1,REP,MEGAN DAHLE,16,2,0,14,0
-Nevada,CP103,State Assembly,1,DEM,ELIZABETH L BETANCOURT,101,2,2,97,0
-Nevada,CP103,State Assembly,1,REP,MEGAN DAHLE,79,2,4,72,1
-Nevada,CP104,State Assembly,1,DEM,ELIZABETH L BETANCOURT,12,1,0,11,0
-Nevada,CP104,State Assembly,1,REP,MEGAN DAHLE,13,0,0,13,0
-Nevada,CP105,State Assembly,1,DEM,ELIZABETH L BETANCOURT,538,12,18,505,3
-Nevada,CP105,State Assembly,1,REP,MEGAN DAHLE,356,13,22,313,8
-Nevada,CP107,State Assembly,1,DEM,ELIZABETH L BETANCOURT,2,0,0,2,0
-Nevada,CP107,State Assembly,1,REP,MEGAN DAHLE,3,0,0,3,0
-Nevada,CP108,State Assembly,1,DEM,ELIZABETH L BETANCOURT,6,0,0,6,0
-Nevada,CP108,State Assembly,1,REP,MEGAN DAHLE,5,0,0,5,0
-Nevada,CP109,State Assembly,1,DEM,ELIZABETH L BETANCOURT,19,0,1,18,0
-Nevada,CP109,State Assembly,1,REP,MEGAN DAHLE,7,0,0,7,0
-Nevada,CP110,State Assembly,1,DEM,ELIZABETH L BETANCOURT,17,1,0,16,0
-Nevada,CP110,State Assembly,1,REP,MEGAN DAHLE,4,0,0,3,1
-Nevada,CP111,State Assembly,1,DEM,ELIZABETH L BETANCOURT,2,0,0,1,1
-Nevada,CP111,State Assembly,1,REP,MEGAN DAHLE,2,1,0,1,0
+Nevada,CP01,State Assembly,1,DEM,Elizabeth L. Betancourt,90,0,2,87,1
+Nevada,CP01,State Assembly,1,REP,Megan Dahle,48,2,2,43,1
+Nevada,CP02,State Assembly,1,DEM,Elizabeth L. Betancourt,367,4,6,354,3
+Nevada,CP02,State Assembly,1,REP,Megan Dahle,286,10,9,267,0
+Nevada,CP03,State Assembly,1,DEM,Elizabeth L. Betancourt,1699,57,57,1566,19
+Nevada,CP03,State Assembly,1,REP,Megan Dahle,1142,71,70,984,17
+Nevada,CP04,State Assembly,1,DEM,Elizabeth L. Betancourt,18,0,1,16,1
+Nevada,CP04,State Assembly,1,REP,Megan Dahle,15,0,3,12,0
+Nevada,CP05,State Assembly,1,DEM,Elizabeth L. Betancourt,2,0,1,1,0
+Nevada,CP05,State Assembly,1,REP,Megan Dahle,4,1,0,3,0
+Nevada,CP06,State Assembly,1,DEM,Elizabeth L. Betancourt,549,19,21,503,6
+Nevada,CP06,State Assembly,1,REP,Megan Dahle,400,31,40,322,7
+Nevada,CP07,State Assembly,1,DEM,Elizabeth L. Betancourt,888,16,27,841,4
+Nevada,CP07,State Assembly,1,REP,Megan Dahle,315,17,15,280,3
+Nevada,CP08,State Assembly,1,DEM,Elizabeth L. Betancourt,766,9,14,738,5
+Nevada,CP08,State Assembly,1,REP,Megan Dahle,186,13,15,157,1
+Nevada,CP09,State Assembly,1,DEM,Elizabeth L. Betancourt,1818,60,104,1610,44
+Nevada,CP09,State Assembly,1,REP,Megan Dahle,593,40,54,482,17
+Nevada,CP10,State Assembly,1,DEM,Elizabeth L. Betancourt,1460,62,77,1277,44
+Nevada,CP10,State Assembly,1,REP,Megan Dahle,570,40,44,474,12
+Nevada,CP11,State Assembly,1,DEM,Elizabeth L. Betancourt,1813,64,63,1651,35
+Nevada,CP11,State Assembly,1,REP,Megan Dahle,681,42,54,566,19
+Nevada,CP12,State Assembly,1,DEM,Elizabeth L. Betancourt,1384,39,48,1282,15
+Nevada,CP12,State Assembly,1,REP,Megan Dahle,520,30,29,456,5
+Nevada,CP13,State Assembly,1,DEM,Elizabeth L. Betancourt,597,20,23,546,8
+Nevada,CP13,State Assembly,1,REP,Megan Dahle,259,17,24,213,5
+Nevada,CP14,State Assembly,1,DEM,Elizabeth L. Betancourt,285,9,10,265,1
+Nevada,CP14,State Assembly,1,REP,Megan Dahle,271,19,15,235,2
+Nevada,CP15,State Assembly,1,DEM,Elizabeth L. Betancourt,923,29,32,848,14
+Nevada,CP15,State Assembly,1,REP,Megan Dahle,612,37,49,508,18
+Nevada,CP16,State Assembly,1,DEM,Elizabeth L. Betancourt,2,0,0,2,0
+Nevada,CP16,State Assembly,1,REP,Megan Dahle,4,0,2,2,0
+Nevada,CP17,State Assembly,1,DEM,Elizabeth L. Betancourt,75,1,0,74,0
+Nevada,CP17,State Assembly,1,REP,Megan Dahle,75,2,5,67,1
+Nevada,CP18,State Assembly,1,DEM,Elizabeth L. Betancourt,744,17,17,705,5
+Nevada,CP18,State Assembly,1,REP,Megan Dahle,1161,72,105,969,15
+Nevada,CP19,State Assembly,1,DEM,Elizabeth L. Betancourt,936,24,35,874,3
+Nevada,CP19,State Assembly,1,REP,Megan Dahle,1522,118,100,1291,13
+Nevada,CP20,State Assembly,1,DEM,Elizabeth L. Betancourt,632,16,14,594,8
+Nevada,CP20,State Assembly,1,REP,Megan Dahle,980,85,73,810,12
+Nevada,CP21,State Assembly,1,DEM,Elizabeth L. Betancourt,61,0,4,57,0
+Nevada,CP21,State Assembly,1,REP,Megan Dahle,82,3,10,68,1
+Nevada,CP22,State Assembly,1,DEM,Elizabeth L. Betancourt,92,3,2,87,0
+Nevada,CP22,State Assembly,1,REP,Megan Dahle,82,0,5,76,1
+Nevada,CP23,State Assembly,1,DEM,Elizabeth L. Betancourt,16,0,0,16,0
+Nevada,CP23,State Assembly,1,REP,Megan Dahle,22,2,0,20,0
+Nevada,CP24,State Assembly,1,DEM,Elizabeth L. Betancourt,179,4,6,169,0
+Nevada,CP24,State Assembly,1,REP,Megan Dahle,244,16,9,217,2
+Nevada,CP25,State Assembly,1,DEM,Elizabeth L. Betancourt,94,2,3,88,1
+Nevada,CP25,State Assembly,1,REP,Megan Dahle,69,1,4,64,0
+Nevada,CP26,State Assembly,1,DEM,Elizabeth L. Betancourt,349,5,6,336,2
+Nevada,CP26,State Assembly,1,REP,Megan Dahle,377,18,21,334,4
+Nevada,CP27,State Assembly,1,DEM,Elizabeth L. Betancourt,801,21,18,755,7
+Nevada,CP27,State Assembly,1,REP,Megan Dahle,1127,51,61,1003,12
+Nevada,CP28,State Assembly,1,DEM,Elizabeth L. Betancourt,701,12,17,667,5
+Nevada,CP28,State Assembly,1,REP,Megan Dahle,885,45,37,798,5
+Nevada,CP29,State Assembly,1,DEM,Elizabeth L. Betancourt,625,10,18,596,1
+Nevada,CP29,State Assembly,1,REP,Megan Dahle,784,32,41,700,11
+Nevada,CP30,State Assembly,1,DEM,Elizabeth L. Betancourt,273,11,6,254,2
+Nevada,CP30,State Assembly,1,REP,Megan Dahle,207,9,8,186,4
+Nevada,CP31,State Assembly,1,DEM,Elizabeth L. Betancourt,168,4,11,152,1
+Nevada,CP31,State Assembly,1,REP,Megan Dahle,228,7,10,210,1
+Nevada,CP32,State Assembly,1,DEM,Elizabeth L. Betancourt,16,1,0,15,0
+Nevada,CP32,State Assembly,1,REP,Megan Dahle,16,0,3,13,0
+Nevada,CP33,State Assembly,1,DEM,Elizabeth L. Betancourt,746,24,21,693,8
+Nevada,CP33,State Assembly,1,REP,Megan Dahle,1103,75,49,970,9
+Nevada,CP34,State Assembly,1,DEM,Elizabeth L. Betancourt,845,21,36,781,7
+Nevada,CP34,State Assembly,1,REP,Megan Dahle,969,53,59,847,10
+Nevada,CP35,State Assembly,1,DEM,Elizabeth L. Betancourt,1049,14,24,1005,6
+Nevada,CP35,State Assembly,1,REP,Megan Dahle,1144,40,52,1045,7
+Nevada,CP36,State Assembly,1,DEM,Elizabeth L. Betancourt,662,14,15,628,5
+Nevada,CP36,State Assembly,1,REP,Megan Dahle,851,38,49,757,7
+Nevada,CP37,State Assembly,1,DEM,Elizabeth L. Betancourt,4,0,0,4,0
+Nevada,CP37,State Assembly,1,REP,Megan Dahle,12,0,0,12,0
+Nevada,CP38,State Assembly,1,DEM,Elizabeth L. Betancourt,10,0,1,9,0
+Nevada,CP38,State Assembly,1,REP,Megan Dahle,11,0,0,11,0
+Nevada,CP39,State Assembly,1,DEM,Elizabeth L. Betancourt,148,2,1,142,3
+Nevada,CP39,State Assembly,1,REP,Megan Dahle,150,6,2,140,2
+Nevada,CP40,State Assembly,1,DEM,Elizabeth L. Betancourt,830,19,22,781,8
+Nevada,CP40,State Assembly,1,REP,Megan Dahle,660,35,47,568,10
+Nevada,CP41,State Assembly,1,DEM,Elizabeth L. Betancourt,135,0,3,132,0
+Nevada,CP41,State Assembly,1,REP,Megan Dahle,86,0,0,86,0
+Nevada,CP42,State Assembly,1,DEM,Elizabeth L. Betancourt,257,7,8,241,1
+Nevada,CP42,State Assembly,1,REP,Megan Dahle,288,8,14,265,1
+Nevada,CP43,State Assembly,1,DEM,Elizabeth L. Betancourt,80,0,4,76,0
+Nevada,CP43,State Assembly,1,REP,Megan Dahle,92,3,5,84,0
+Nevada,CP44,State Assembly,1,DEM,Elizabeth L. Betancourt,158,5,6,146,1
+Nevada,CP44,State Assembly,1,REP,Megan Dahle,178,8,11,156,3
+Nevada,CP45,State Assembly,1,DEM,Elizabeth L. Betancourt,749,15,18,707,9
+Nevada,CP45,State Assembly,1,REP,Megan Dahle,859,41,50,761,7
+Nevada,CP46,State Assembly,1,DEM,Elizabeth L. Betancourt,200,2,5,192,1
+Nevada,CP46,State Assembly,1,REP,Megan Dahle,213,5,14,193,1
+Nevada,CP47,State Assembly,1,DEM,Elizabeth L. Betancourt,2,0,0,2,0
+Nevada,CP47,State Assembly,1,REP,Megan Dahle,2,0,0,1,1
+Nevada,CP48,State Assembly,1,DEM,Elizabeth L. Betancourt,9,0,1,8,0
+Nevada,CP48,State Assembly,1,REP,Megan Dahle,15,0,1,14,0
+Nevada,CP49,State Assembly,1,DEM,Elizabeth L. Betancourt,327,5,12,304,6
+Nevada,CP49,State Assembly,1,REP,Megan Dahle,308,8,19,275,6
+Nevada,CP50,State Assembly,1,DEM,Elizabeth L. Betancourt,891,18,19,847,7
+Nevada,CP50,State Assembly,1,REP,Megan Dahle,965,41,47,869,8
+Nevada,CP51,State Assembly,1,DEM,Elizabeth L. Betancourt,280,7,12,259,2
+Nevada,CP51,State Assembly,1,REP,Megan Dahle,241,17,8,213,3
+Nevada,CP52,State Assembly,1,DEM,Elizabeth L. Betancourt,386,7,12,366,1
+Nevada,CP52,State Assembly,1,REP,Megan Dahle,423,24,26,366,7
+Nevada,CP53,State Assembly,1,DEM,Elizabeth L. Betancourt,193,3,6,183,1
+Nevada,CP53,State Assembly,1,REP,Megan Dahle,163,7,4,150,2
+Nevada,CP54,State Assembly,1,DEM,Elizabeth L. Betancourt,4,0,3,1,0
+Nevada,CP54,State Assembly,1,REP,Megan Dahle,1,0,1,0,0
+Nevada,CP55,State Assembly,1,DEM,Elizabeth L. Betancourt,215,5,1,208,1
+Nevada,CP55,State Assembly,1,REP,Megan Dahle,205,10,10,183,2
+Nevada,CP56,State Assembly,1,DEM,Elizabeth L. Betancourt,33,0,1,31,1
+Nevada,CP56,State Assembly,1,REP,Megan Dahle,16,0,3,13,0
+Nevada,CP57,State Assembly,1,DEM,Elizabeth L. Betancourt,359,9,7,342,1
+Nevada,CP57,State Assembly,1,REP,Megan Dahle,355,20,18,315,2
+Nevada,CP58,State Assembly,1,DEM,Elizabeth L. Betancourt,77,3,4,70,0
+Nevada,CP58,State Assembly,1,REP,Megan Dahle,53,3,5,44,1
+Nevada,CP59,State Assembly,1,DEM,Elizabeth L. Betancourt,117,2,5,109,1
+Nevada,CP59,State Assembly,1,REP,Megan Dahle,97,2,1,93,1
+Nevada,CP60,State Assembly,1,DEM,Elizabeth L. Betancourt,60,1,1,58,0
+Nevada,CP60,State Assembly,1,REP,Megan Dahle,65,0,3,58,4
+Nevada,CP62,State Assembly,1,DEM,Elizabeth L. Betancourt,60,2,4,54,0
+Nevada,CP62,State Assembly,1,REP,Megan Dahle,26,2,3,21,0
+Nevada,CP63,State Assembly,1,DEM,Elizabeth L. Betancourt,77,4,6,65,2
+Nevada,CP63,State Assembly,1,REP,Megan Dahle,88,8,4,75,1
+Nevada,CP64,State Assembly,1,DEM,Elizabeth L. Betancourt,319,5,7,305,2
+Nevada,CP64,State Assembly,1,REP,Megan Dahle,244,18,10,214,2
+Nevada,CP65,State Assembly,1,DEM,Elizabeth L. Betancourt,1041,5,27,1000,9
+Nevada,CP65,State Assembly,1,REP,Megan Dahle,711,20,41,647,3
+Nevada,CP66,State Assembly,1,DEM,Elizabeth L. Betancourt,1078,28,34,1007,9
+Nevada,CP66,State Assembly,1,REP,Megan Dahle,564,19,35,504,6
+Nevada,CP67,State Assembly,1,DEM,Elizabeth L. Betancourt,447,4,13,430,0
+Nevada,CP67,State Assembly,1,REP,Megan Dahle,177,4,10,157,6
+Nevada,CP68,State Assembly,1,DEM,Elizabeth L. Betancourt,1361,14,30,1308,9
+Nevada,CP68,State Assembly,1,REP,Megan Dahle,752,29,34,683,6
+Nevada,CP69,State Assembly,1,DEM,Elizabeth L. Betancourt,42,1,1,39,1
+Nevada,CP69,State Assembly,1,REP,Megan Dahle,26,1,2,23,0
+Nevada,CP70,State Assembly,1,DEM,Elizabeth L. Betancourt,824,23,30,766,5
+Nevada,CP70,State Assembly,1,REP,Megan Dahle,703,41,37,620,5
+Nevada,CP71,State Assembly,1,DEM,Elizabeth L. Betancourt,32,0,3,29,0
+Nevada,CP71,State Assembly,1,REP,Megan Dahle,13,1,0,11,1
+Nevada,CP72,State Assembly,1,DEM,Elizabeth L. Betancourt,1023,63,21,928,11
+Nevada,CP72,State Assembly,1,REP,Megan Dahle,267,36,9,214,8
+Nevada,CP73,State Assembly,1,DEM,Elizabeth L. Betancourt,53,1,0,47,5
+Nevada,CP73,State Assembly,1,REP,Megan Dahle,52,4,1,45,2
+Nevada,CP75,State Assembly,1,DEM,Elizabeth L. Betancourt,0,0,0,0,0
+Nevada,CP75,State Assembly,1,REP,Megan Dahle,1,0,0,0,1
+Nevada,CP76,State Assembly,1,DEM,Elizabeth L. Betancourt,191,8,4,171,8
+Nevada,CP76,State Assembly,1,REP,Megan Dahle,122,5,5,110,2
+Nevada,CP77,State Assembly,1,DEM,Elizabeth L. Betancourt,32,2,0,29,1
+Nevada,CP77,State Assembly,1,REP,Megan Dahle,35,0,0,34,1
+Nevada,CP78,State Assembly,1,DEM,Elizabeth L. Betancourt,50,0,0,50,0
+Nevada,CP78,State Assembly,1,REP,Megan Dahle,11,0,1,10,0
+Nevada,CP79,State Assembly,1,DEM,Elizabeth L. Betancourt,5,0,1,4,0
+Nevada,CP79,State Assembly,1,REP,Megan Dahle,3,0,0,3,0
+Nevada,CP80,State Assembly,1,DEM,Elizabeth L. Betancourt,13,0,2,10,1
+Nevada,CP80,State Assembly,1,REP,Megan Dahle,13,0,0,12,1
+Nevada,CP84,State Assembly,1,DEM,Elizabeth L. Betancourt,0,0,0,0,0
+Nevada,CP84,State Assembly,1,REP,Megan Dahle,1,1,0,0,0
+Nevada,CP86,State Assembly,1,DEM,Elizabeth L. Betancourt,24,0,1,23,0
+Nevada,CP86,State Assembly,1,REP,Megan Dahle,27,1,2,24,0
+Nevada,CP87,State Assembly,1,DEM,Elizabeth L. Betancourt,5,0,0,5,0
+Nevada,CP87,State Assembly,1,REP,Megan Dahle,4,0,1,1,2
+Nevada,CP88,State Assembly,1,DEM,Elizabeth L. Betancourt,5,0,0,5,0
+Nevada,CP88,State Assembly,1,REP,Megan Dahle,4,0,0,4,0
+Nevada,CP89,State Assembly,1,DEM,Elizabeth L. Betancourt,55,1,2,52,0
+Nevada,CP89,State Assembly,1,REP,Megan Dahle,61,0,1,60,0
+Nevada,CP90,State Assembly,1,DEM,Elizabeth L. Betancourt,0,0,0,0,0
+Nevada,CP90,State Assembly,1,REP,Megan Dahle,1,0,0,1,0
+Nevada,CP92,State Assembly,1,DEM,Elizabeth L. Betancourt,56,2,3,51,0
+Nevada,CP92,State Assembly,1,REP,Megan Dahle,58,6,5,47,0
+Nevada,CP94,State Assembly,1,DEM,Elizabeth L. Betancourt,107,3,3,99,2
+Nevada,CP94,State Assembly,1,REP,Megan Dahle,138,2,10,124,2
+Nevada,CP95,State Assembly,1,DEM,Elizabeth L. Betancourt,214,1,1,212,0
+Nevada,CP95,State Assembly,1,REP,Megan Dahle,294,17,23,250,4
+Nevada,CP96,State Assembly,1,DEM,Elizabeth L. Betancourt,0,0,0,0,0
+Nevada,CP96,State Assembly,1,REP,Megan Dahle,1,1,0,0,0
+Nevada,CP98,State Assembly,1,DEM,Elizabeth L. Betancourt,52,2,2,48,0
+Nevada,CP98,State Assembly,1,REP,Megan Dahle,84,5,3,75,1
+Nevada,CP99,State Assembly,1,DEM,Elizabeth L. Betancourt,5,0,0,5,0
+Nevada,CP99,State Assembly,1,REP,Megan Dahle,3,0,0,2,1
+Nevada,CP101,State Assembly,1,DEM,Elizabeth L. Betancourt,229,4,8,217,0
+Nevada,CP101,State Assembly,1,REP,Megan Dahle,249,14,13,221,1
+Nevada,CP102,State Assembly,1,DEM,Elizabeth L. Betancourt,21,0,2,19,0
+Nevada,CP102,State Assembly,1,REP,Megan Dahle,16,2,0,14,0
+Nevada,CP103,State Assembly,1,DEM,Elizabeth L. Betancourt,101,2,2,97,0
+Nevada,CP103,State Assembly,1,REP,Megan Dahle,79,2,4,72,1
+Nevada,CP104,State Assembly,1,DEM,Elizabeth L. Betancourt,12,1,0,11,0
+Nevada,CP104,State Assembly,1,REP,Megan Dahle,13,0,0,13,0
+Nevada,CP105,State Assembly,1,DEM,Elizabeth L. Betancourt,538,12,18,505,3
+Nevada,CP105,State Assembly,1,REP,Megan Dahle,356,13,22,313,8
+Nevada,CP107,State Assembly,1,DEM,Elizabeth L. Betancourt,2,0,0,2,0
+Nevada,CP107,State Assembly,1,REP,Megan Dahle,3,0,0,3,0
+Nevada,CP108,State Assembly,1,DEM,Elizabeth L. Betancourt,6,0,0,6,0
+Nevada,CP108,State Assembly,1,REP,Megan Dahle,5,0,0,5,0
+Nevada,CP109,State Assembly,1,DEM,Elizabeth L. Betancourt,19,0,1,18,0
+Nevada,CP109,State Assembly,1,REP,Megan Dahle,7,0,0,7,0
+Nevada,CP110,State Assembly,1,DEM,Elizabeth L. Betancourt,17,1,0,16,0
+Nevada,CP110,State Assembly,1,REP,Megan Dahle,4,0,0,3,1
+Nevada,CP111,State Assembly,1,DEM,Elizabeth L. Betancourt,2,0,0,1,1
+Nevada,CP111,State Assembly,1,REP,Megan Dahle,2,1,0,1,0

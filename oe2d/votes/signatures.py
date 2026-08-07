@@ -72,12 +72,17 @@ class InterpretPrecinctPage(dspy.Signature):
 
     Candidate rows. Give each row's row_index (0-based grid row) WITHIN THIS CONTEST -- when several
     contests stack on the page their write-in / over-vote / under-vote labels repeat, so scope by
-    position, not by label. For a row that matches an expected candidate, return the matched EXPECTED
-    name and party. Do NOT read party off the document. Exclude the statistics block (Registered
-    Voters, Ballots Cast) and grand-total rows (e.g. "Total Votes Cast", "Contest Totals").
+    position, not by label. The expected-candidate list MAY BE INCOMPLETE (a real-world roster names
+    the major candidates but can omit minor-party or independent ones); capture EVERY candidate row
+    the contest actually has, not just the listed ones. For a row that MATCHES a listed candidate,
+    return the matched EXPECTED name and party. For a candidate row that matches NO listed candidate,
+    keep its observed label verbatim with a blank party -- it is a legitimate candidate the list
+    omitted, not automatically a write-in. Do NOT read party off the document. Exclude the statistics
+    block (Registered Voters, Ballots Cast) and grand-total rows (e.g. "Total Votes Cast", "Contest
+    Totals").
 
-    Non-candidate rows. A row that matches no expected candidate is a write-in or a vote-integrity
-    line; give it a blank party.
+    Non-candidate rows. A row that is not a candidate at all is a write-in or a vote-integrity line;
+    give it a blank party.
     - Vote-integrity rows: use the canonical single-word spelling "Overvotes" or "Undervotes" even
       when the grid splits or punctuates the label ("Ov | ervotes:" -> "Overvotes"); rejoin split
       words and drop trailing punctuation.
@@ -113,11 +118,15 @@ class InterpretResultsPage(dspy.Signature):
     provisional, or total). In skip_labels list the row labels that are totals or section headers to
     skip (a county grand-total row, a cumulative section, a "County" header).
 
-    For each candidate column, MATCH its header to one of the expected candidates (headers may show a
-    running mate, party, or garbled/reversed fragments -- match on the recognizable name) and return
-    that expected candidate's name and party EXACTLY as supplied. Do NOT read the party off the
-    document. A candidate column that matches no expected candidate (typically a write-in line) keeps
-    its observed label verbatim with a blank party. Set write_in=true on ANY write-in column (a
+    The expected-candidate list is an external aid that MAY BE INCOMPLETE -- a real-world roster names
+    the major candidates but can omit minor-party or independent ones who are nonetheless on THIS
+    page. So do NOT treat the list as the full set of candidates: identify EVERY candidate column the
+    page actually has, however many, not just the ones on the list. For a column that MATCHES a listed
+    candidate (headers may show a running mate, party, or garbled/reversed fragments -- match on the
+    recognizable name) return that candidate's name and party EXACTLY as supplied. For a candidate
+    column that matches NO listed candidate, keep its observed label verbatim with a blank party -- it
+    is a legitimate candidate the list simply omitted, NOT automatically a write-in. Do NOT read the
+    party off the document. Set write_in=true on ANY write-in column (a
     named/qualified write-in, an unresolved/scattered write-in, or a write-in total -- "Qualified
     Write In", "Unresolved Write-In", "Write-In Totals", "Not Assigned", etc.); they are consolidated
     into one write-in row downstream, so flag them all. Additionally set write_in_total=true ONLY on a
