@@ -43,7 +43,7 @@ def test_unions_disjoint_candidate_columns_across_pages():
         'Harris': _schema([_col(1, 'Harris', 'DEM'), _col(2, 'Trump', 'REP')]),
         'Oliver': _schema([_col(1, 'Oliver', 'LIB'), _col(2, 'Scattered', write_in=True)])})
     vote_map, _totals = votes.join_flat_table_pages(
-        [[page_a], [page_b]], 'Harris\nTrump\nOliver', schema_for)
+        [[page_a], [page_b]], schema_for, lambda _tables: 0)
     assert vote_map[('P1', 'Harris', 'DEM')] == {'votes': 10}
     assert vote_map[('P1', 'Oliver', 'LIB')] == {'votes': 3}
     assert vote_map[('P1', votes.WRITE_IN_LABEL, '')] == {'votes': 1}
@@ -58,7 +58,7 @@ def test_matches_precincts_across_pages_by_normalized_name_keeping_the_first_lab
     schema_for = _resolver({'Harris': _schema([_col(1, 'Harris', 'DEM')]),
                             'Oliver': _schema([_col(1, 'Oliver', 'LIB')])})
     vote_map, _totals = votes.join_flat_table_pages(
-        [[page_a], [page_b]], 'Harris\nOliver', schema_for)
+        [[page_a], [page_b]], schema_for, lambda _tables: 0)
     precincts = {precinct for (precinct, _c, _p) in vote_map}
     assert precincts == {'01 - Alpha'}                              # matched to one, first label kept
     assert vote_map[('01 - Alpha', 'Oliver', 'LIB')] == {'votes': 3}
@@ -72,7 +72,7 @@ def test_sums_write_in_rows_across_pages():
         'Harris': _schema([_col(1, 'Harris', 'DEM'), _col(2, 'Carroll', write_in=True)]),
         'Pierce': _schema([_col(1, 'Pierce', write_in=True), _col(2, 'Ventura', write_in=True)])})
     vote_map, _totals = votes.join_flat_table_pages(
-        [[page_a], [page_b]], 'Harris', schema_for)
+        [[page_a], [page_b]], schema_for, lambda _tables: 0)
     assert vote_map[('P1', votes.WRITE_IN_LABEL, '')] == {'votes': 4}   # 3 (page a) + 1 (page b)
 
 
@@ -85,6 +85,6 @@ def test_unions_printed_totals_across_pages():
         'Harris': _schema([_col(1, 'Harris', 'DEM'), _col(2, 'Trump', 'REP')]),
         'Oliver': _schema([_col(1, 'Oliver', 'LIB')])})
     vote_map, totals = votes.join_flat_table_pages(
-        [[page_a], [page_b]], 'Harris\nTrump\nOliver', schema_for)
+        [[page_a], [page_b]], schema_for, lambda _tables: 0)
     assert totals == {('Harris', 'DEM'): 10, ('Trump', 'REP'): 20, ('Oliver', 'LIB'): 3}
     assert votes._reconciles(vote_map, totals)                     # single precinct sums to each total

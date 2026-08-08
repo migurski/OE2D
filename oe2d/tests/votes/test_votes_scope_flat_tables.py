@@ -23,8 +23,8 @@ def _schema(columns, label_column=0, skip_labels=()):
                                  method_labels={}, skip_labels=list(skip_labels))
 
 
-def _run(tables, schema, context='Harris (DEM)\nTrump (REP)'):
-    return votes.scope_flat_tables(tables, context, lambda _anchor: schema)
+def _run(tables, schema, anchor_index=0):
+    return votes.scope_flat_tables(tables, lambda _anchor: schema, anchor_index=anchor_index)
 
 
 def test_flat_read_gives_votes_totals_and_reconciles():
@@ -92,18 +92,18 @@ def test_label_only_row_continues_the_previous_precinct_across_tables():
     assert precincts == {'Big Creek Township, Precinct 1', 'Sherman Township'}
 
 
-def test_anchor_is_chosen_by_header_match_not_position_or_size():
-    # the header-match anchor pick has to DISCRIMINATE: a decoy table from another contest comes
-    # first and has more rows, but does not match the expected candidates; the target table comes
-    # second and is a different width. Only if header_match (not position or row count) picks the
-    # target does its column count win -- so the wider decoy is dropped and its wards never appear.
+def test_alignment_scopes_to_the_chosen_anchor_dropping_the_other_contest():
+    # given the caller's chosen anchor (region selection now happens upstream via the LLM), the pure
+    # alignment must scope to it: a decoy table from another contest comes first and has more rows,
+    # but the caller passes anchor_index=1 for the target. Its column count then wins -- the wider
+    # decoy aligns to none of the anchor's candidates and is dropped, so its wards never appear.
     decoy = [['', 'SMITH', 'JONES', 'DOE', 'Write-in'],
              ['WARD A', '5', '6', '7', '0'], ['WARD B', '5', '6', '7', '0'],
              ['WARD C', '5', '6', '7', '0']]
     target = [['', 'CASEY', 'MCCORMICK', 'Write-in'], ['BEAVER TWP', '125', '428', '0']]
     schema = _schema([_col(1, 'Casey', 'DEM'), _col(2, 'McCormick', 'REP'),
                       _col(3, 'Scattered', write_in=True)])
-    vote_map, _totals = _run([decoy, target], schema, context='Casey (DEM)\nMcCormick (REP)')
+    vote_map, _totals = _run([decoy, target], schema, anchor_index=1)
     assert {precinct for (precinct, _c, _p) in vote_map} == {'BEAVER TWP'}
 
 
@@ -145,6 +145,6 @@ def test_total_row_detected_by_skip_label():
 def test_empty_tables_returns_empty_without_resolving_a_schema():
     # no tables -> no votes, no totals, and the schema resolver is never called (nothing to anchor)
     called: list = []
-    vote_map, totals = votes.scope_flat_tables([], 'Casey (DEM)', lambda anchor: called.append(anchor))
+    vote_map, totals = votes.scope_flat_tables([], lambda anchor: called.append(anchor))
     assert vote_map == {} and totals == {}
     assert not called

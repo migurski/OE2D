@@ -32,33 +32,31 @@ CONT_P2 = [
     ['130', 'Delta', '40', '45'],
     ['', 'Total', '70', '80'],
 ]
-WANTED = {votes._norm(n) for n in ('Harris', 'Trump', 'Oliver', 'Stein')}
-
-
 def test_group_split_is_detected() -> None:
-    # Oliver/Stein appear only on page 2, and Alpha/Bravo repeat -> a candidate-group contest.
-    assert votes._grids_split_candidates([GROUP_P1, GROUP_P2], WANTED) is True
+    # Oliver/Stein head page 2's columns (absent from page 1's header) and Alpha/Bravo repeat -> a
+    # candidate-group contest. Decided from the documents' own headers, no context.
+    assert votes._grids_split_candidates([GROUP_P1, GROUP_P2]) is True
 
 
 def test_continuation_is_not_a_group_split() -> None:
-    # page 2 carries the SAME candidates (Harris/Trump) -> no later-only name -> not grouped.
-    assert votes._grids_split_candidates([GROUP_P1, CONT_P2], {votes._norm('Harris'), votes._norm('Trump')}) is False
+    # page 2's header carries the SAME candidates (Harris/Trump) -> no later-only header token -> not grouped.
+    assert votes._grids_split_candidates([GROUP_P1, CONT_P2]) is False
 
 
 def test_single_page_is_not_a_group_split() -> None:
-    assert votes._grids_split_candidates([GROUP_P1], WANTED) is False
+    assert votes._grids_split_candidates([GROUP_P1]) is False
 
 
 def test_later_only_names_without_repeat_precincts_is_not_grouped() -> None:
-    # A later page introduces a new candidate BUT on entirely new precincts (not a repeat) -> reject:
-    # this is the disjoint shape, not a group split.
+    # A later page's header introduces a new candidate BUT on entirely new precincts (not a repeat) ->
+    # reject: this is the disjoint shape, not a group split.
     new_precincts = [
         ['Reg', 'Precinct', 'Oliver', 'Stein'],
         ['110', 'Charlie', '3', '4'],
         ['130', 'Delta', '5', '2'],
         ['', 'Total', '8', '6'],
     ]
-    assert votes._grids_split_candidates([GROUP_P1, new_precincts], WANTED) is False
+    assert votes._grids_split_candidates([GROUP_P1, new_precincts]) is False
 
 
 def test_grid_precincts_reads_the_nonnumeric_label_column() -> None:
@@ -70,9 +68,10 @@ def test_grid_precincts_reads_the_nonnumeric_label_column() -> None:
     assert '40' not in keys and '50' not in keys       # numeric candidate cells are not precincts
 
 
-def test_candidate_tokens_drops_short_tokens_and_party() -> None:
-    tokens = votes._candidate_tokens('- Joseph R Biden (DEM)\n- Donald J Trump (REP)')
-    assert votes._norm('Biden') in tokens
+def test_header_tokens_reads_candidate_names_from_the_header_row() -> None:
+    # the group probe's per-page names come from the DOCUMENT's header row, not any context
+    tokens = votes._header_tokens([['Reg', 'Precinct', 'Harris', 'Trump'], ['100', 'Alpha', '1', '2']])
+    assert votes._norm('Harris') in tokens
     assert votes._norm('Trump') in tokens
-    assert votes._norm('R') not in tokens              # too short
-    assert votes._norm('DEM') not in tokens            # party parenthetical is stripped
+    assert votes._norm('Reg') not in tokens            # too short (<= 3 chars)
+    assert votes._norm('100') not in tokens            # not from the data row

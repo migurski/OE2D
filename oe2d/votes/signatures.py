@@ -157,3 +157,47 @@ class InterpretResultsPage(dspy.Signature):
     grid: str = dspy.InputField(
         desc='raw cells; one row per line as "<rownum>: cell0 | cell1 | ..." with 0-based columns')
     page_schema: PageSchema = dspy.OutputField()
+
+
+class SelectContestRegion(dspy.Signature):
+    '''Pick which candidate region on a page holds the results for the given contest.
+
+    A page can carry several regions: the target contest's results table, other contests' tables, and
+    turnout/statistics blocks (Registered Voters, Ballots Cast, Times Counted). Each region is
+    described ONLY by the document's own text for it -- a contest title/heading when the reader
+    captured one, otherwise the region's column-header cells (candidate names).
+
+    Match on the office LEVEL/TYPE, allowing wording differences:
+    - President -- "President", "President/Vice President".
+    - U.S. Senate -- "United States Senator", "U.S. Senator".
+    - U.S. House (a federal congressional seat) -- "Representative in Congress", "Rep Congress",
+      "U.S. Representative", "Congressional".
+    - State Senate -- "State Senator", "State Senate".
+    - State House / State Assembly (a state-legislature seat) -- "State Representative", "State
+      Assembly", "NNNth Representative"/"NNNrd Rep" (an ordinal-numbered state-house district).
+
+    DISTRICT NUMBERS IN A TITLE ARE UNRELIABLE -- the document often prints a wrong or differently-
+    numbered district (e.g. a title "Rep Congress 4th" for the district-1 seat, or "103rd Rep" for
+    district 105). Do NOT reject a region because its title's number differs from the target district.
+    Use the target district ONLY to choose among MULTIPLE regions of the SAME office level; when just
+    one region matches the office level, pick it regardless of any number in its title.
+
+    With no title, choose the region whose column headers are candidate names for this contest rather
+    than a turnout/statistics block.
+
+    electoral_context is an OPTIONAL hint that MAY BE EMPTY OR UNRELATED to this contest -- it can
+    make the choice easier when it lists this contest's candidates, but never require it and never
+    reject a region merely because the context does not mention its candidates. Decide from the
+    document's text first.
+
+    Return the 0-based index of the chosen region, or -1 ONLY if no region is the target office level.
+    '''
+    office: str = dspy.InputField()
+    district: str = dspy.InputField(desc='district number when the office has one, else empty')
+    electoral_context: str = dspy.InputField(
+        desc='OPTIONAL free-form hint; may be empty or unrelated to this contest')
+    regions: list[str] = dspy.InputField(
+        desc="the candidate regions on the page, in order; each entry is the document's own text for "
+             'one region -- its contest title, or its column-header cells joined by " | "')
+    region_index: int = dspy.OutputField(
+        desc='0-based index into `regions` of the chosen region, or -1 if none is the target office')

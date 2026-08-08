@@ -50,21 +50,24 @@ def expected_rows(record: dict) -> list[dict]:
 
 
 def electoral_context(record: dict) -> str:
-    '''The expected-candidate prose supplied to the interpreter, one "Name (PARTY)" line per
-    distinct candidate.
+    '''The free-form electoral-context prose supplied to the extractor -- exactly the string a caller
+    would pass to --electoral-context.
 
-    Prefer the record's stored `electoral_context` strings -- the real production context looked up
-    from the candidates/ directory (federal races) or period sources (older cycles). Fall back to
-    DERIVING the list from the expected-answer CSV when a record has none; that baseline is idealized
-    (it always names exactly the candidates in the answer), so a stored real-world list is what the
-    eval and production actually use.
+    The record's stored `electoral_context` is the real production context: one whole-county block
+    (the core federal races plus the county's state races), the same string for every contest in that
+    county, looked up from the candidates/ directory (2024 federal) or period sources (older cycles).
+    A stored STRING is passed through verbatim -- Python never parses or reshapes it, because the
+    prose can have any shape or be empty (that is the only invariant). A legacy list is rendered as a
+    bulleted hint for back-compat. When a record has neither, DERIVE a list from the expected-answer
+    CSV; that baseline is idealized (it always names exactly the candidates in the answer).
 
     Deliberately does NOT string-classify rows into candidate vs write-in/vote-integrity -- that
     is language interpretation, the LLM's job, not Python's.'''
     stored = record.get('electoral_context')
-    if stored:
-        items: list[str] = stored if isinstance(stored, list) else [stored]
-        return 'Expected candidates in this contest:\n' + '\n'.join('- ' + s for s in items)
+    if isinstance(stored, str):
+        return stored                                      # real production prose, verbatim
+    if stored:                                             # legacy per-contest array -> bulleted hint
+        return 'Expected candidates in this contest:\n' + '\n'.join('- ' + s for s in stored)
     lines: list[str] = []
     seen: set[str] = set()
     for row in expected_rows(record):
