@@ -88,10 +88,21 @@ does the whole-county slate (president always present, other races included) hel
 contest-locate accuracy vs a single-race context. **Result still pending** — read the two files (or
 the macro lines) when `bkdb67i0m` completes; confirm the gold file was restored clean afterward.
 
-## Open items / next
+## Result: whole-county context stays (SETTLED)
 
-1. **Read the before/after result** and decide whether whole-county context stays (it will unless it
-   regresses locate meaningfully).
+Clean before/after on the resilient Haiku locator (`num_retries=16`), same 106 targets, 0 errored on
+both runs, only the context shape differing:
+
+| context | recall | precision | F1 | title-hit |
+|---|---|---|---|---|
+| AFTER — whole-county slate (HEAD) | 0.919 | 0.925 | **0.904** | 25/106 |
+| BEFORE — per-target only (`7dbf482`) | 0.904 | 0.911 | 0.891 | 24/106 |
+
+Every metric moves up (+0.013 F1). Whole-county context helps slightly, hurts nothing, and matches
+how context arrives in production. Kept. (`title-hit` is a coarse exact-string probe of the match
+predictor and is dragged down by gold rows with no/loose `observed_title`; F1 is the real signal.)
+
+## Open items / next
 2. **votes decoupling** (deferred): votes can't consume free-form prose until its deterministic
    column-matcher stops assuming the `"- Name (PARTY)"` per-line list — a real refactor.
 3. Optional cosmetic: reword non-federal `"Candidates for <mechanism>"` lines — not needed for locate.
