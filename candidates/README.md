@@ -42,6 +42,18 @@ Which lines a file has:
 - **U.S. Senate** — the 33 states with a regular 2024 (Class I) election get one line. California and Nebraska each held two races in 2024, so they get two lines: `U.S. Senate (full term)` and `U.S. Senate (partial/unexpired term)`.
 - **U.S. House** — one line per congressional district that overlaps the county. At-large states use `U.S. House (at-large)`. DC and the territories elect a non-voting member, written `U.S. House Delegate`, except **Puerto Rico** which uses `Resident Commissioner`.
 
+Additionally, **every file begins with a standard Straight Party line** — identical everywhere:
+
+```
+Candidates for Straight Party were Democratic Party (DEM), Republican Party (REP), Libertarian Party (LIB), Green Party (GRN), Constitution Party (CST), U.S. Taxpayers Party (UST), Natural Law Party (NLP), and Working Class Party (WCP)
+```
+
+States without straight-party (party-ticket) voting simply never have such a contest, so the line
+is inert there. Where a document does carry a straight-party contest, this line supplies the
+party-name→code mapping: the extractor reproduces the ballot's own party wording for the row name and
+takes the standard code from here. The national party codes are stable convention (not a document's
+specific spelling), so this is a safe universal hint rather than leaked answer content.
+
 ## Office label strings
 
 | situation | label |
